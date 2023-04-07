@@ -1,5 +1,8 @@
 namespace CrowdParlay.Social.Domain.Entities;
 
+/// <summary>
+/// Post with text, timestamp, OP (author) and discussion id.
+/// </summary>
 public class Post
 {
     public int Id { get; set; }

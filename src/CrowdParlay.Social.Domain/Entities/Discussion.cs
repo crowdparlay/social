@@ -1,7 +1,8 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace CrowdParlay.Social.Domain.Entities;
 
+/// <summary>
+/// A thread that includes posts in relationship "one-to-many".
+/// </summary>
 public class Discussion
 {
     public int Id { get; set; }
