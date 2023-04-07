@@ -1,7 +1,7 @@
 namespace CrowdParlay.Social.Domain.Entities;
 
 /// <summary>
-/// Post with text, timestamp, OP (author) and discussion id. Any authenticated user can create post in any discussion.
+/// Post with text, timestamp, OP (author) and discussion id.
 /// </summary>
 public class Post
 {
