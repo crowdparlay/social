@@ -12,4 +12,9 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\CrowdParlay.Social.Application\CrowdParlay.Social.Application.csproj" />
+      <ProjectReference Include="..\CrowdParlay.Social.Infrastructure\CrowdParlay.Social.Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>
