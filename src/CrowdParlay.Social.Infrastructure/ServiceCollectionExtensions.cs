@@ -14,11 +14,12 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddNeo4J(this IServiceCollection services, IConfiguration configuration)
     {
-        var uri = configuration["Neo4jData:NEO4J_URI"] ?? throw new AggregateException("NEO4J_URI is not set!");
-        var username = configuration["Neo4jData:NEO4J_USERNAME"] ??
-                       throw new ArgumentException("NEO4J_USERNAME is not set!");
-        var password =  configuration["Neo4jData:NEO4J_PASSWORD"] ?? 
-                        throw new ArgumentException("NEO4J_PASSWORD is not set!");
+        var uri = configuration["NEO4J_URI"] ?? throw new InvalidOperationException("NEO4J_URI is not set!");
+        var username = configuration["NEO4J_USERNAME"] ??
+                       throw new InvalidOperationException("NEO4J_USERNAME is not set!");
+        var password =  configuration["NEO4J_PASSWORD"] ?? 
+                        throw new InvalidOperationException("NEO4J_PASSWORD is not set!");
+
         
         return services.AddSingleton(new GraphClient(uri, username, password));
     }
