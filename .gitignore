@@ -4,5 +4,4 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 .idea/
-*.Development.*
-CrowdParlay.Social.sln.DotSettings.user
+*.DotSettings.user
