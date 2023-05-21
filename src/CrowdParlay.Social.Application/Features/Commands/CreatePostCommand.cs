@@ -8,7 +8,7 @@ using Neo4jClient.Cypher;
 
 namespace CrowdParlay.Social.Application.Features.Commands;
 
-public record CreatePostCommand(CreatePostDto CreatePostDto) : IRequest<PostDto>;
+public record CreatePostCommand(Guid AuthorId, string Content) : IRequest<PostDto>;
 
 public class CreatePostHandler : IRequestHandler<CreatePostCommand, PostDto>
 {
@@ -21,14 +21,14 @@ public class CreatePostHandler : IRequestHandler<CreatePostCommand, PostDto>
 
     public async Task<PostDto> Handle(CreatePostCommand request, CancellationToken cancellationToken)
     {
-        var result = await _graphClient.Cypher
+        var queryResult = await _graphClient.Cypher
             .Match("(a:Author {Id: $AuthorId})")
             .Create("(p:Post {Id: $PostId, Content: $Content, CreatedAt: datetime()})")
             .Create("(p)-[:AUTHORED]->(a)")
             .WithParams(new {
-                request.CreatePostDto.AuthorId,
+                request.AuthorId,
                 PostId = Guid.NewGuid(),
-                request.CreatePostDto.Content,
+                request.Content,
             })
             .Return((p, a) => new
             {
@@ -37,10 +37,10 @@ public class CreatePostHandler : IRequestHandler<CreatePostCommand, PostDto>
             })
             .ResultsAsync;
         
-        var collection = result.Single();
+        var result = queryResult.Single();
         
-        var postWithAuthor = collection.PostDto;
-        postWithAuthor.AuthorDto = collection.AuthorDto;
+        var postWithAuthor = result.PostDto;
+        postWithAuthor.AuthorDto = result.AuthorDto;
 
         return postWithAuthor;
     }

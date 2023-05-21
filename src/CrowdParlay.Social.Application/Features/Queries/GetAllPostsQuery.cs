@@ -1,10 +1,11 @@
+using CrowdParlay.Social.Application.DTOs.Author;
 using CrowdParlay.Social.Application.DTOs.Post;
 using MediatR;
 using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Queries;
 
-public record GetAllPostsQuery(GetAllPostsDto GetAllPostsDto) : IRequest<IEnumerable<PostDto>>;
+public record GetAllPostsQuery(int Offset, int Limit) : IRequest<IEnumerable<PostDto>>;
 
 public class GetAllPostsHandler : IRequestHandler<GetAllPostsQuery, IEnumerable<PostDto>>
 {
@@ -19,9 +20,15 @@ public class GetAllPostsHandler : IRequestHandler<GetAllPostsQuery, IEnumerable<
     {
         var posts = await _graphClient.Cypher
             .Match("(p:Post)-[:AUTHORED]->(a:Author)")
-            .Skip(request.GetAllPostsDto.Offset)
-            .Limit(request.GetAllPostsDto.Limit)
-            .Return(p => p.As<PostDto>())
+            .Return((p, a) => new PostDto
+            {
+                Id = p.As<PostDto>().Id,
+                Content = p.As<PostDto>().Content,
+                CreatedAt = p.As<PostDto>().CreatedAt,
+                AuthorDto = a.As<AuthorDto>()
+            })
+            .Skip(request.Offset)
+            .Limit(request.Limit)
             .ResultsAsync;
 
         return posts;

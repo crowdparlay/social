@@ -5,7 +5,7 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Queries;
 
-public record GetPostByIdQuery(GetPostByIdDto GetPostByIdDto) : IRequest<PostDto>;
+public record GetPostByIdQuery(Guid Id) : IRequest<PostDto>;
 
 public class GetPostByIdHandler : IRequestHandler<GetPostByIdQuery, PostDto>
 {
@@ -18,11 +18,11 @@ public class GetPostByIdHandler : IRequestHandler<GetPostByIdQuery, PostDto>
 
     public async Task<PostDto> Handle(GetPostByIdQuery request, CancellationToken cancellationToken)
     {
-        var result = await _graphClient.Cypher
+        var queryResult = await _graphClient.Cypher
             .Match("(p:Post {Id: $PostId})-[:AUTHORED]->(a:Author)")
             .WithParams(new
             {
-                PostId = request.GetPostByIdDto.Id
+                PostId = request.Id
             })
             .Return((p, a) => new
             {
@@ -31,10 +31,10 @@ public class GetPostByIdHandler : IRequestHandler<GetPostByIdQuery, PostDto>
             })
             .ResultsAsync;
 
-        var collection = result.Single();
+        var result = queryResult.Single();
         
-        var postWithAuthor = collection.PostDto;
-        postWithAuthor.AuthorDto = collection.AuthorDto;
+        var postWithAuthor = result.PostDto;
+        postWithAuthor.AuthorDto = result.AuthorDto;
 
         return postWithAuthor;
     }
