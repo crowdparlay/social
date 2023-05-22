@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using CrowdParlay.Social.Application.DTOs.Post;
 using CrowdParlay.Social.Application.Features.Commands;
 using CrowdParlay.Social.Application.Features.Queries;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CrowdParlay.Social.Api.Controllers;
 
-[ApiController, Route("api/[controller]/[action]")]
+[ApiController, Route("api/[controller]")]
 public class PostsController : ControllerBase
 {
     private readonly ISender _sender;
@@ -24,14 +25,10 @@ public class PostsController : ControllerBase
     }
     
     [HttpGet("{postId:guid}")]
-    public async Task<ActionResult> Get([FromRoute] Guid postId)
-    {
-        return Ok(await _sender.Send(new GetPostByIdQuery(postId)));
-    }
+    public async Task Get([FromRoute] Guid postId) =>
+        await _sender.Send(new GetPostByIdQuery(postId));
 
-    [HttpGet("{offset:int}/{limit:int}")]
-    public async Task<ActionResult<IEnumerable<PostDto>>> GetAll(int offset, int limit)
-    {
-        return Ok(await _sender.Send(new GetAllPostsQuery(offset, limit)));
-    }
+    [HttpGet]
+    public async Task<IEnumerable<PostDto>> GetAll([FromQuery, Required] int offset, [FromQuery, Required] int limit) =>
+        await _sender.Send(new GetAllPostsQuery(offset, limit));
 }

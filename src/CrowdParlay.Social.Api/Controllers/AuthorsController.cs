@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CrowdParlay.Social.Api.Controllers;
 
-[ApiController, Route("api/[controller]/[action]/{authorId:guid}")]
+[ApiController, Route("api/[controller]")]
 public class AuthorsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -21,6 +21,6 @@ public class AuthorsController : ControllerBase
         await _mediator.Send(new GetAuthorByIdQuery((authorId)));
 
     [HttpDelete]
-    public async Task<Unit> Delete([FromRoute] Guid authorId) =>
+    public async Task Delete([FromRoute] Guid authorId) =>
         await _mediator.Send(new DeleteAuthorCommand(authorId));
 }
