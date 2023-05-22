@@ -4,9 +4,9 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Commands;
 
-public record DeleteAuthorCommand(Guid Id) : IRequest<Unit>;
+public record DeleteAuthorCommand(Guid Id) : IRequest;
 
-public class DeleteAuthorHandler : IRequestHandler<DeleteAuthorCommand, Unit>
+public class DeleteAuthorHandler : IRequestHandler<DeleteAuthorCommand>
 {
     private readonly GraphClient _graphClient;
 

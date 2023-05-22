@@ -28,7 +28,7 @@ public class CreatePostHandler : IRequestHandler<CreatePostCommand, PostDto>
             .WithParams(new {
                 request.AuthorId,
                 PostId = Guid.NewGuid(),
-                request.Content,
+                request.Content
             })
             .Return((p, a) => new
             {
