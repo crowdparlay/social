@@ -19,10 +19,10 @@ public static class ServiceCollectionExtensions
             throw new InvalidOperationException("NEO4J_URI is not set!");
         var username = 
             configuration["NEO4J_USERNAME"] ??
-           throw new InvalidOperationException("NEO4J_USERNAME is not set!");
+            throw new InvalidOperationException("NEO4J_USERNAME is not set!");
         var password =
             configuration["NEO4J_PASSWORD"] ??
-           throw new InvalidOperationException("NEO4J_PASSWORD is not set!");
+            throw new InvalidOperationException("NEO4J_PASSWORD is not set!");
         
         return services.AddSingleton(new GraphClient(uri, username, password));
     }
