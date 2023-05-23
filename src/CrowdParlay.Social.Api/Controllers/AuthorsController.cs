@@ -18,9 +18,9 @@ public class AuthorsController : ControllerBase
 
     [HttpGet]
     public async Task<AuthorDto> Get([FromRoute] Guid authorId) =>
-        await _mediator.Send(new GetAuthorByIdQuery((authorId)));
+        await _mediator.Send(new GetAuthorById((authorId)));
 
     [HttpDelete]
     public async Task Delete([FromRoute] Guid authorId) =>
-        await _mediator.Send(new DeleteAuthorCommand(authorId));
+        await _mediator.Send(new DeleteAuthor(authorId));
 }
