@@ -4,9 +4,9 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Commands;
 
-public record CreateAuthor(Guid Id, string DisplayName, string AvatarUrl, string? Alias) : IRequest<AuthorDto>;
+public record CreateAuthorCommand(Guid Id, string DisplayName, string AvatarUrl, string? Alias) : IRequest<AuthorDto>;
 
-public class CreateAuthorHandler : IRequestHandler<CreateAuthor, AuthorDto>
+public class CreateAuthorHandler : IRequestHandler<CreateAuthorCommand, AuthorDto>
 {
     private readonly GraphClient _graphClient;
 
@@ -15,7 +15,7 @@ public class CreateAuthorHandler : IRequestHandler<CreateAuthor, AuthorDto>
         _graphClient = graphClient;
     }
     
-    public async Task<AuthorDto> Handle(CreateAuthor request, CancellationToken cancellationToken)
+    public async Task<AuthorDto> Handle(CreateAuthorCommand request, CancellationToken cancellationToken)
     {
         var author = await _graphClient.Cypher
             .Create(

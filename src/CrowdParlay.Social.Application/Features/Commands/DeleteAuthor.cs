@@ -4,9 +4,9 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Commands;
 
-public record DeleteAuthor(Guid Id) : IRequest;
+public record DeleteAuthorCommand(Guid Id) : IRequest;
 
-public class DeleteAuthorHandler : IRequestHandler<DeleteAuthor>
+public class DeleteAuthorHandler : IRequestHandler<DeleteAuthorCommand>
 {
     private readonly GraphClient _graphClient;
 
@@ -15,7 +15,7 @@ public class DeleteAuthorHandler : IRequestHandler<DeleteAuthor>
         _graphClient = graphClient;
     }
 
-    public async Task<Unit> Handle(DeleteAuthor request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
     {
         await _graphClient.Cypher
             .Match("(a:Author {Id: $Id})")

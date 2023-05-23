@@ -4,9 +4,9 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Queries;
 
-public record GetAuthorById(Guid Id) : IRequest<AuthorDto>;
+public record GetAuthorByIdQuery(Guid Id) : IRequest<AuthorDto>;
 
-public class GetAuthorByIdHandler : IRequestHandler<GetAuthorById, AuthorDto>
+public class GetAuthorByIdHandler : IRequestHandler<GetAuthorByIdQuery, AuthorDto>
 {
     private readonly GraphClient _graphClient;
     
@@ -15,7 +15,7 @@ public class GetAuthorByIdHandler : IRequestHandler<GetAuthorById, AuthorDto>
         _graphClient = graphClient;
     }
     
-    public async Task<AuthorDto> Handle(GetAuthorById request, CancellationToken cancellationToken)
+    public async Task<AuthorDto> Handle(GetAuthorByIdQuery request, CancellationToken cancellationToken)
     {
         var author = await _graphClient.Cypher
             .Match("(a:Author {Id: $Id})")
