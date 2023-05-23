@@ -8,9 +8,9 @@ using Neo4jClient.Cypher;
 
 namespace CrowdParlay.Social.Application.Features.Commands;
 
-public record CreatePostCommand(Guid AuthorId, string Content) : IRequest<PostDto>;
+public record CreatePost(Guid AuthorId, string Content) : IRequest<PostDto>;
 
-public class CreatePostHandler : IRequestHandler<CreatePostCommand, PostDto>
+public class CreatePostHandler : IRequestHandler<CreatePost, PostDto>
 {
     private readonly GraphClient _graphClient;
     
@@ -19,7 +19,7 @@ public class CreatePostHandler : IRequestHandler<CreatePostCommand, PostDto>
         _graphClient = graphClient;
     }
 
-    public async Task<PostDto> Handle(CreatePostCommand request, CancellationToken cancellationToken)
+    public async Task<PostDto> Handle(CreatePost request, CancellationToken cancellationToken)
     {
         var queryResult = await _graphClient.Cypher
             .Match("(a:Author {Id: $AuthorId})")
