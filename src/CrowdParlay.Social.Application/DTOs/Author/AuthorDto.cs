@@ -6,6 +6,6 @@ public class AuthorDto
 {
     public Guid Id { get; set; }
     public string Alias { get; set; } = default!;
-    [Required] public string DisplayName { get; set; } = default!;
-    [Required] public string AvatarUrl { get; set; } = default!;
+    public required string DisplayName { get; set; } = default!;
+    public required string AvatarUrl { get; set; } = default!;
 }
