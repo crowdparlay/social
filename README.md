@@ -1,4 +1,4 @@
-# Crowd Parlay's *users* microservice
+# Crowd Parlay's *social* microservice
 
 ### Technologies
 - Languages `C#` `SQL`
