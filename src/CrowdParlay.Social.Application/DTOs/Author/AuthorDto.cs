@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace CrowdParlay.Social.Application.DTOs.Author;
 
 public class AuthorDto

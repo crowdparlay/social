@@ -1,4 +1,3 @@
-using CrowdParlay.Social.Application.DTOs.Author;
 using MediatR;
 using Neo4jClient;
 
@@ -10,10 +9,7 @@ public class DeleteAuthorHandler : IRequestHandler<DeleteAuthorCommand>
 {
     private readonly GraphClient _graphClient;
 
-    public DeleteAuthorHandler(GraphClient graphClient)
-    {
-        _graphClient = graphClient;
-    }
+    public DeleteAuthorHandler(GraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<Unit> Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
     {

@@ -10,6 +10,8 @@
     <ItemGroup>
         <PackageReference Include="MediatR" Version="11.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.2" />
+        <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+        <PackageReference Include="Serilog.Settings.AppSettings" Version="2.2.2" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 

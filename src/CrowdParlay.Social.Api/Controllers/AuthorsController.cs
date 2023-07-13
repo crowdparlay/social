@@ -11,10 +11,7 @@ public class AuthorsController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public AuthorsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
+    public AuthorsController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
     public async Task<AuthorDto> Get([FromRoute] Guid authorId) =>
