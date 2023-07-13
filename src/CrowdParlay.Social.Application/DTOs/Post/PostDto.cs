@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using CrowdParlay.Social.Application.DTOs.Author;
 
 namespace CrowdParlay.Social.Application.DTOs.Post;

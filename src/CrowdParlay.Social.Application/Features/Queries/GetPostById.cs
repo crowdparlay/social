@@ -11,10 +11,7 @@ public class GetPostByIdHandler : IRequestHandler<GetPostByIduQuery, PostDto>
 {
     private readonly GraphClient _graphClient;
 
-    public GetPostByIdHandler(GraphClient graphClient)
-    {
-        _graphClient = graphClient;
-    }
+    public GetPostByIdHandler(GraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<PostDto> Handle(GetPostByIduQuery request, CancellationToken cancellationToken)
     {

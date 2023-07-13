@@ -11,10 +11,7 @@ public class GetAllPostsHandler : IRequestHandler<GetAllPostsQuery, IEnumerable<
 {
     private readonly GraphClient _graphClient;
 
-    public GetAllPostsHandler(GraphClient graphClient)
-    {
-        _graphClient = graphClient;
-    }
+    public GetAllPostsHandler(GraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<IEnumerable<PostDto>> Handle(GetAllPostsQuery request, CancellationToken cancellationToken)
     {

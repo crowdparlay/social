@@ -1,23 +1,29 @@
-using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.DTOs.Author;
 using CrowdParlay.Social.Application.DTOs.Post;
 using FluentValidation;
 using MediatR;
 using Neo4jClient;
-using Neo4jClient.Cypher;
 
 namespace CrowdParlay.Social.Application.Features.Commands;
 
-public record CreatePostCommand(Guid AuthorId, string Content) : IRequest<PostDto>;
+public sealed record CreatePostCommand(Guid AuthorId, string Content) : IRequest<PostDto>;
+
+internal sealed class CreatePostCommandValidator : AbstractValidator<CreatePostCommand>
+{
+    public CreatePostCommandValidator()
+    {
+        RuleFor(post => post.Content)
+            .NotEmpty()
+            .MinimumLength(5)
+            .MaximumLength(500);
+    }
+}
 
 public class CreatePostHandler : IRequestHandler<CreatePostCommand, PostDto>
 {
     private readonly GraphClient _graphClient;
     
-    public CreatePostHandler(GraphClient graphClient)
-    {
-        _graphClient = graphClient;
-    }
+    public CreatePostHandler(GraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<PostDto> Handle(CreatePostCommand request, CancellationToken cancellationToken)
     {

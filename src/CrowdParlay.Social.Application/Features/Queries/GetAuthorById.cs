@@ -10,10 +10,7 @@ public class GetAuthorByIdHandler : IRequestHandler<GetAuthorByIdQuery, AuthorDt
 {
     private readonly GraphClient _graphClient;
     
-    public GetAuthorByIdHandler(GraphClient graphClient)
-    {
-        _graphClient = graphClient;
-    }
+    public GetAuthorByIdHandler(GraphClient graphClient) => _graphClient = graphClient;
     
     public async Task<AuthorDto> Handle(GetAuthorByIdQuery request, CancellationToken cancellationToken)
     {

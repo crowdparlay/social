@@ -3,14 +3,14 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Infrastructure.Services;
 
-public class GraphClientInitialisator : IHostedService
+/// <summary>
+/// Initalizes a GraphClient for Neo4j database
+/// </summary>
+public class GraphClientInitializer : IHostedService
 {
     private readonly GraphClient _graphClient;
 
-    public GraphClientInitialisator(GraphClient graphClient)
-    {
-        _graphClient = graphClient;
-    }
+    public GraphClientInitializer(GraphClient graphClient) => _graphClient = graphClient;
 
     public async Task StartAsync(CancellationToken cancellationToken) =>
         await _graphClient.ConnectAsync();
