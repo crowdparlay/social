@@ -14,7 +14,7 @@ public class UserEventsListener : IMessageListener<UserCreatedEvent>, IMessageLi
     {
         _sender = sender;
     }
-    
+
     public async Task HandleAsync(UserCreatedEvent message)
     {
         var command = message.Adapt<CreateAuthorCommand>();
