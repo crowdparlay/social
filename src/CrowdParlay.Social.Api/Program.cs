@@ -13,16 +13,10 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services
-    .AddApplication()
+    .AddApplication(builder.Configuration)
     .AddDatabase(builder.Configuration);
 
 builder.Host.UseSerilog();
-
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.AppSettings()
-    .WriteTo.File("logs/CrowdParlay.Social.log", rollingInterval: RollingInterval.Day)
-    .WriteTo.Console()
-    .CreateLogger();
 
 var app = builder.Build();
 

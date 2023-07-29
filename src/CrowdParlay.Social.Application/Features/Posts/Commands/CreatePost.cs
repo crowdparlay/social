@@ -4,7 +4,7 @@ using FluentValidation;
 using MediatR;
 using Neo4jClient;
 
-namespace CrowdParlay.Social.Application.Features.Commands;
+namespace CrowdParlay.Social.Application.Features.Posts.Commands;
 
 public sealed record CreatePostCommand(Guid AuthorId, string Content) : IRequest<PostDto>;
 

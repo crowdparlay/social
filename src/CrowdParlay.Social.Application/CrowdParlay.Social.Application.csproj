@@ -30,4 +30,8 @@
       <ProjectReference Include="..\CrowdParlay.Social.Domain\CrowdParlay.Social.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Features\Posts\" />
+    </ItemGroup>
+
 </Project>

@@ -2,7 +2,7 @@ using CrowdParlay.Social.Application.DTOs.Author;
 using MediatR;
 using Neo4jClient;
 
-namespace CrowdParlay.Social.Application.Features.Queries;
+namespace CrowdParlay.Social.Application.Features.Authors.Queries;
 
 public record GetAuthorByIdQuery(Guid Id) : IRequest<AuthorDto>;
 

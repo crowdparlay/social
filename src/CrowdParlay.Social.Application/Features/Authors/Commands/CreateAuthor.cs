@@ -2,7 +2,7 @@ using CrowdParlay.Social.Application.DTOs.Author;
 using MediatR;
 using Neo4jClient;
 
-namespace CrowdParlay.Social.Application.Features.Commands;
+namespace CrowdParlay.Social.Application.Features.Authors.Commands;
 
 public sealed record CreateAuthorCommand(Guid Id, string DisplayName, string AvatarUrl, string? Alias) : IRequest<AuthorDto>;
 
