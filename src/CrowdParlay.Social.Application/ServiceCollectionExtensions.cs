@@ -1,4 +1,5 @@
 using System.Reflection;
+using CrowdParlay.Communication.RabbitMq.DependencyInjection;
 using CrowdParlay.Social.Application.Behaviors;
 using CrowdParlay.Social.Application.Middlewares;
 using FluentValidation;
@@ -20,10 +21,19 @@ public static class ServiceCollectionExtensions
             .CreateLogger();
 
         var assembly = Assembly.GetExecutingAssembly();
+        
+        var rabbitMqAmqpServerUrl =
+            configuration["RABBITMQ_AMQP_SERVER_URL"] ??
+            throw new InvalidOperationException("RABBITMQ_AMQP_SERVER_URL is not set!");
+
         return services
             .AddValidatorsFromAssembly(assembly, ServiceLifetime.Scoped, null, true)
             .AddMediatR(assembly)
             .AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>))
-            .AddTransient<ExceptionHandlingMiddleware>();
+            .AddTransient<ExceptionHandlingMiddleware>()
+            .AddRabbitMqCommunication(options => options
+                .UseAmqpServer(rabbitMqAmqpServerUrl)
+                .UseMessageListenersFromAssembly(assembly)
+            );
     }
 }
