@@ -5,5 +5,8 @@ namespace CrowdParlay.Social.Api;
 public static class ApiServiceExtensions
 {
     public static IServiceCollection AddApi(this IServiceCollection services) =>
-        services.AddTransient<ExceptionHandlingMiddleware>();
+           services
+               .AddSwaggerGen()
+               .AddEndpointsApiExplorer()
+               .AddTransient<ExceptionHandlingMiddleware>();
 }
