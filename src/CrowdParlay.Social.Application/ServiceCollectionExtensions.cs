@@ -1,7 +1,6 @@
 using System.Reflection;
 using CrowdParlay.Communication.RabbitMq.DependencyInjection;
 using CrowdParlay.Social.Application.Behaviors;
-using CrowdParlay.Social.Application.Middlewares;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -30,7 +29,6 @@ public static class ServiceCollectionExtensions
             .AddValidatorsFromAssembly(assembly, ServiceLifetime.Scoped, null, true)
             .AddMediatR(assembly)
             .AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>))
-            .AddTransient<ExceptionHandlingMiddleware>()
             .AddRabbitMqCommunication(options => options
                 .UseAmqpServer(rabbitMqAmqpServerUrl)
                 .UseMessageListenersFromAssembly(assembly)

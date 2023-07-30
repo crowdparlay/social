@@ -1,5 +1,6 @@
+using CrowdParlay.Social.Api;
+using CrowdParlay.Social.Api.Middlewares;
 using CrowdParlay.Social.Application;
-using CrowdParlay.Social.Application.Middlewares;
 using CrowdParlay.Social.Infrastructure;
 using Serilog;
 
@@ -13,6 +14,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services
+    .AddApi()
     .AddApplication(builder.Configuration)
     .AddDatabase(builder.Configuration);
 
