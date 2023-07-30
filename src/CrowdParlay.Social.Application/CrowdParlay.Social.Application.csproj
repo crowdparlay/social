@@ -7,22 +7,30 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="CrowdParlay.Communication" Version="1.0.3" />
+      <PackageReference Include="CrowdParlay.Communication.RabbitMq" Version="1.0.2" />
+      <PackageReference Include="CrowdParlay.Communication.RabbitMq.DependencyInjection" Version="1.0.3" />
       <PackageReference Include="FluentValidation" Version="11.5.2" />
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.2" />
       <PackageReference Include="Mapster" Version="7.3.0" />
       <PackageReference Include="MediatR" Version="11.1.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
       <PackageReference Include="Neo4jClient" Version="5.1.11" />
       <PackageReference Include="Serilog" Version="3.0.1" />
+      <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+      <PackageReference Include="Serilog.Settings.AppSettings" Version="2.2.2" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\CrowdParlay.Social.Domain\CrowdParlay.Social.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features\Posts\" />
     </ItemGroup>
 
 </Project>

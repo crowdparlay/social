@@ -1,6 +1,6 @@
 using CrowdParlay.Social.Application.DTOs.Author;
-using CrowdParlay.Social.Application.Features.Commands;
-using CrowdParlay.Social.Application.Features.Queries;
+using CrowdParlay.Social.Application.Features.Authors.Commands;
+using CrowdParlay.Social.Application.Features.Authors.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

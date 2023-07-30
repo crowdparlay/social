@@ -1,5 +1,6 @@
+using CrowdParlay.Social.Api;
+using CrowdParlay.Social.Api.Middlewares;
 using CrowdParlay.Social.Application;
-using CrowdParlay.Social.Application.Middlewares;
 using CrowdParlay.Social.Infrastructure;
 using Serilog;
 
@@ -10,19 +11,12 @@ builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options => options.SuppressMapClientErrors = true);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services
-    .AddApplication()
+    .AddApi()
+    .AddApplication(builder.Configuration)
     .AddDatabase(builder.Configuration);
 
 builder.Host.UseSerilog();
-
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.AppSettings()
-    .WriteTo.File("logs/CrowdParlay.Social.log", rollingInterval: RollingInterval.Day)
-    .WriteTo.Console()
-    .CreateLogger();
 
 var app = builder.Build();
 

@@ -1,7 +1,7 @@
 using MediatR;
 using Neo4jClient;
 
-namespace CrowdParlay.Social.Application.Features.Commands;
+namespace CrowdParlay.Social.Application.Features.Authors.Commands;
 
 public record DeleteAuthorCommand(Guid Id) : IRequest;
 

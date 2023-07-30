@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using CrowdParlay.Social.Application.DTOs.Post;
-using CrowdParlay.Social.Application.Features.Commands;
-using CrowdParlay.Social.Application.Features.Queries;
+using CrowdParlay.Social.Application.Features.Authors.Commands;
+using CrowdParlay.Social.Application.Features.Posts.Commands;
+using CrowdParlay.Social.Application.Features.Posts.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

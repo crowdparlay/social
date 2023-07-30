@@ -1,11 +1,9 @@
 using System.Net.Mime;
 using System.Text.Json;
 using CrowdParlay.Social.Application.Exceptions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using ApplicationException = CrowdParlay.Social.Domain.Exceptions.ApplicationException;
 
-namespace CrowdParlay.Social.Application.Middlewares;
+namespace CrowdParlay.Social.Api.Middlewares;
 
 public sealed class ExceptionHandlingMiddleware : IMiddleware
 {

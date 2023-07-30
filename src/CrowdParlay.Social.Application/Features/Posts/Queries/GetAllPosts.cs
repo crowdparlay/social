@@ -3,7 +3,7 @@ using CrowdParlay.Social.Application.DTOs.Post;
 using MediatR;
 using Neo4jClient;
 
-namespace CrowdParlay.Social.Application.Features.Queries;
+namespace CrowdParlay.Social.Application.Features.Posts.Queries;
 
 public record GetAllPostsQuery(int Offset, int Limit) : IRequest<IEnumerable<PostDto>>;
 
