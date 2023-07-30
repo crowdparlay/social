@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
             throw new InvalidOperationException("RABBITMQ_AMQP_SERVER_URL is not set!");
 
         return services
-            .AddValidatorsFromAssembly(assembly, ServiceLifetime.Scoped, null, true)
+            .AddValidatorsFromAssembly(assembly, includeInternalTypes:true)
             .AddMediatR(assembly)
             .AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>))
             .AddRabbitMqCommunication(options => options
