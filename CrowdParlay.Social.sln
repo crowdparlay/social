@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Applicat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Infrastructure", "src\CrowdParlay.Social.Infrastructure\CrowdParlay.Social.Infrastructure.csproj", "{3AD90CC0-9858-4164-ADA7-335EB4677495}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{00C5EC71-2662-4897-8C51-8C1355111519}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.IntegrationTests", "CrowdParlay.Social.IntegrationTests\CrowdParlay.Social.IntegrationTests.csproj", "{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,11 +36,16 @@ Global
 		{3AD90CC0-9858-4164-ADA7-335EB4677495}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AD90CC0-9858-4164-ADA7-335EB4677495}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AD90CC0-9858-4164-ADA7-335EB4677495}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1C0DE505-4898-4FB4-A5AA-C01630770F79} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 		{1B849F3A-49BF-4547-9091-4B2107E5B1A1} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 		{34501CA3-78D7-4AAC-9B47-219F1C51E075} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 		{3AD90CC0-9858-4164-ADA7-335EB4677495} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
+		{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB} = {00C5EC71-2662-4897-8C51-8C1355111519}
 	EndGlobalSection
 EndGlobal
