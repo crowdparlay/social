@@ -29,7 +29,7 @@ public class CommentsController : ControllerBase
     [HttpPost("{replyToCommentId}/reply")]
     public async Task<IActionResult> ReplyToComment([FromRoute] Guid replyToCommentId, [FromBody] CreateReplyToCommentCommand command)
     {
-        var userIdHeaderValue = Request.Headers["x-user-id"].Single()!;
+        var userIdHeaderValue = Request.Headers["X-UserId"].Single()!;
         var authorId = Guid.Parse(userIdHeaderValue);
 
         return CreatedAtAction(nameof(GetCommentById), await _mediator.Send(command with
