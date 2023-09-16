@@ -10,10 +10,7 @@ public class UserEventsListener : IMessageListener<UserCreatedEvent>, IMessageLi
 {
     private readonly ISender _sender;
 
-    public UserEventsListener(ISender sender)
-    {
-        _sender = sender;
-    }
+    public UserEventsListener(ISender sender) => _sender = sender;
 
     public async Task HandleAsync(UserCreatedEvent message)
     {
