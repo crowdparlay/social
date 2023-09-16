@@ -14,7 +14,7 @@ public class CommentsController : ControllerBase
 
     public CommentsController(IMediator mediator) => _mediator = mediator;
 
-    [HttpGet("{commentId}")]
+    [HttpGet]
     public async Task<CommentDto> GetCommentById([FromRoute] Guid commentId) =>
         await _mediator.Send(new GetCommentByIdQuery(commentId));
 
@@ -24,12 +24,18 @@ public class CommentsController : ControllerBase
 
     [HttpPost, FeatureGate("BackdoorEndpoints")]
     public async Task<IActionResult> CreateComment([FromBody] CreateCommentCommand command) =>
-        Created("(GET by Comment ID)", await _mediator.Send(command));
+        CreatedAtAction(nameof(GetCommentById), await _mediator.Send(command));
 
     [HttpPost("{replyToCommentId}/reply")]
-    public async Task<IActionResult> ReplyToComment([FromRoute] Guid replyToCommentId, [FromBody] CreateReplyToCommentCommand command) =>
-        Created("(GET by Comment ID)", await _mediator.Send(command with
+    public async Task<IActionResult> ReplyToComment([FromRoute] Guid replyToCommentId, [FromBody] CreateReplyToCommentCommand command)
+    {
+        var userIdHeaderValue = Request.Headers["x-user-id"].Single()!;
+        var authorId = Guid.Parse(userIdHeaderValue);
+
+        return CreatedAtAction(nameof(GetCommentById), await _mediator.Send(command with
         {
+            AuthorId = authorId,
             InReplyToCommentId = replyToCommentId
         }));
+    }
 }
