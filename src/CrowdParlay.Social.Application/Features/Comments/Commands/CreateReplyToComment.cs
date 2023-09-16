@@ -29,16 +29,22 @@ public class ReplyToCommentHandler : IRequestHandler<CreateReplyToCommentCommand
         var result = await _graphClient.Cypher
             .WithParams(new
             {
-                CommentId = Guid.NewGuid(),
                 request.AuthorId,
                 request.Content,
                 request.InReplyToCommentId
             })
             .Match("(a:Author {Id: $AuthorId})")
             .Match("(t:Comment {Id: $InReplyToCommentId})")
-            .Create("(c:Comment {Id: $CommentId, Content: $Content, CreatedAt: datetime()})")
+            .Create(
+                """
+                (c:Comment {
+                    Id: randomUUID(),
+                    Content: $Content,
+                    CreatedAt: datetime()
+                })
+                """)
             .Create("(t)<-[:REPLIES_TO]-(c)-[:AUTHORED_BY]->(a)")
-            .Return(c => c.As<CommentDto>())
+            .Return<CommentDto>("c")
             .ResultsAsync;
 
         return result.Single();

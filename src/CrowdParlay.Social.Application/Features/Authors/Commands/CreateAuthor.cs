@@ -17,7 +17,7 @@ public class CreateAuthorHandler : IRequestHandler<CreateAuthorCommand, AuthorDt
         var author = await _graphClient.Cypher
             .WithParams(new
             {
-                Id = request.Id.ToString(),
+                request.Id,
                 request.Username,
                 request.DisplayName,
                 request.AvatarUrl

@@ -29,14 +29,20 @@ public class CreateCommentHandler : IRequestHandler<CreateCommentCommand, Commen
         var result = await _graphClient.Cypher
             .WithParams(new
             {
-                CommentId = Guid.NewGuid(),
                 request.AuthorId,
                 request.Content
             })
             .Match("(a:Author {Id: $AuthorId})")
-            .Create("(c:Comment {Id: $CommentId, Content: $Content, CreatedAt: datetime()})")
+            .Create(
+                """
+                (c:Comment {
+                    Id: randomUUID(),
+                    Content: $Content,
+                    CreatedAt: datetime()
+                })
+                """)
             .Create("(c)-[:AUTHORED_BY]->(a)")
-            .Return(c => c.As<CommentDto>())
+            .Return<CommentDto>("c")
             .ResultsAsync;
 
         return result.Single();
