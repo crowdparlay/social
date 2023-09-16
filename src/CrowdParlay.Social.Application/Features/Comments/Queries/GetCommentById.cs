@@ -40,6 +40,7 @@ public class GetCommentByIdHandler : IRequestHandler<GetCommentByIdQuery, Commen
                         DisplayName: a.DisplayName,
                         AvatarUrl: a.AvatarUrl
                     },
+                    CreatedAt: c.CreatedAt,
                     ReplyCount: rc,
                     FirstRepliesAuthors: fras
                 }
