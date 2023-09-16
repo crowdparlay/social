@@ -12,8 +12,7 @@ services:
       retries: 3
       start_period: 3s
     environment:
-      USERNAME: $NEO4J_USERNAME
-      PASSWORD: $NEO4J_PASSWORD
+      NEO4J_AUTH: $NEO4J_USERNAME/$NEO4J_PASSWORD
     ports:
       - "7474:7474"
     networks:
