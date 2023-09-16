@@ -1,3 +1,4 @@
+using CrowdParlay.Social.Application.Exceptions;
 using MediatR;
 using Neo4jClient;
 
@@ -13,12 +14,15 @@ public class DeleteAuthorHandler : IRequestHandler<DeleteAuthorCommand>
 
     public async Task<Unit> Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
     {
-        await _graphClient.Cypher
-            .Match("(a:Author {Id: $Id})")
+        var results = await _graphClient.Cypher
             .WithParams(new { request.Id })
+            .OptionalMatch("(a:Author { Id: $Id })")
             .Delete("a")
-            .ExecuteWithoutResultsAsync();
+            .Return<bool>("COUNT(a) > 0")
+            .ResultsAsync;
 
-        return Unit.Value;
+        return results.Single()
+            ? Unit.Value
+            : throw new NotFoundException();
     }
 }

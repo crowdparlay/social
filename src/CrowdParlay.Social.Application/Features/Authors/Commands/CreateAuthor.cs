@@ -4,33 +4,34 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Authors.Commands;
 
-public sealed record CreateAuthorCommand(Guid Id, string DisplayName, string AvatarUrl, string? Alias) : IRequest<AuthorDto>;
+public sealed record CreateAuthorCommand(Guid Id, string Username, string DisplayName, string? AvatarUrl) : IRequest<AuthorDto>;
 
 public class CreateAuthorHandler : IRequestHandler<CreateAuthorCommand, AuthorDto>
 {
     private readonly GraphClient _graphClient;
 
     public CreateAuthorHandler(GraphClient graphClient) => _graphClient = graphClient;
-    
+
     public async Task<AuthorDto> Handle(CreateAuthorCommand request, CancellationToken cancellationToken)
     {
         var author = await _graphClient.Cypher
+            .WithParams(new
+            {
+                Id = request.Id.ToString(),
+                request.Username,
+                request.DisplayName,
+                request.AvatarUrl
+            })
             .Create(
-                @"(a:Author {
-                        Id: $Id, 
-                        DisplayName: $DisplayName, 
-                        AvatarUrl: $AvatarUrl, 
-                        Alias: $Alias
-                })")
-            .WithParams(
-                new
-                {
-                    AuthorId = request.Id.ToString(),
-                    request.DisplayName,
-                    request.AvatarUrl,
-                    request.Alias
+                """
+                (a:Author {
+                    Id: $Id,
+                    Username: $Username,
+                    DisplayName: $DisplayName,
+                    AvatarUrl: $AvatarUrl
                 })
-            .Return(a => a.As<AuthorDto>())
+                """)
+            .Return<AuthorDto>("a")
             .ResultsAsync;
 
         return author.Single();

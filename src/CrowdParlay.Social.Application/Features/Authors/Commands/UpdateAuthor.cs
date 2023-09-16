@@ -1,10 +1,9 @@
-using CrowdParlay.Social.Application.DTOs.Author;
 using MediatR;
 using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Authors.Commands;
 
-public record UpdateAuthorCommand(string UserId, string Username, string DisplayName, string? AvatarUrl) : IRequest;
+public record UpdateAuthorCommand(string Id, string Username, string DisplayName, string? AvatarUrl) : IRequest;
 
 public class UpdateAuthorHandler : IRequestHandler<UpdateAuthorCommand>
 {
@@ -15,16 +14,20 @@ public class UpdateAuthorHandler : IRequestHandler<UpdateAuthorCommand>
     public async Task<Unit> Handle(UpdateAuthorCommand request, CancellationToken cancellationToken)
     {
         await _graphClient.Cypher
-            .Match("(a:Author)")
-            .Where((AuthorDto a) => a.Id.ToString() == request.UserId)
-            .Set("a.DisplayName = $DisplayName, a.Alias = $Alias, a.AvatarUrl = $AvatarUrl")
-            .WithParams(
-                new
-                {
-                    request.DisplayName,
-                    Alias = request.Username,
-                    request.AvatarUrl
-                })
+            .WithParams(new
+            {
+                request.Id,
+                request.Username,
+                request.DisplayName,
+                request.AvatarUrl
+            })
+            .Match("(a:Author { Id: $Id })")
+            .Set(
+                """
+                a.Username = $Username,
+                a.DisplayName = $DisplayName,
+                a.AvatarUrl = $AvatarUrl
+                """)
             .ExecuteWithoutResultsAsync();
 
         return Unit.Value;
