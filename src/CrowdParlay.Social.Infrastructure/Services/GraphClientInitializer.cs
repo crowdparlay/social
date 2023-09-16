@@ -4,7 +4,7 @@ using Neo4jClient;
 namespace CrowdParlay.Social.Infrastructure.Services;
 
 /// <summary>
-/// Initalizes a GraphClient for Neo4j database
+/// Initializes a GraphClient for Neo4j database
 /// </summary>
 public class GraphClientInitializer : IHostedService
 {
@@ -12,8 +12,13 @@ public class GraphClientInitializer : IHostedService
 
     public GraphClientInitializer(GraphClient graphClient) => _graphClient = graphClient;
 
-    public async Task StartAsync(CancellationToken cancellationToken) =>
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
         await _graphClient.ConnectAsync();
+        await _graphClient.Cypher
+            .Create("CONSTRAINT unique_author_id FOR (a:Author) REQUIRE a.Id IS UNIQUE")
+            .ExecuteWithoutResultsAsync();
+    }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
