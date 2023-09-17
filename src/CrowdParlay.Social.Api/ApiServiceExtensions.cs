@@ -1,7 +1,9 @@
 using CrowdParlay.Communication;
 using CrowdParlay.Social.Api.Middlewares;
+using CrowdParlay.Social.Api.Routing;
 using CrowdParlay.Social.Application.Listeners;
 using MassTransit;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace CrowdParlay.Social.Api;
 
@@ -10,9 +12,18 @@ public static class ApiServiceExtensions
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services
+            .AddAuthorization()
             .AddSwaggerGen()
             .AddEndpointsApiExplorer()
             .AddTransient<ExceptionHandlingMiddleware>();
+
+        var mvcBuilder = services.AddControllers(options =>
+        {
+            var transformer = new KebabCaseParameterPolicy();
+            options.Conventions.Add(new RouteTokenTransformerConvention(transformer));
+        });
+
+        mvcBuilder.AddNewtonsoftJson();
 
         return services.AddMassTransit(bus =>
         {
