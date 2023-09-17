@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using MassTransit;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 
@@ -21,5 +22,17 @@ internal class TestWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             ["NEO4J_PASSWORD"] = _neo4jConfiguration.Password,
             ["NEO4J_URI"] = $"http://neo4j:{_neo4jConfiguration.Port}"
         }));
+
+        builder.ConfigureServices(services =>
+        {
+            var massTransitDescriptors = services
+                .Where(x => x.ServiceType.Namespace?.StartsWith(nameof(MassTransit)) == true)
+                .ToArray();
+
+            foreach (var descriptor in massTransitDescriptors)
+                services.Remove(descriptor);
+
+            services.AddMassTransitTestHarness();
+        });
     }
 }
