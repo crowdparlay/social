@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Application.Features.Authors.Commands;
 
-public record UpdateAuthorCommand(string Id, string Username, string DisplayName, string? AvatarUrl) : IRequest;
+public record UpdateAuthorCommand(Guid Id, string Username, string DisplayName, string? AvatarUrl) : IRequest;
 
 public class UpdateAuthorHandler : IRequestHandler<UpdateAuthorCommand>
 {
