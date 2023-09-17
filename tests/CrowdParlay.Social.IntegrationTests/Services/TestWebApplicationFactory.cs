@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using CrowdParlay.Social.Application.Consumers;
+using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -30,7 +31,11 @@ internal class TestWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             foreach (var descriptor in massTransitDescriptors)
                 services.Remove(descriptor);
 
-            services.AddMassTransitTestHarness();
+            services.AddMassTransitTestHarness(bus =>
+            {
+                bus.AddDelayedMessageScheduler();
+                bus.AddConsumersFromNamespaceContaining<UserEventConsumer>();
+            });
         });
     }
 }
