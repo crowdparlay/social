@@ -1,7 +1,7 @@
 using CrowdParlay.Communication;
 using CrowdParlay.Social.Api.Middlewares;
 using CrowdParlay.Social.Api.Routing;
-using CrowdParlay.Social.Application.Listeners;
+using CrowdParlay.Social.Application.Consumers;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
@@ -37,6 +37,8 @@ public static class ApiServiceExtensions
                 configurator.Host(amqpServerUrl);
                 configurator.ConfigureEndpoints(context);
                 configurator.ConfigureTopology();
+                
+                configurator.Message<UserUpdatedEvent>(x => x.SetEntityName("user"));
             });
         });
     }
