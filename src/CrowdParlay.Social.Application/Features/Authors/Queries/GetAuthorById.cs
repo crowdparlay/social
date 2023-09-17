@@ -9,9 +9,9 @@ public record GetAuthorByIdQuery(Guid Id) : IRequest<AuthorDto>;
 
 public class GetAuthorByIdHandler : IRequestHandler<GetAuthorByIdQuery, AuthorDto>
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public GetAuthorByIdHandler(GraphClient graphClient) => _graphClient = graphClient;
+    public GetAuthorByIdHandler(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<AuthorDto> Handle(GetAuthorByIdQuery request, CancellationToken cancellationToken)
     {

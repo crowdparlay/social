@@ -20,9 +20,9 @@ internal sealed class CreateCommentCommandValidator : AbstractValidator<CreateCo
 
 public class CreateCommentHandler : IRequestHandler<CreateCommentCommand, CommentDto>
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public CreateCommentHandler(GraphClient graphClient) => _graphClient = graphClient;
+    public CreateCommentHandler(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<CommentDto> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
     {

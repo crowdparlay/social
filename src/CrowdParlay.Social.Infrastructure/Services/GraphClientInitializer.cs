@@ -8,9 +8,9 @@ namespace CrowdParlay.Social.Infrastructure.Services;
 /// </summary>
 public class GraphClientInitializer : IHostedService
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public GraphClientInitializer(GraphClient graphClient) => _graphClient = graphClient;
+    public GraphClientInitializer(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

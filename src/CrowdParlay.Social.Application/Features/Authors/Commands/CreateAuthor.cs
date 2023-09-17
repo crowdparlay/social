@@ -8,9 +8,9 @@ public sealed record CreateAuthorCommand(Guid Id, string Username, string Displa
 
 public class CreateAuthorHandler : IRequestHandler<CreateAuthorCommand, AuthorDto>
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public CreateAuthorHandler(GraphClient graphClient) => _graphClient = graphClient;
+    public CreateAuthorHandler(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<AuthorDto> Handle(CreateAuthorCommand request, CancellationToken cancellationToken)
     {

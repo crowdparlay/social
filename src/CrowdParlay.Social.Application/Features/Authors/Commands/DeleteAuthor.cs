@@ -8,9 +8,9 @@ public record DeleteAuthorCommand(Guid Id) : IRequest;
 
 public class DeleteAuthorHandler : IRequestHandler<DeleteAuthorCommand>
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public DeleteAuthorHandler(GraphClient graphClient) => _graphClient = graphClient;
+    public DeleteAuthorHandler(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
     {

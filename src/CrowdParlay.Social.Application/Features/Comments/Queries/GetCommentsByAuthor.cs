@@ -8,9 +8,9 @@ public record GetCommentsByAuthorQuery(Guid AuthorId) : IRequest<IEnumerable<Com
 
 public class GetCommentsByAuthorHandler : IRequestHandler<GetCommentsByAuthorQuery, IEnumerable<CommentDto>>
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public GetCommentsByAuthorHandler(GraphClient graphClient) => _graphClient = graphClient;
+    public GetCommentsByAuthorHandler(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<IEnumerable<CommentDto>> Handle(GetCommentsByAuthorQuery request, CancellationToken cancellationToken) =>
         await _graphClient.Cypher

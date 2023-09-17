@@ -9,9 +9,9 @@ public record GetCommentByIdQuery(Guid CommentId) : IRequest<CommentDto>;
 
 public class GetCommentByIdHandler : IRequestHandler<GetCommentByIdQuery, CommentDto>
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public GetCommentByIdHandler(GraphClient graphClient) => _graphClient = graphClient;
+    public GetCommentByIdHandler(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task<CommentDto> Handle(GetCommentByIdQuery request, CancellationToken cancellationToken)
     {

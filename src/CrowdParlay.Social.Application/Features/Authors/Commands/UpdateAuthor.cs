@@ -7,9 +7,9 @@ public record UpdateAuthorCommand(string Id, string Username, string DisplayName
 
 public class UpdateAuthorHandler : IRequestHandler<UpdateAuthorCommand>
 {
-    private readonly GraphClient _graphClient;
+    private readonly IGraphClient _graphClient;
 
-    public UpdateAuthorHandler(GraphClient graphClient) => _graphClient = graphClient;
+    public UpdateAuthorHandler(IGraphClient graphClient) => _graphClient = graphClient;
 
     public async Task Handle(UpdateAuthorCommand request, CancellationToken cancellationToken) => await _graphClient.Cypher
         .WithParams(new

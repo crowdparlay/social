@@ -14,18 +14,10 @@ public static class ServiceCollectionExtensions
     // ReSharper disable once InconsistentNaming
     private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)
     {
-        var uri =
-            configuration["NEO4J_URI"] ??
-            throw new InvalidOperationException("NEO4J_URI is not set!");
+        var connectionString =
+            configuration["NEO4J_CONNECTION_STRING"] ??
+            throw new InvalidOperationException("NEO4J_CONNECTION_STRING is not set!");
 
-        var username =
-            configuration["NEO4J_USERNAME"] ??
-            throw new InvalidOperationException("NEO4J_USERNAME is not set!");
-
-        var password =
-            configuration["NEO4J_PASSWORD"] ??
-            throw new InvalidOperationException("NEO4J_PASSWORD is not set!");
-
-        return services.AddSingleton(new GraphClient(uri, username, password));
+        return services.AddSingleton<IGraphClient>(new BoltGraphClient(connectionString));
     }
 }
