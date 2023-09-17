@@ -27,7 +27,7 @@ public static class ApiServiceExtensions
 
         return services.AddMassTransit(bus =>
         {
-            bus.AddConsumersFromNamespaceContaining<UserEventsListener>();
+            bus.AddConsumersFromNamespaceContaining<UserEventConsumer>();
             bus.UsingRabbitMq((context, configurator) =>
             {
                 var amqpServerUrl =
