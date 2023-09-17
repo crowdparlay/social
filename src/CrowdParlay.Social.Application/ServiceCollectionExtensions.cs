@@ -2,7 +2,6 @@ using System.Reflection;
 using CrowdParlay.Social.Application.Behaviors;
 using FluentValidation;
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 

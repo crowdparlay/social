@@ -4,7 +4,7 @@ using Mapster;
 using MassTransit;
 using MediatR;
 
-namespace CrowdParlay.Social.Application.Listeners;
+namespace CrowdParlay.Social.Application.Consumers;
 
 public class UserEventConsumer : IConsumer<UserCreatedEvent>, IConsumer<UserUpdatedEvent>, IConsumer<UserDeletedEvent>
 {
@@ -15,18 +15,18 @@ public class UserEventConsumer : IConsumer<UserCreatedEvent>, IConsumer<UserUpda
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
         var command = context.Message.Adapt<CreateAuthorCommand>();
-        await _sender.Send(command);
+        await _sender.Send(command with { Id = Guid.Parse(context.Message.UserId) });
     }
 
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
     {
         var command = context.Message.Adapt<UpdateAuthorCommand>();
-        await _sender.Send(command);
+        await _sender.Send(command with { Id = Guid.Parse(context.Message.UserId) });
     }
 
     public async Task Consume(ConsumeContext<UserDeletedEvent> context)
     {
-        var command = context.Message.Adapt<DeleteAuthorCommand>();
+        var command = new DeleteAuthorCommand(Guid.Parse(context.Message.UserId));
         await _sender.Send(command);
     }
 }
