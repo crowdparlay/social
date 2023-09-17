@@ -1,32 +1,32 @@
 using CrowdParlay.Communication;
-using CrowdParlay.Communication.Abstractions;
 using CrowdParlay.Social.Application.Features.Authors.Commands;
 using Mapster;
+using MassTransit;
 using MediatR;
 
 namespace CrowdParlay.Social.Application.Listeners;
 
-public class UserEventsListener : IMessageListener<UserCreatedEvent>, IMessageListener<UserDeletedEvent>, IMessageListener<UserUpdatedEvent>
+public class UserEventsListener : IConsumer<UserCreatedEvent>, IConsumer<UserUpdatedEvent>, IConsumer<UserDeletedEvent>
 {
     private readonly ISender _sender;
 
     public UserEventsListener(ISender sender) => _sender = sender;
 
-    public async Task HandleAsync(UserCreatedEvent message)
+    public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
-        var command = message.Adapt<CreateAuthorCommand>();
+        var command = context.Message.Adapt<CreateAuthorCommand>();
         await _sender.Send(command);
     }
 
-    public async Task HandleAsync(UserDeletedEvent message)
+    public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
     {
-        var command = message.Adapt<DeleteAuthorCommand>();
+        var command = context.Message.Adapt<UpdateAuthorCommand>();
         await _sender.Send(command);
     }
 
-    public async Task HandleAsync(UserUpdatedEvent message)
+    public async Task Consume(ConsumeContext<UserDeletedEvent> context)
     {
-        var command = message.Adapt<UpdateAuthorCommand>();
+        var command = context.Message.Adapt<DeleteAuthorCommand>();
         await _sender.Send(command);
     }
 }
