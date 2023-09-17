@@ -1,36 +1,11 @@
 using CrowdParlay.Social.Api;
-using CrowdParlay.Social.Api.Middlewares;
-using CrowdParlay.Social.Application;
-using CrowdParlay.Social.Infrastructure;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllers()
-    .ConfigureApiBehaviorOptions(options => options.SuppressMapClientErrors = true);
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services
-    .AddApi(builder.Configuration)
-    .AddApplication(builder.Configuration)
-    .AddInfrastructure(builder.Configuration);
-
-builder.Host.UseSerilog();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+public class Program
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    public static void Main(string[] args) => CreateHostBuilder(args).Build().Run();
+
+    private static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(builder => builder.UseStartup<Startup>())
+        .UseSerilog();
 }
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseRouting();
-app.UseAuthorization();
-app.UseCors();
-app.MapControllers();
-
-app.Run();

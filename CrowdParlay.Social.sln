@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Infrastr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{00C5EC71-2662-4897-8C51-8C1355111519}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.IntegrationTests", "CrowdParlay.Social.IntegrationTests\CrowdParlay.Social.IntegrationTests.csproj", "{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.IntegrationTests", "tests\CrowdParlay.Social.IntegrationTests\CrowdParlay.Social.IntegrationTests.csproj", "{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
