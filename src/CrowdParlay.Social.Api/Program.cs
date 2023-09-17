@@ -14,7 +14,7 @@ builder.Services.AddControllers()
 builder.Services
     .AddApi()
     .AddApplication(builder.Configuration)
-    .AddDatabase(builder.Configuration);
+    .AddInfrastructure(builder.Configuration);
 
 builder.Host.UseSerilog();
 

@@ -7,12 +7,12 @@ namespace CrowdParlay.Social.Infrastructure;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration) =>
-        services
-            .AddNeo4J(configuration)
-            .AddHostedService<GraphClientInitializer>();
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration) => services
+        .AddNeo4j(configuration)
+        .AddHostedService<GraphClientInitializer>();
 
-    private static IServiceCollection AddNeo4J(this IServiceCollection services, IConfiguration configuration)
+    // ReSharper disable once InconsistentNaming
+    private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)
     {
         var uri =
             configuration["NEO4J_URI"] ??
