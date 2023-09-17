@@ -13,7 +13,7 @@ public class CommentsController : ControllerBase
 
     public CommentsController(IMediator mediator) => _mediator = mediator;
 
-    [HttpGet]
+    [HttpGet("{commentId}")]
     public async Task<CommentDto> GetCommentById([FromRoute] Guid commentId) =>
         await _mediator.Send(new GetCommentByIdQuery(commentId));
 

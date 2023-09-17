@@ -12,7 +12,7 @@ public class AuthorsController : ControllerBase
 
     public AuthorsController(IMediator mediator) => _mediator = mediator;
 
-    [HttpGet]
+    [HttpGet("{authorId}")]
     public async Task<AuthorDto> GetAuthorById([FromRoute] Guid authorId) =>
         await _mediator.Send(new GetAuthorByIdQuery(authorId));
 }
