@@ -29,13 +29,12 @@ public class AuthorsControllerTests : IClassFixture<WebApplicationContext>
             AvatarUrl: null);
 
         await _harness.Bus.Publish(@event);
-        await Task.Delay(1000);
 
         var message = await _client.GetAsync($"api/authors/{@event.UserId}");
         message.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var response = message.Content.ReadFromJsonAsync<AuthorDto>();
-        response.Should().Be(new AuthorDto
+        var response = await message.Content.ReadFromJsonAsync<AuthorDto>();
+        response.Should().BeEquivalentTo(new AuthorDto
         {
             Id = Guid.Parse(@event.UserId),
             Username = @event.Username,
