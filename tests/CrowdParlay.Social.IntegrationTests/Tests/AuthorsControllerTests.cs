@@ -29,6 +29,7 @@ public class AuthorsControllerTests : IClassFixture<WebApplicationContext>
             AvatarUrl: null);
 
         await _harness.Bus.Publish(@event);
+        await Task.Delay(1000);
 
         var message = await _client.GetAsync($"api/authors/{@event.UserId}");
         message.StatusCode.Should().Be(HttpStatusCode.OK);
