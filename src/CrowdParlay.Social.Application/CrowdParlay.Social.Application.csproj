@@ -8,8 +8,6 @@
 
     <ItemGroup>
       <PackageReference Include="CrowdParlay.Communication" Version="2.0.0" />
-      <PackageReference Include="CrowdParlay.Communication.RabbitMq" Version="1.0.2" />
-      <PackageReference Include="CrowdParlay.Communication.RabbitMq.DependencyInjection" Version="1.0.3" />
       <PackageReference Include="FluentValidation" Version="11.7.1" />
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.7.1" />
       <PackageReference Include="Mapster" Version="7.3.0" />
