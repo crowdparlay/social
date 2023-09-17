@@ -12,17 +12,16 @@ public class DeleteAuthorHandler : IRequestHandler<DeleteAuthorCommand>
 
     public DeleteAuthorHandler(GraphClient graphClient) => _graphClient = graphClient;
 
-    public async Task<Unit> Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteAuthorCommand request, CancellationToken cancellationToken)
     {
         var results = await _graphClient.Cypher
             .WithParams(new { request.Id })
             .OptionalMatch("(a:Author { Id: $Id })")
             .Delete("a")
-            .Return<bool>("COUNT(a) > 0")
+            .Return<bool>("COUNT(a) = 0")
             .ResultsAsync;
 
-        return results.Single()
-            ? Unit.Value
-            : throw new NotFoundException();
+        if (results.Single())
+            throw new NotFoundException();
     }
 }
