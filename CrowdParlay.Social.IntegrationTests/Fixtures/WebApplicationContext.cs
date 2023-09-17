@@ -23,8 +23,7 @@ public class WebApplicationContext
         
         // ReSharper disable once InconsistentNaming
         var neo4j = new Neo4jBuilder()
-            .WithEnvironment("NEO4J_USERNAME", neo4jConfiguration.Username)
-            .WithEnvironment("NEO4J_PASSWORD", neo4jConfiguration.Password)
+            .WithEnvironment("NEO4J_AUTH", $"{neo4jConfiguration.Username}/{neo4jConfiguration.Password}")
             .WithExposedPort(neo4jConfiguration.Port)
             .WithPortBinding(neo4jConfiguration.Port, true)
             .Build();
