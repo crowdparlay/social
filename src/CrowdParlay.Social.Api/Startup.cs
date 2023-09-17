@@ -44,6 +44,6 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services) => services
         .AddApi(_configuration)
-        .AddApplication(_configuration)
+        .AddApplication()
         .AddInfrastructure(_configuration);
 }
