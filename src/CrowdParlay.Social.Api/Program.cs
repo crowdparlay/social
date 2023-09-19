@@ -1,5 +1,6 @@
-using CrowdParlay.Social.Api;
 using Serilog;
+
+namespace CrowdParlay.Social.Api;
 
 public class Program
 {

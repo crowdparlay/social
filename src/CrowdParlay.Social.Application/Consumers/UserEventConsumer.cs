@@ -1,32 +1,33 @@
 using CrowdParlay.Communication;
-using CrowdParlay.Social.Application.Features.Authors.Commands;
-using Mapster;
+using CrowdParlay.Social.Application.Abstractions;
 using MassTransit;
-using MediatR;
 
 namespace CrowdParlay.Social.Application.Consumers;
 
 public class UserEventConsumer : IConsumer<UserCreatedEvent>, IConsumer<UserUpdatedEvent>, IConsumer<UserDeletedEvent>
 {
-    private readonly ISender _sender;
+    private readonly IAuthorRepository _authors;
 
-    public UserEventConsumer(ISender sender) => _sender = sender;
+    public UserEventConsumer(IAuthorRepository authors) => _authors = authors;
 
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
-        var command = context.Message.Adapt<CreateAuthorCommand>();
-        await _sender.Send(command with { Id = Guid.Parse(context.Message.UserId) });
+        await _authors.CreateAsync(
+            Guid.Parse(context.Message.UserId),
+            context.Message.Username,
+            context.Message.DisplayName,
+            context.Message.AvatarUrl);
     }
 
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
     {
-        var command = context.Message.Adapt<UpdateAuthorCommand>();
-        await _sender.Send(command with { Id = Guid.Parse(context.Message.UserId) });
+        await _authors.UpdateAsync(
+            Guid.Parse(context.Message.UserId),
+            context.Message.Username,
+            context.Message.DisplayName,
+            context.Message.AvatarUrl);
     }
 
-    public async Task Consume(ConsumeContext<UserDeletedEvent> context)
-    {
-        var command = new DeleteAuthorCommand(Guid.Parse(context.Message.UserId));
-        await _sender.Send(command);
-    }
+    public async Task Consume(ConsumeContext<UserDeletedEvent> context) =>
+        await _authors.DeleteAsync(Guid.Parse(context.Message.UserId));
 }

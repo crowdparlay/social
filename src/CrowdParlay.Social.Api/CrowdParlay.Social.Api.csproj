@@ -16,7 +16,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\CrowdParlay.Social.Application\CrowdParlay.Social.Application.csproj" />
-      <ProjectReference Include="..\CrowdParlay.Social.Infrastructure\CrowdParlay.Social.Infrastructure.csproj" />
+      <ProjectReference Include="..\CrowdParlay.Social.Infrastructure.Persistence\CrowdParlay.Social.Infrastructure.Persistence.csproj" />
     </ItemGroup>
 
 </Project>

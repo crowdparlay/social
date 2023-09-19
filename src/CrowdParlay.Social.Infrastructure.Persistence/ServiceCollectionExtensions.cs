@@ -1,13 +1,13 @@
-using CrowdParlay.Social.Infrastructure.Services;
+using CrowdParlay.Social.Infrastructure.Persistence.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Neo4jClient;
 
-namespace CrowdParlay.Social.Infrastructure;
+namespace CrowdParlay.Social.Infrastructure.Persistence;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration) => services
+    public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
         .AddNeo4j(configuration)
         .AddHostedService<GraphClientInitializer>();
 

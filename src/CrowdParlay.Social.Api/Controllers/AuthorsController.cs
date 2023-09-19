@@ -1,5 +1,5 @@
+using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs.Author;
-using CrowdParlay.Social.Application.Features.Authors.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,11 +8,11 @@ namespace CrowdParlay.Social.Api.Controllers;
 [ApiController, Route("api/[controller]")]
 public class AuthorsController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IAuthorRepository _authors;
 
-    public AuthorsController(IMediator mediator) => _mediator = mediator;
+    public AuthorsController(IAuthorRepository authors) => _authors = authors;
 
     [HttpGet("{authorId}")]
     public async Task<AuthorDto> GetAuthorById([FromRoute] Guid authorId) =>
-        await _mediator.Send(new GetAuthorByIdQuery(authorId));
+        await _authors.FindAsync(authorId);
 }

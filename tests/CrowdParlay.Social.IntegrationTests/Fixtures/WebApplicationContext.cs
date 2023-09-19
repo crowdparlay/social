@@ -1,4 +1,5 @@
-﻿using CrowdParlay.Social.IntegrationTests.Services;
+﻿using CrowdParlay.Social.Api;
+using CrowdParlay.Social.IntegrationTests.Services;
 using MassTransit.Testing;
 using Nito.AsyncEx;
 using Testcontainers.Neo4j;

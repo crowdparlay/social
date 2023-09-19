@@ -1,6 +1,6 @@
 using CrowdParlay.Social.Api.Middlewares;
 using CrowdParlay.Social.Application;
-using CrowdParlay.Social.Infrastructure;
+using CrowdParlay.Social.Infrastructure.Persistence;
 using Serilog;
 
 namespace CrowdParlay.Social.Api;
@@ -45,5 +45,5 @@ public class Startup
     public void ConfigureServices(IServiceCollection services) => services
         .AddApi(_configuration)
         .AddApplication()
-        .AddInfrastructure(_configuration);
+        .AddPersistence(_configuration);
 }

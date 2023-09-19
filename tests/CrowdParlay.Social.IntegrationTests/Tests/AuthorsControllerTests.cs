@@ -42,4 +42,37 @@ public class AuthorsControllerTests : IClassFixture<WebApplicationContext>
             AvatarUrl = @event.AvatarUrl
         });
     }
+
+    [Fact(DisplayName = "Reply to comment creates reply")]
+    public async Task ReplyToComment_Positive()
+    {
+        var @event = new UserCreatedEvent(
+            UserId: Guid.NewGuid().ToString(),
+            Username: "compartmental",
+            DisplayName: "Степной ишак",
+            AvatarUrl: null);
+
+        await _harness.Bus.Publish(@event);
+
+        var message = await _client.GetAsync($"api/authors/{@event.UserId}");
+        message.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var createReplyCommand = new CreateReplyToCommentCommand(
+            AuthorId: authorId,
+            Content: "Reply",
+            InReplyToCommentId: s);
+        await _harness.Bus.Publish(@event);
+
+        var message = await _client.GetAsync($"api/authors/{@event.UserId}");
+        message.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await message.Content.ReadFromJsonAsync<AuthorDto>();
+        response.Should().BeEquivalentTo(new AuthorDto
+        {
+            Id = Guid.Parse(@event.UserId),
+            Username = @event.Username,
+            DisplayName = @event.DisplayName,
+            AvatarUrl = @event.AvatarUrl
+        });
+    }
 }

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Neo4jClient;
 
-namespace CrowdParlay.Social.Infrastructure.Services;
+namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 /// <summary>
 /// Initializes a GraphClient for Neo4j database
