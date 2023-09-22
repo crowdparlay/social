@@ -27,7 +27,7 @@ public class CommentRepository : ICommentRepository
                     AvatarUrl: ra.AvatarUrl
                 })[0..3] ELSE [] END AS fras
                 """)
-            .Return<CommentDto>(
+            .With(
                 """
                 {
                     Id: c.Id,
@@ -42,7 +42,9 @@ public class CommentRepository : ICommentRepository
                     ReplyCount: rc,
                     FirstRepliesAuthors: fras
                 }
+                AS c
                 """)
+            .Return<CommentDto>("c")
             .ResultsAsync;
 
         return
@@ -64,7 +66,7 @@ public class CommentRepository : ICommentRepository
                 AvatarUrl: ra.AvatarUrl
             })[0..3] ELSE [] END AS fras
             """)
-        .Return<CommentDto>(
+        .With(
             """
             {
                 Id: c.Id,
@@ -74,11 +76,13 @@ public class CommentRepository : ICommentRepository
                     Username: a.Username,
                     DisplayName: a.DisplayName,
                     AvatarUrl: a.AvatarUrl
-               },
-               ReplyCount: rc,
-               FirstRepliesAuthors: fras
+                },
+                ReplyCount: rc,
+                FirstRepliesAuthors: fras
             }
+            AS c
             """)
+        .Return<CommentDto>("c")
         .ResultsAsync;
 
     public async Task<CommentDto> CreateAsync(Guid authorId, string content)
@@ -94,7 +98,7 @@ public class CommentRepository : ICommentRepository
                 """
                 (c:Comment {
                     Id: randomUUID(),
-                    Content: $Content,
+                    Content: $content,
                     CreatedAt: datetime()
                 })
                 """)
@@ -115,17 +119,17 @@ public class CommentRepository : ICommentRepository
                 targetCommentId
             })
             .Match("(a:Author {Id: $authorId})")
-            .Match("(t:Comment {Id: targetCommentId})")
+            .Match("(c:Comment {Id: $targetCommentId})")
             .Create(
                 """
-                (c:Comment {
+                (r:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
                 """)
-            .Create("(t)<-[:REPLIES_TO]-(c)-[:AUTHORED_BY]->(a)")
-            .Return<CommentDto>("c")
+            .Create("(c)<-[:REPLIES_TO]-(r)-[:AUTHORED_BY]->(a)")
+            .Return<CommentDto>("r")
             .ResultsAsync;
 
         return result.Single();

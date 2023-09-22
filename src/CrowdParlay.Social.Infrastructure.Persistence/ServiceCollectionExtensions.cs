@@ -1,3 +1,4 @@
+using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Infrastructure.Persistence.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +10,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
         .AddNeo4j(configuration)
-        .AddHostedService<GraphClientInitializer>();
+        .AddHostedService<GraphClientInitializer>()
+        .AddScoped<IAuthorRepository, AuthorRepository>()
+        .AddScoped<ICommentRepository, CommentRepository>();
 
     // ReSharper disable once InconsistentNaming
     private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)
