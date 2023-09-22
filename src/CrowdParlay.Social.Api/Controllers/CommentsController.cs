@@ -1,7 +1,6 @@
 using CrowdParlay.Social.Api.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs.Comment;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrowdParlay.Social.Api.Controllers;

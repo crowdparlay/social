@@ -1,6 +1,5 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs.Author;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrowdParlay.Social.Api.Controllers;
