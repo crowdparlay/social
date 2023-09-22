@@ -1,7 +1,5 @@
 using System.Reflection;
-using CrowdParlay.Social.Application.Behaviors;
 using FluentValidation;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -18,9 +16,6 @@ public static class ServiceCollectionExtensions
             .CreateLogger();
 
         var assembly = Assembly.GetExecutingAssembly();
-        return services
-            .AddValidatorsFromAssembly(assembly, includeInternalTypes: true)
-            .AddMediatR(x => x.RegisterServicesFromAssembly(assembly))
-            .AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        return services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
     }
 }
