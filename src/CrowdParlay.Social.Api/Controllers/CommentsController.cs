@@ -1,3 +1,4 @@
+using CrowdParlay.Social.Api.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs.Comment;
 using MediatR;
@@ -21,22 +22,22 @@ public class CommentsController : ControllerBase
         await _comments.FindByAuthorAsync(authorId);
 
     [HttpPost]
-    public async Task<IActionResult> CreateComment([FromBody] string content)
+    public async Task<ActionResult<CommentDto>> CreateComment([FromBody] CommentRequest request)
     {
         var userIdHeaderValue = Request.Headers["X-UserId"].Single()!;
         var authorId = Guid.Parse(userIdHeaderValue);
 
-        var response = await _comments.CreateAsync(authorId, content);
-        return CreatedAtAction(nameof(GetCommentById), response);
+        var response = await _comments.CreateAsync(authorId, request.Content);
+        return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
     }
 
     [HttpPost("{targetCommentId}/reply")]
-    public async Task<IActionResult> ReplyToComment([FromRoute] Guid targetCommentId, [FromBody] string content)
+    public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid targetCommentId, [FromBody] CommentRequest request)
     {
         var userIdHeaderValue = Request.Headers["X-UserId"].Single()!;
         var authorId = Guid.Parse(userIdHeaderValue);
 
-        var response = await _comments.ReplyAsync(authorId, targetCommentId, content);
-        return CreatedAtAction(nameof(GetCommentById), response);
+        var response = await _comments.ReplyAsync(authorId, targetCommentId, request.Content);
+        return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
     }
 }
