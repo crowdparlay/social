@@ -45,12 +45,14 @@ public sealed class ExceptionHandlingMiddleware : IMiddleware
     private int GetStatusCode(Exception exception) => exception switch
     {
         ValidationException => StatusCodes.Status400BadRequest,
+        NotFoundException => StatusCodes.Status404NotFound,
         _ => StatusCodes.Status500InternalServerError
     };
 
     private string GetTitle(Exception exception) => exception switch
     {
         ApplicationException a => a.Title,
+        NotFoundException => "Resource not found",
         _ => "Server error"
     };
 

@@ -1,7 +1,5 @@
+using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs.Author;
-using CrowdParlay.Social.Application.Features.Authors.Commands;
-using CrowdParlay.Social.Application.Features.Authors.Queries;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrowdParlay.Social.Api.Controllers;
@@ -9,15 +7,11 @@ namespace CrowdParlay.Social.Api.Controllers;
 [ApiController, Route("api/[controller]")]
 public class AuthorsController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IAuthorRepository _authors;
 
-    public AuthorsController(IMediator mediator) => _mediator = mediator;
+    public AuthorsController(IAuthorRepository authors) => _authors = authors;
 
-    [HttpGet]
-    public async Task<AuthorDto> Get([FromRoute] Guid authorId) =>
-        await _mediator.Send(new GetAuthorByIdQuery((authorId)));
-
-    [HttpDelete]
-    public async Task Delete([FromRoute] Guid authorId) =>
-        await _mediator.Send(new DeleteAuthorCommand(authorId));
+    [HttpGet("{authorId}")]
+    public async Task<AuthorDto> GetAuthorById([FromRoute] Guid authorId) =>
+        await _authors.FindAsync(authorId);
 }
