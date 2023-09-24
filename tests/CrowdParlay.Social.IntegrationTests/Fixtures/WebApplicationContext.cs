@@ -20,8 +20,14 @@ public class WebApplicationContext
             .Build();
 
         AsyncContext.Run(async () => await neo4j.StartAsync());
+        
+        // ReSharper disable once InconsistentNaming
+        var neo4jConfiguration = new Neo4jConfiguration(
+            Uri: neo4j.GetConnectionString(),
+            Username: "neo4j",
+            Password: "neo4j");
 
-        var webApplicationFactory = new TestWebApplicationFactory<Program>(neo4j.GetConnectionString());
+        var webApplicationFactory = new TestWebApplicationFactory<Program>(neo4jConfiguration);
         Client = webApplicationFactory.CreateClient();
         Harness = webApplicationFactory.Services.GetTestHarness();
     }
