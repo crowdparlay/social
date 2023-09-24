@@ -6,7 +6,7 @@ using Neo4jClient;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence;
 
-public static class ServiceCollectionExtensions
+public static class ConfigurePersistenceExtensions
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
         .AddNeo4j(configuration)
@@ -17,10 +17,19 @@ public static class ServiceCollectionExtensions
     // ReSharper disable once InconsistentNaming
     private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString =
-            configuration["NEO4J_CONNECTION_STRING"] ??
-            throw new InvalidOperationException("NEO4J_CONNECTION_STRING is not set!");
+        var uri =
+            configuration["NEO4J_URI"] ??
+            throw new InvalidOperationException("NEO4J_URI is not set!");
 
-        return services.AddSingleton<IGraphClient>(new BoltGraphClient(connectionString));
+        var username =
+            configuration["NEO4J_USERNAME"] ??
+            throw new InvalidOperationException("NEO4J_USERNAME is not set!");
+
+        var password =
+            configuration["NEO4J_PASSWORD"] ??
+            throw new InvalidOperationException("NEO4J_PASSWORD is not set!");
+
+        var client = new BoltGraphClient(uri, username, password);
+        return services.AddSingleton<IGraphClient>(client);
     }
 }
