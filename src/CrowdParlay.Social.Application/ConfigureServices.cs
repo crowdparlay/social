@@ -5,7 +5,7 @@ using Serilog;
 
 namespace CrowdParlay.Social.Application;
 
-public static class ServiceCollectionExtensions
+public static class ConfigureServicesExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
