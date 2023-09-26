@@ -1,5 +1,6 @@
-using System.Reflection;
+using CrowdParlay.Social.Api.Routing;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.OpenApi.Models;
 
 namespace CrowdParlay.Social.Api;
@@ -14,15 +15,20 @@ public class SwaggerWebHostFactory
         {
             services.AddSwaggerGen(options =>
             {
+                options.SupportNonNullableReferenceTypes();
                 options.SwaggerDoc(SwaggerVersion, new OpenApiInfo
                 {
-                    Title = Assembly.GetExecutingAssembly().GetName().Name,
+                    Title = "Crowd Parlay Social API",
                     Version = SwaggerVersion
                 });
             });
 
-            services.AddControllers();
             services.AddEndpointsApiExplorer();
+            services.AddControllers(options =>
+            {
+                var transformer = new KebabCaseParameterPolicy();
+                options.Conventions.Add(new RouteTokenTransformerConvention(transformer));
+            });
         })
         .Build();
 }

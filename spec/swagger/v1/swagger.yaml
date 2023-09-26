@@ -1,9 +1,9 @@
 openapi: 3.0.1
 info:
-  title: CrowdParlay.Social.Api
+  title: Crowd Parlay Social API
   version: v1
 paths:
-  '/api/Authors/{authorId}':
+  '/api/authors/{authorId}':
     get:
       tags:
         - Authors
@@ -28,7 +28,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/AuthorDto'
-  '/api/Comments/{commentId}':
+  '/api/comments/{commentId}':
     get:
       tags:
         - Comments
@@ -53,7 +53,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/CommentDto'
-  /api/Comments:
+  /api/comments:
     get:
       tags:
         - Comments
@@ -110,7 +110,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/CommentDto'
-  '/api/Comments/{targetCommentId}/reply':
+  '/api/comments/{targetCommentId}/reply':
     post:
       tags:
         - Comments
@@ -156,10 +156,8 @@ components:
           format: uuid
         username:
           type: string
-          nullable: true
         displayName:
           type: string
-          nullable: true
         avatarUrl:
           type: string
           nullable: true
@@ -172,7 +170,6 @@ components:
           format: uuid
         content:
           type: string
-          nullable: true
         author:
           $ref: '#/components/schemas/AuthorDto'
         createdAt:
@@ -185,12 +182,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AuthorDto'
-          nullable: true
       additionalProperties: false
     CommentRequest:
       type: object
       properties:
         content:
           type: string
-          nullable: true
       additionalProperties: false

@@ -1,11 +1,11 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "CrowdParlay.Social.Api",
+    "title": "Crowd Parlay Social API",
     "version": "v1"
   },
   "paths": {
-    "/api/Authors/{authorId}": {
+    "/api/authors/{authorId}": {
       "get": {
         "tags": [
           "Authors"
@@ -46,7 +46,7 @@
         }
       }
     },
-    "/api/Comments/{commentId}": {
+    "/api/comments/{commentId}": {
       "get": {
         "tags": [
           "Comments"
@@ -87,7 +87,7 @@
         }
       }
     },
-    "/api/Comments": {
+    "/api/comments": {
       "get": {
         "tags": [
           "Comments"
@@ -182,7 +182,7 @@
         }
       }
     },
-    "/api/Comments/{targetCommentId}/reply": {
+    "/api/comments/{targetCommentId}/reply": {
       "post": {
         "tags": [
           "Comments"
@@ -253,12 +253,10 @@
             "format": "uuid"
           },
           "username": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "displayName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "avatarUrl": {
             "type": "string",
@@ -275,8 +273,7 @@
             "format": "uuid"
           },
           "content": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "author": {
             "$ref": "#/components/schemas/AuthorDto"
@@ -293,8 +290,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AuthorDto"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
@@ -303,8 +299,7 @@
         "type": "object",
         "properties": {
           "content": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
