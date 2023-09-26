@@ -1,0 +1,196 @@
+openapi: 3.0.1
+info:
+  title: CrowdParlay.Social.Api
+  version: v1
+paths:
+  '/api/Authors/{authorId}':
+    get:
+      tags:
+        - Authors
+      parameters:
+        - name: authorId
+          in: path
+          required: true
+          style: simple
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/AuthorDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/AuthorDto'
+  '/api/Comments/{commentId}':
+    get:
+      tags:
+        - Comments
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          style: simple
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+  /api/Comments:
+    get:
+      tags:
+        - Comments
+      parameters:
+        - name: authorId
+          in: query
+          style: form
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentDto'
+    post:
+      tags:
+        - Comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+  '/api/Comments/{targetCommentId}/reply':
+    post:
+      tags:
+        - Comments
+      parameters:
+        - name: targetCommentId
+          in: path
+          required: true
+          style: simple
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+components:
+  schemas:
+    AuthorDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          nullable: true
+        displayName:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+      additionalProperties: false
+    CommentDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+          nullable: true
+        author:
+          $ref: '#/components/schemas/AuthorDto'
+        createdAt:
+          type: string
+          format: date-time
+        replyCount:
+          type: integer
+          format: int32
+        firstRepliesAuthors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorDto'
+          nullable: true
+      additionalProperties: false
+    CommentRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          nullable: true
+      additionalProperties: false

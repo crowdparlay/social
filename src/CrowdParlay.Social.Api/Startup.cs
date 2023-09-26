@@ -29,12 +29,6 @@ public class Startup
             .AllowAnyHeader()
             .AllowAnyMethod());
 
-        if (_environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseRouting();
