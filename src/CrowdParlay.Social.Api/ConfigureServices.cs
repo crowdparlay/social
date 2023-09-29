@@ -4,7 +4,6 @@ using CrowdParlay.Social.Api.Routing;
 using CrowdParlay.Social.Application.Consumers;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using Microsoft.OpenApi.Models;
 
 namespace CrowdParlay.Social.Api;
 
@@ -16,12 +15,6 @@ public static class ConfigureApiExtensions
             .AddAuthorization()
             .AddEndpointsApiExplorer()
             .AddTransient<ExceptionHandlingMiddleware>();
-
-        services.AddSwaggerGen(options =>
-        {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Crowd Parlay Social API", Version = "v1" });
-            options.SupportNonNullableReferenceTypes();
-        });
 
         var mvcBuilder = services.AddControllers(options =>
         {
@@ -43,7 +36,7 @@ public static class ConfigureApiExtensions
                 configurator.Host(amqpServerUrl);
                 configurator.ConfigureEndpoints(context);
                 configurator.ConfigureTopology();
-                
+
                 configurator.Message<UserUpdatedEvent>(x => x.SetEntityName("user"));
             });
         });
