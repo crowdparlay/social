@@ -1,3 +1,3 @@
-namespace CrowdParlay.Social.Api.DTOs;
+namespace CrowdParlay.Social.Api.v1.DTOs;
 
 public record CommentRequest(string Content);

@@ -1,25 +1,35 @@
-using CrowdParlay.Social.Api.DTOs;
+using CrowdParlay.Social.Api.Routing;
+using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs.Comment;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CrowdParlay.Social.Api.Controllers;
+namespace CrowdParlay.Social.Api.v1.Controllers;
 
-[ApiController, Route("api/[controller]")]
+[ApiController, ApiRoute("[controller]")]
 public class CommentsController : ControllerBase
 {
     private readonly ICommentRepository _comments;
 
     public CommentsController(ICommentRepository comments) => _comments = comments;
 
+    /// <summary>
+    /// Returns comment with the specified ID.
+    /// </summary>
     [HttpGet("{commentId}")]
     public async Task<CommentDto> GetCommentById([FromRoute] Guid commentId) =>
         await _comments.FindAsync(commentId);
 
+    /// <summary>
+    /// Returns all comments created by author with the specified ID.
+    /// </summary>
     [HttpGet]
     public async Task<IEnumerable<CommentDto>> GetCommentsByAuthor([FromQuery] Guid authorId) =>
         await _comments.FindByAuthorAsync(authorId);
 
+    /// <summary>
+    /// Creates a comment.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<CommentDto>> CreateComment([FromBody] CommentRequest request)
     {
@@ -30,6 +40,9 @@ public class CommentsController : ControllerBase
         return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
     }
 
+    /// <summary>
+    /// Creates a reply to comment with the specified ID.
+    /// </summary>
     [HttpPost("{targetCommentId}/reply")]
     public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid targetCommentId, [FromBody] CommentRequest request)
     {
