@@ -1,3 +1,4 @@
+using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.Middlewares;
 using CrowdParlay.Social.Application;
 using CrowdParlay.Social.Infrastructure.Persistence;

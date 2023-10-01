@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using CrowdParlay.Communication;
-using CrowdParlay.Social.Api.DTOs;
+using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.DTOs.Author;
 using CrowdParlay.Social.Application.DTOs.Comment;
 using CrowdParlay.Social.IntegrationTests.Fixtures;
