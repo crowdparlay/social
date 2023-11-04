@@ -16,7 +16,7 @@ public class GraphClientInitializer : IHostedService
     {
         await _graphClient.ConnectAsync();
         await _graphClient.Cypher
-            .Create("CONSTRAINT unique_author_id FOR (a:Author) REQUIRE a.Id IS UNIQUE")
+            .Create("CONSTRAINT IF NOT EXISTS unique_author_id ON (a:Author) ASSERT a.Id IS UNIQUE")
             .ExecuteWithoutResultsAsync();
     }
 
