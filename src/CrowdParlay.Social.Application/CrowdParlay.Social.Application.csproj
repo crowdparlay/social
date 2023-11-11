@@ -21,8 +21,4 @@
       <PackageReference Include="Serilog.Settings.AppSettings" Version="2.2.2" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\CrowdParlay.Social.Domain\CrowdParlay.Social.Domain.csproj" />
-    </ItemGroup>
-
 </Project>

@@ -90,12 +90,9 @@ paths:
     post:
       tags:
         - Comments
-      summary: Creates a comment.
+      summary: Creates a top-level comment in discussion.
       requestBody:
         content:
-          application/json-patch+json:
-            schema:
-              $ref: '#/components/schemas/CommentRequest'
           application/json:
             schema:
               $ref: '#/components/schemas/CommentRequest'
@@ -118,7 +115,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/CommentDto'
-  '/api/v1/comments/{targetCommentId}/reply':
+  '/api/v1/comments/{targetCommentId}':
     post:
       tags:
         - Comments
@@ -133,18 +130,15 @@ paths:
             format: uuid
       requestBody:
         content:
-          application/json-patch+json:
-            schema:
-              $ref: '#/components/schemas/CommentRequest'
           application/json:
             schema:
-              $ref: '#/components/schemas/CommentRequest'
+              $ref: '#/components/schemas/ReplyRequest'
           text/json:
             schema:
-              $ref: '#/components/schemas/CommentRequest'
+              $ref: '#/components/schemas/ReplyRequest'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/CommentRequest'
+              $ref: '#/components/schemas/ReplyRequest'
       responses:
         '200':
           description: Success
@@ -158,6 +152,121 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/CommentDto'
+  '/api/v1/discussions/{discussionId}':
+    get:
+      tags:
+        - Discussions
+      summary: Returns discussion with the specified ID.
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          style: simple
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/DiscussionDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionDto'
+  /api/v1/discussions:
+    get:
+      tags:
+        - Discussions
+      summary: Returns all discussions.
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DiscussionDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DiscussionDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DiscussionDto'
+    post:
+      tags:
+        - Discussions
+      summary: Creates a discussion.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscussionRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/DiscussionRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/DiscussionRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/DiscussionDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionDto'
+  '/api/v1/discussions/{authorId}':
+    get:
+      tags:
+        - Discussions
+      summary: Returns all discussions created by author with the specified ID.
+      parameters:
+        - name: authorId
+          in: query
+          style: form
+          schema:
+            type: string
+            format: uuid
+        - name: authorId
+          in: path
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DiscussionDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DiscussionDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DiscussionDto'
 components:
   schemas:
     AuthorDto:
@@ -168,9 +277,9 @@ components:
           format: uuid
         username:
           type: string
-        displayName:
+        display_name:
           type: string
-        avatarUrl:
+        avatar_url:
           type: string
           nullable: true
       additionalProperties: false
@@ -184,18 +293,48 @@ components:
           type: string
         author:
           $ref: '#/components/schemas/AuthorDto'
-        createdAt:
+        created_at:
           type: string
           format: date-time
-        replyCount:
+        reply_count:
           type: integer
           format: int32
-        firstRepliesAuthors:
+        first_replies_authors:
           type: array
           items:
             $ref: '#/components/schemas/AuthorDto'
       additionalProperties: false
     CommentRequest:
+      type: object
+      properties:
+        discussion_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+      additionalProperties: false
+    DiscussionDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        author:
+          $ref: '#/components/schemas/AuthorDto'
+      additionalProperties: false
+    DiscussionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+      additionalProperties: false
+    ReplyRequest:
       type: object
       properties:
         content:

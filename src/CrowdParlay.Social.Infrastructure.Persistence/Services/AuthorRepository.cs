@@ -1,5 +1,5 @@
 using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.Application.DTOs.Author;
+using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
 using Neo4jClient;
 
@@ -11,7 +11,7 @@ public class AuthorRepository : IAuthorRepository
 
     public AuthorRepository(IGraphClient graphClient) => _graphClient = graphClient;
 
-    public async Task<AuthorDto> FindAsync(Guid id)
+    public async Task<AuthorDto> GetByIdAsync(Guid id)
     {
         var results = await _graphClient.Cypher
             .WithParams(new { id })
@@ -26,7 +26,7 @@ public class AuthorRepository : IAuthorRepository
 
     public async Task<AuthorDto> CreateAsync(Guid id, string username, string displayName, string? avatarUrl)
     {
-        var author = await _graphClient.Cypher
+        var results = await _graphClient.Cypher
             .WithParams(new
             {
                 id,
@@ -46,7 +46,7 @@ public class AuthorRepository : IAuthorRepository
             .Return<AuthorDto>("a")
             .ResultsAsync;
 
-        return author.Single();
+        return results.Single();
     }
 
     public async Task<AuthorDto> UpdateAsync(Guid id, string username, string displayName, string? avatarUrl)

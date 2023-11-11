@@ -1,7 +1,8 @@
-using CrowdParlay.Social.Api.Routing;
+using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.Application.DTOs.Comment;
+using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrowdParlay.Social.Api.v1.Controllers;
@@ -18,40 +19,40 @@ public class CommentsController : ControllerBase
     /// </summary>
     [HttpGet("{commentId}")]
     public async Task<CommentDto> GetCommentById([FromRoute] Guid commentId) =>
-        await _comments.FindAsync(commentId);
+        await _comments.GetByIdAsync(commentId);
 
     /// <summary>
     /// Returns all comments created by author with the specified ID.
     /// </summary>
     [HttpGet]
     public async Task<IEnumerable<CommentDto>> GetCommentsByAuthor([FromQuery] Guid authorId) =>
-        await _comments.FindByAuthorAsync(authorId);
+        await _comments.GetByAuthorAsync(authorId);
 
     /// <summary>
-    /// Creates a comment.
+    /// Creates a top-level comment in discussion.
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<CommentDto>> CreateComment([FromBody] CommentRequest request)
+    public async Task<ActionResult<CommentDto>> Create([FromBody] CommentRequest request)
     {
         var authorId =
             User.GetUserId()
             ?? throw new ForbiddenException();
 
-        var response = await _comments.CreateAsync(authorId, request.Content);
+        var response = await _comments.CreateAsync(authorId, request.DiscussionId, request.Content);
         return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
     }
 
     /// <summary>
     /// Creates a reply to comment with the specified ID.
     /// </summary>
-    [HttpPost("{targetCommentId}/reply")]
-    public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid targetCommentId, [FromBody] CommentRequest request)
+    [HttpPost("{targetCommentId}")]
+    public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid targetCommentId, [FromBody] ReplyRequest request)
     {
         var authorId =
             User.GetUserId()
             ?? throw new ForbiddenException();
 
-        var response = await _comments.ReplyAsync(authorId, targetCommentId, request.Content);
+        var response = await _comments.ReplyToCommentAsync(authorId, targetCommentId, request.Content);
         return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
     }
 }

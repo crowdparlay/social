@@ -1,4 +1,4 @@
-namespace CrowdParlay.Social.Application.DTOs.Author;
+namespace CrowdParlay.Social.Application.DTOs;
 
 public class AuthorDto
 {

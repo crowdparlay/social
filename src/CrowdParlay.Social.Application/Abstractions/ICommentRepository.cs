@@ -1,12 +1,12 @@
-using CrowdParlay.Social.Application.DTOs.Comment;
+using CrowdParlay.Social.Application.DTOs;
 
 namespace CrowdParlay.Social.Application.Abstractions;
 
 public interface ICommentRepository
 {
-    public Task<CommentDto> FindAsync(Guid id);
-    public Task<IEnumerable<CommentDto>> FindByAuthorAsync(Guid authorId);
-    public Task<CommentDto> CreateAsync(Guid authorId, string content);
-    public Task<CommentDto> ReplyAsync(Guid authorId, Guid targetCommentId, string content);
+    public Task<CommentDto> GetByIdAsync(Guid id);
+    public Task<IEnumerable<CommentDto>> GetByAuthorAsync(Guid authorId);
+    public Task<CommentDto> CreateAsync(Guid authorId, Guid discussionId, string content);
+    public Task<CommentDto> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content);
     public Task DeleteAsync(Guid id);
 }
