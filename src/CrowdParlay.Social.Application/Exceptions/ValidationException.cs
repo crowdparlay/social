@@ -1,12 +1,20 @@
-using ApplicationException = CrowdParlay.Social.Domain.Exceptions.ApplicationException;
+using FluentValidation.Results;
 
 namespace CrowdParlay.Social.Application.Exceptions;
 
-public sealed class ValidationException : ApplicationException
+public class ValidationException : Exception
 {
-    public ValidationException(IReadOnlyDictionary<string, string[]> errorsDictionary)
-        : base("Validation failure", "One or more validation errors occurred.") =>
-        ErrorsDictionary = errorsDictionary;
+    public IDictionary<string, IEnumerable<string>> Errors { get; } = new Dictionary<string, IEnumerable<string>>();
 
-    public IReadOnlyDictionary<string, string[]> ErrorsDictionary { get; }
+    public ValidationException()
+        : base("One or more validation failures have occurred.") { }
+
+    public ValidationException(IDictionary<string, IEnumerable<string>> errors) =>
+        Errors = errors;
+
+    public ValidationException(string propertyName, IEnumerable<string> errorDescriptions)
+        : this(new Dictionary<string, IEnumerable<string>>
+        {
+            [propertyName] = errorDescriptions
+        }) { }
 }

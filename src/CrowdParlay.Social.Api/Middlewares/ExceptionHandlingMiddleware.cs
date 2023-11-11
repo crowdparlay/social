@@ -1,11 +1,9 @@
-using System.Net.Mime;
-using System.Text.Json;
+using System.Net;
 using CrowdParlay.Social.Application.Exceptions;
-using ApplicationException = CrowdParlay.Social.Domain.Exceptions.ApplicationException;
 
 namespace CrowdParlay.Social.Api.Middlewares;
 
-public sealed class ExceptionHandlingMiddleware : IMiddleware
+public class ExceptionHandlingMiddleware : IMiddleware
 {
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
@@ -20,45 +18,58 @@ public sealed class ExceptionHandlingMiddleware : IMiddleware
         catch (Exception exception)
         {
             _logger.LogError(exception, "{ExceptionMessage}", exception.Message);
-            await HandleExceptionAsync(context, exception);
+            var problem = exception switch
+            {
+                ValidationException e => SanitizeValidationException(e),
+                FluentValidation.ValidationException e => SanitizeFluentValidationException(e),
+                NotFoundException e => SanitizeNotFoundException(e, context),
+                ForbiddenException e => SanitizeForbiddenException(e, context),
+                _ => SanitizeGenericException()
+            };
+
+            context.Response.ContentType = "application/problem+json";
+            context.Response.StatusCode = (int)problem.HttpStatusCode;
+            await context.Response.WriteAsJsonAsync(problem, problem.GetType(), GlobalSerializerOptions.SnakeCase);
         }
     }
 
-    private async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
+    private static Problem SanitizeGenericException() => new()
     {
-        var statusCode = GetStatusCode(exception);
-
-        var response = new
-        {
-            Title = GetTitle(exception),
-            Status = statusCode,
-            Detail = exception.Message,
-            Errors = GetErrors(exception)
-        };
-
-        httpContext.Response.ContentType = MediaTypeNames.Application.Json;
-        httpContext.Response.StatusCode = statusCode;
-
-        await httpContext.Response.WriteAsync(JsonSerializer.Serialize(response));
-    }
-
-    private int GetStatusCode(Exception exception) => exception switch
-    {
-        ValidationException => StatusCodes.Status400BadRequest,
-        NotFoundException => StatusCodes.Status404NotFound,
-        _ => StatusCodes.Status500InternalServerError
+        HttpStatusCode = HttpStatusCode.InternalServerError,
+        ErrorDescription = "Something went wrong. Try again later."
     };
 
-    private string GetTitle(Exception exception) => exception switch
+    private static ValidationProblem SanitizeValidationException(ValidationException exception) => new()
     {
-        ApplicationException a => a.Title,
-        NotFoundException => "Resource not found",
-        _ => "Server error"
+        HttpStatusCode = HttpStatusCode.BadRequest,
+        ErrorDescription = "The specified data is invalid.",
+        ValidationErrors = exception.Errors.ToDictionary(
+            error => error.Key,
+            error => error.Value.ToArray())
     };
 
-    private IReadOnlyDictionary<string, string[]> GetErrors(Exception exception) => exception switch
+    private static ValidationProblem SanitizeFluentValidationException(FluentValidation.ValidationException exception) => new()
     {
-        ValidationException validationException => validationException.ErrorsDictionary,
-        _ => new Dictionary<string, string[]>()
+        HttpStatusCode = HttpStatusCode.BadRequest,
+        ErrorDescription = "The specified data is invalid.",
+        ValidationErrors = exception.Errors
+            .GroupBy(error => error.PropertyName)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(failure => failure.ErrorMessage)
+                    .ToArray())
+    };
+
+    private static Problem SanitizeNotFoundException(NotFoundException exception, HttpContext context) => new()
+    {
+        HttpStatusCode = HttpStatusCode.NotFound,
+        ErrorDescription = "The requested resource doesn't exist."
+    };
+
+    private static Problem SanitizeForbiddenException(ForbiddenException exception, HttpContext context) => new()
+    {
+        HttpStatusCode = HttpStatusCode.Forbidden,
+        ErrorDescription = "You have no permission for this action."
     };
 }
