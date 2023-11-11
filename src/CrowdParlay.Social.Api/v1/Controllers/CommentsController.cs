@@ -33,8 +33,9 @@ public class CommentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CommentDto>> CreateComment([FromBody] CommentRequest request)
     {
-        var userIdHeaderValue = Request.Headers["X-UserId"].Single()!;
-        var authorId = Guid.Parse(userIdHeaderValue);
+        var authorId =
+            User.GetUserId()
+            ?? throw new ForbiddenException();
 
         var response = await _comments.CreateAsync(authorId, request.Content);
         return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
@@ -46,8 +47,9 @@ public class CommentsController : ControllerBase
     [HttpPost("{targetCommentId}/reply")]
     public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid targetCommentId, [FromBody] CommentRequest request)
     {
-        var userIdHeaderValue = Request.Headers["X-UserId"].Single()!;
-        var authorId = Guid.Parse(userIdHeaderValue);
+        var authorId =
+            User.GetUserId()
+            ?? throw new ForbiddenException();
 
         var response = await _comments.ReplyAsync(authorId, targetCommentId, request.Content);
         return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);

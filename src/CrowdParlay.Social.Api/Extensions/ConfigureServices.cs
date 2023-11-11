@@ -11,6 +11,7 @@ public static class ConfigureApiExtensions
     {
         services
             .ConfigureEndpoints()
+            .ConfigureAuthentication()
             .AddAuthorization()
             .AddTransient<ExceptionHandlingMiddleware>();
 
