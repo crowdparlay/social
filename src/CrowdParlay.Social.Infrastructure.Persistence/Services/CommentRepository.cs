@@ -1,5 +1,5 @@
 using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.Application.DTOs.Comment;
+using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
 using Neo4jClient;
 
@@ -11,7 +11,7 @@ public class CommentRepository : ICommentRepository
 
     public CommentRepository(IGraphClient graphClient) => _graphClient = graphClient;
 
-    public async Task<CommentDto> FindAsync(Guid id)
+    public async Task<CommentDto> GetByIdAsync(Guid id)
     {
         var results = await _graphClient.Cypher
             .WithParams(new { id })
@@ -52,7 +52,7 @@ public class CommentRepository : ICommentRepository
             ?? throw new NotFoundException();
     }
 
-    public async Task<IEnumerable<CommentDto>> FindByAuthorAsync(Guid authorId, int page, int size) => await _graphClient.Cypher
+    public async Task<IEnumerable<CommentDto>> GetByAuthorAsync(Guid authorId, int page, int size) => await _graphClient.Cypher
         .WithParams(new { authorId })
         .Match("(c:Comment)-[:AUTHORED_BY]->(a:Author { Id: $authorId })")
         .OptionalMatch("(ra:Author)<-[:AUTHORED_BY]-(r:Comment)-[:REPLIES_TO]->(c)")
@@ -87,42 +87,44 @@ public class CommentRepository : ICommentRepository
         .Skip(page * size)
         .Limit(size)
         .ResultsAsync;
-    
-    public async Task<CommentDto> CreateAsync(Guid authorId, string content)
+
+    public async Task<CommentDto> CreateAsync(Guid authorId, Guid discussionId, string content)
     {
-        var result = await _graphClient.Cypher
+        var results = await _graphClient.Cypher
             .WithParams(new
             {
                 authorId,
-                content
+                content,
+                discussionId
             })
             .Match("(a:Author {Id: $authorId})")
+            .Match("(d:Discussion {Id: $discussionId})")
             .Create(
                 """
-                (c:Comment {
+                (r:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
                 """)
-            .Create("(c)-[:AUTHORED_BY]->(a)")
-            .Return<CommentDto>("c")
+            .Create("(d)<-[:REPLIES_TO]-(r)-[:AUTHORED_BY]->(a)")
+            .Return<CommentDto>("r")
             .ResultsAsync;
 
-        return result.Single();
+        return results.Single();
     }
 
-    public async Task<CommentDto> ReplyAsync(Guid authorId, Guid targetCommentId, string content)
+    public async Task<CommentDto> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
     {
-        var result = await _graphClient.Cypher
+        var results = await _graphClient.Cypher
             .WithParams(new
             {
                 authorId,
                 content,
-                targetCommentId
+                parentCommentId
             })
             .Match("(a:Author {Id: $authorId})")
-            .Match("(c:Comment {Id: $targetCommentId})")
+            .Match("(c:Comment {Id: $parentCommentId})")
             .Create(
                 """
                 (r:Comment {
@@ -135,7 +137,7 @@ public class CommentRepository : ICommentRepository
             .Return<CommentDto>("r")
             .ResultsAsync;
 
-        return result.Single();
+        return results.Single();
     }
 
     public async Task DeleteAsync(Guid id)

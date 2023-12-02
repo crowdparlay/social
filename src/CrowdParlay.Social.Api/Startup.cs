@@ -9,13 +9,8 @@ namespace CrowdParlay.Social.Api;
 public class Startup
 {
     private readonly IConfiguration _configuration;
-    private readonly IWebHostEnvironment _environment;
 
-    public Startup(IConfiguration configuration, IWebHostEnvironment environment)
-    {
-        _configuration = configuration;
-        _environment = environment;
-    }
+    public Startup(IConfiguration configuration) => _configuration = configuration;
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
     {

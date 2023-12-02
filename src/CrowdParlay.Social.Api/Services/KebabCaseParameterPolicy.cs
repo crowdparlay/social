@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace CrowdParlay.Social.Api.Routing;
+namespace CrowdParlay.Social.Api.Services;
 
 /// <summary>
 /// An endpoint parameter transformer that applies kebab-case naming convention to endpoint routes and parameter names.
@@ -15,7 +15,7 @@ public class KebabCaseParameterPolicy : IOutboundParameterTransformer
         // If input is not null, but its string representation is, then null is returned.
         not null => Regex.Replace(
             value.ToString() ?? string.Empty,
-            "([a-z])([A-Z])", "$1-$2").ToLower(),
+            "([a-z0-9])([A-Z])", "$1-$2").ToLower(),
         _ => null
     };
 }

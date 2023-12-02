@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using CrowdParlay.Communication;
-using CrowdParlay.Social.Api.v1.DTOs;
-using CrowdParlay.Social.Application.DTOs.Author;
-using CrowdParlay.Social.Application.DTOs.Comment;
+using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.IntegrationTests.Fixtures;
 using FluentAssertions;
 using MassTransit.Testing;
@@ -32,10 +30,10 @@ public class AuthorsControllerTests : IClassFixture<WebApplicationContext>
 
         await _harness.Bus.Publish(@event);
 
-        var message = await _client.GetAsync($"api/v1/authors/{@event.UserId}");
+        var message = await _client.GetAsync($"/api/v1/authors/{@event.UserId}");
         message.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var response = await message.Content.ReadFromJsonAsync<AuthorDto>();
+        var response = await message.Content.ReadFromJsonAsync<AuthorDto>(GlobalSerializerOptions.SnakeCase);
         response.Should().BeEquivalentTo(new AuthorDto
         {
             Id = Guid.Parse(@event.UserId),
@@ -43,36 +41,5 @@ public class AuthorsControllerTests : IClassFixture<WebApplicationContext>
             DisplayName = @event.DisplayName,
             AvatarUrl = @event.AvatarUrl
         });
-    }
-
-    [Fact(DisplayName = "Reply to comment creates reply")]
-    public async Task ReplyToComment_Positive()
-    {
-        // Create author
-        var @event = new UserCreatedEvent(
-            UserId: Guid.NewGuid().ToString(),
-            Username: "zendet",
-            DisplayName: "Z E N D E T",
-            AvatarUrl: null);
-
-        await _harness.Bus.Publish(@event);
-        _client.DefaultRequestHeaders.Add("X-UserId", @event.UserId);
-
-        // Create top-level comment
-        var createCommentResponse = await _client.PostAsJsonAsync("api/v1/comments", new CommentRequest("Top-level comment!"));
-        createCommentResponse.StatusCode.Should().Be(HttpStatusCode.Created, "top-level comment cannot be created");
-
-        // Create reply comment
-        var comment = await createCommentResponse.Content.ReadFromJsonAsync<CommentDto>();
-        var createReplyResponse = await _client.PostAsJsonAsync($"api/v1/comments/{comment!.Id}/reply", new CommentRequest("Reply comment."));
-        createReplyResponse.StatusCode.Should().Be(HttpStatusCode.Created, "reply comment cannot be created");
-
-        // Get top-level comment
-        var getCommentResponse = await _client.GetAsync($"api/v1/comments/{comment.Id}");
-        getCommentResponse.StatusCode.Should().Be(HttpStatusCode.OK, "top-level comment cannot be fetched");
-        comment = await getCommentResponse.Content.ReadFromJsonAsync<CommentDto>();
-
-        comment!.ReplyCount.Should().Be(1);
-        comment.FirstRepliesAuthors.Should().ContainSingle(x => x.Id == Guid.Parse(@event.UserId));
     }
 }

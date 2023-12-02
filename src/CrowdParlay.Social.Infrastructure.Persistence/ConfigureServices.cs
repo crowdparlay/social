@@ -12,7 +12,8 @@ public static class ConfigurePersistenceExtensions
         .AddNeo4j(configuration)
         .AddHostedService<GraphClientInitializer>()
         .AddScoped<IAuthorRepository, AuthorRepository>()
-        .AddScoped<ICommentRepository, CommentRepository>();
+        .AddScoped<ICommentRepository, CommentRepository>()
+        .AddScoped<IDiscussionRepository, DiscussionRepository>();
 
     // ReSharper disable once InconsistentNaming
     private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)

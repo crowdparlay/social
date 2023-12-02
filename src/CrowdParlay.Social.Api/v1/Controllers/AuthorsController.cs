@@ -1,6 +1,5 @@
-using CrowdParlay.Social.Api.Routing;
 using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.Application.DTOs.Author;
+using CrowdParlay.Social.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrowdParlay.Social.Api.v1.Controllers;
@@ -17,5 +16,5 @@ public class AuthorsController : ControllerBase
     /// </summary>
     [HttpGet("{authorId}")]
     public async Task<AuthorDto> GetAuthorById([FromRoute] Guid authorId) =>
-        await _authors.FindAsync(authorId);
+        await _authors.GetByIdAsync(authorId);
 }
