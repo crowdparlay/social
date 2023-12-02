@@ -24,9 +24,10 @@ public class CommentsController : ControllerBase
     /// Returns all comments created by author with the specified ID.
     /// </summary>
     [HttpGet]
-    public async Task<IEnumerable<CommentDto>> GetCommentsByAuthor([FromQuery] Guid authorId) =>
-        await _comments.FindByAuthorAsync(authorId);
-
+    public async Task<IEnumerable<CommentDto>> GetCommentsByAuthor
+        ([FromQuery] Guid authorId, [FromQuery] int page, [FromQuery] int size) =>
+        await _comments.FindByAuthorAsync(authorId, page, size);
+    
     /// <summary>
     /// Creates a comment.
     /// </summary>

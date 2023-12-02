@@ -32,7 +32,7 @@ public class AuthorsControllerTests : IClassFixture<WebApplicationContext>
 
         await _harness.Bus.Publish(@event);
 
-        var message = await _client.GetAsync($"api/authors/{@event.UserId}");
+        var message = await _client.GetAsync($"api/v1/authors/{@event.UserId}");
         message.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var response = await message.Content.ReadFromJsonAsync<AuthorDto>();
@@ -59,16 +59,16 @@ public class AuthorsControllerTests : IClassFixture<WebApplicationContext>
         _client.DefaultRequestHeaders.Add("X-UserId", @event.UserId);
 
         // Create top-level comment
-        var createCommentResponse = await _client.PostAsJsonAsync("api/comments", new CommentRequest("Top-level comment!"));
+        var createCommentResponse = await _client.PostAsJsonAsync("api/v1/comments", new CommentRequest("Top-level comment!"));
         createCommentResponse.StatusCode.Should().Be(HttpStatusCode.Created, "top-level comment cannot be created");
 
         // Create reply comment
         var comment = await createCommentResponse.Content.ReadFromJsonAsync<CommentDto>();
-        var createReplyResponse = await _client.PostAsJsonAsync($"api/comments/{comment!.Id}/reply", new CommentRequest("Reply comment."));
+        var createReplyResponse = await _client.PostAsJsonAsync($"api/v1/comments/{comment!.Id}/reply", new CommentRequest("Reply comment."));
         createReplyResponse.StatusCode.Should().Be(HttpStatusCode.Created, "reply comment cannot be created");
 
         // Get top-level comment
-        var getCommentResponse = await _client.GetAsync($"api/comments/{comment.Id}");
+        var getCommentResponse = await _client.GetAsync($"api/v1/comments/{comment.Id}");
         getCommentResponse.StatusCode.Should().Be(HttpStatusCode.OK, "top-level comment cannot be fetched");
         comment = await getCommentResponse.Content.ReadFromJsonAsync<CommentDto>();
 

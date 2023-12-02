@@ -68,6 +68,18 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: page
+          in: query
+          style: form
+          schema:
+            type: integer
+            format: int32
+        - name: size
+          in: query
+          style: form
+          schema:
+            type: integer
+            format: int32
       responses:
         '200':
           description: Success

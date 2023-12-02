@@ -31,7 +31,7 @@ public class CommentRepository : ICommentRepository
                 """
                 {
                     Id: c.Id,
-                    Content: c.content,
+                    Content: c.Content,
                     Author: {
                         Id: a.Id,
                         Username: a.Username,
@@ -52,7 +52,7 @@ public class CommentRepository : ICommentRepository
             ?? throw new NotFoundException();
     }
 
-    public async Task<IEnumerable<CommentDto>> FindByAuthorAsync(Guid authorId) => await _graphClient.Cypher
+    public async Task<IEnumerable<CommentDto>> FindByAuthorAsync(Guid authorId, int page, int size) => await _graphClient.Cypher
         .WithParams(new { authorId })
         .Match("(c:Comment)-[:AUTHORED_BY]->(a:Author { Id: $authorId })")
         .OptionalMatch("(ra:Author)<-[:AUTHORED_BY]-(r:Comment)-[:REPLIES_TO]->(c)")
@@ -70,21 +70,24 @@ public class CommentRepository : ICommentRepository
             """
             {
                 Id: c.Id,
-                Content: c.content,
+                Content: c.Content,
                 Author: {
                     Id: a.Id,
                     Username: a.Username,
                     DisplayName: a.DisplayName,
                     AvatarUrl: a.AvatarUrl
                 },
+                CreatedAt: c.CreatedAt,
                 ReplyCount: rc,
                 FirstRepliesAuthors: fras
             }
             AS c
             """)
         .Return<CommentDto>("c")
+        .Skip(page * size)
+        .Limit(size)
         .ResultsAsync;
-
+    
     public async Task<CommentDto> CreateAsync(Guid authorId, string content)
     {
         var result = await _graphClient.Cypher
