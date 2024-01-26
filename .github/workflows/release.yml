@@ -55,7 +55,7 @@ jobs:
           skip-tag: true
           skip-commit: true
       - name: 🎁 Publish GitHub release
-        uses: actions/create-release@v1.13.0
+        uses: actions/create-release@v1
         if: ${{ steps.changelog.outputs.skipped == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
