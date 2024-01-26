@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag (version) to be associated with the ongoing release (for example, "v1.0.0")
+        type: string
+  pull_request:
+    types: [ closed ]
+    branches: [ master ]
+
+jobs:
+  version:
+    name: Increment version
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🦾 Predict next SemVer tag based on PR label
+        id: predicted-tag
+        if: github.event.pull_request.merged
+        uses: K-Phoen/semver-release-action@v1.3.2
+        with:
+          release_branch: master
+          release_strategy: none
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+      - name: 💪 Use input tag if triggered manually
+        id: final-tag
+        if: success() || failure()
+        run: |
+          if [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
+            tag=${{ inputs.tag }}
+          else
+            tag=${{ steps.predicted-tag.outputs.tag }}
+          fi
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+    outputs:
+      tag: ${{ steps.final-tag.outputs.tag }}
+  release:
+    name: Publish GitHub release
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔽 Checkout repository
+        uses: actions/checkout@v4
+      - name: 📝 Create changelog
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v3
+        with:
+          github-token: ${{ secrets.github_token }}
+          output-file: false
+          git-push: false
+          skip-on-empty: false
+          skip-version-file: true
+          skip-tag: true
+          skip-commit: true
+      - name: 🎁 Publish GitHub release
+        uses: actions/create-release@v1.13.0
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          release_name: ${{ needs.version.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+  deliver:
+    name: Deliver
+    needs: version
+    uses: ./.github/workflows/delivery.yml
+    with:
+      version: ${{ needs.version.outputs.tag  }}
+    secrets: inherit
+  notify:
+    name: Notify
+    needs: [ version, deliver ]
+    uses: ./.github/workflows/notification.yml
+    with:
+      version: ${{ needs.version.outputs.tag  }}
+    secrets: inherit
+  deploy:
+    name: Deploy
+    needs: deliver
+    uses: ./.github/workflows/deployment.yml
+    with:
+      version: ${{ needs.version.outputs.tag  }}
+    secrets: inherit

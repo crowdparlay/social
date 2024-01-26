@@ -1,0 +1,25 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version of the release to be deployed (for example, "v1.0.0" or "latest")
+        type: string
+
+jobs:
+  rollout:
+    name: Roll out to Kubernetes
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚀 Rollout restart
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        with:
+          args: set image -n crowdparlay deployments/social social=ghcr.io/${{ github.repository }}:${{ inputs.version }}
