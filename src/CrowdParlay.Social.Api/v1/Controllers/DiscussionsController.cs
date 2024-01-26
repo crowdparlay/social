@@ -32,7 +32,7 @@ public class DiscussionsController : ControllerBase
     /// <summary>
     /// Returns all discussions created by author with the specified ID.
     /// </summary>
-    [HttpGet("{authorId}")]
+    [HttpGet]
     public async Task<IEnumerable<DiscussionDto>> GetDiscussionsByAuthor([FromQuery] Guid authorId) =>
         await _discussions.GetByAuthorAsync(authorId);
 
