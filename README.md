@@ -1,11 +1,5 @@
-# Crowd Parlay's *social* microservice
-
-### Technologies
-- Languages `C#` `SQL`
-- Frameworks `.NET 7` `ASP.NET Core`
-- Persistence `Neo4j`
-- Other `RabbitMQ` `MediatR` `FluentValidation` `Mapster` `Swashbuckle`
-
-### Responsibilities
-- Formatted posts
-- Platform-wide entity referencing
+# Crowd Parlay's *social* microservice [![Test](https://github.com/crowdparlay/social/actions/workflows/test.yml/badge.svg)](https://github.com/crowdparlay/social/actions/workflows/test.yml)
+- **languages:** <kbd>C#</kbd> <kbd>SQL</kbd>
+- **frameworks:** <kbd>.NET 7</kbd> <kbd>ASP.NET Core</kbd>
+- **persistence:** <kbd>Neo4j</kbd>
+- **other:** <kbd>RabbitMQ</kbd> <kbd>MediatR</kbd> <kbd>FluentValidation</kbd> <kbd>Mapster</kbd> <kbd>Swashbuckle</kbd></kbd>
