@@ -23,20 +23,20 @@ public class CommentsControllerTests : IClassFixture<WebApplicationContext>
         _harness = context.Harness;
     }
 
-    [Fact(DisplayName = "Get comments by author returns comments")]
-    public async Task GetCommentsByAuthor_Positive()
+    [Fact(DisplayName = "Search comments returns comments")]
+    public async Task SearchComments_Positive()
     {
         var authorId = Guid.NewGuid();
-        
+
         // Create author
         var @event = new UserCreatedEvent(
             UserId: authorId.ToString(),
-            Username: "maxaytt",
-            DisplayName: "Rebus",
+            Username: "drcrxwn",
+            DisplayName: "Степной ишак",
             AvatarUrl: null);
 
         await _harness.Bus.Publish(@event);
-        
+
         // Create discussion
         var serializedCreateDiscussionRequest = JsonSerializer.Serialize(
             new DiscussionRequest("Test discussion", "Something"),
@@ -56,20 +56,20 @@ public class CommentsControllerTests : IClassFixture<WebApplicationContext>
         var serializedCreateFirstCommentRequest = JsonSerializer.Serialize(
             new CommentRequest(discussion!.Id, "This is the first comment."),
             GlobalSerializerOptions.SnakeCase);
-        
+
         var createFirstCommentResponse = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, "/api/v1/comments")
         {
             Content = new StringContent(serializedCreateFirstCommentRequest, Encoding.UTF8, "application/json"),
             Headers = { { "Authorization", $"Bearer {accessToken}" } }
         });
-        
+
         createFirstCommentResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-        
+
         // Create second comment
         var serializedCreateSecondCommentRequest = JsonSerializer.Serialize(
             new CommentRequest(discussion.Id, "This is the second comment."),
             GlobalSerializerOptions.SnakeCase);
-        
+
         var createSecondCommentResponse = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, "/api/v1/comments")
         {
             Content = new StringContent(serializedCreateSecondCommentRequest, Encoding.UTF8, "application/json"),
@@ -77,10 +77,9 @@ public class CommentsControllerTests : IClassFixture<WebApplicationContext>
         });
 
         createSecondCommentResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-        
-        // Get comments by author
+
         var getCommentsResponse =
-            await _client.GetAsync($"/api/v1/comments?authorId={@event.UserId}&page=0&size=3");
+            await _client.GetAsync($"/api/v1/comments?discussionId={discussion.Id}&page=0&size=3");
         var comments = await getCommentsResponse.Content.ReadFromJsonAsync<IEnumerable<CommentDto>>(GlobalSerializerOptions.SnakeCase);
 
         var commentList = comments.Should().NotBeNullOrEmpty()
