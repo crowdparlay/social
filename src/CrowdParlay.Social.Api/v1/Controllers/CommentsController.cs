@@ -4,6 +4,7 @@ using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CrowdParlay.Social.Api.v1.Controllers;
 
@@ -22,12 +23,12 @@ public class CommentsController : ControllerBase
         await _comments.GetByIdAsync(commentId);
 
     /// <summary>
-    /// Returns all comments created by author with the specified ID.
+    /// Returns all comments created in discussion or by author with the specified ID.
     /// </summary>
     [HttpGet]
-    public async Task<IEnumerable<CommentDto>> GetCommentsByAuthor
-        ([FromQuery] Guid authorId, [FromQuery] int page, [FromQuery] int size) =>
-        await _comments.GetByAuthorAsync(authorId, page, size);
+    public async Task<IEnumerable<CommentDto>> SearchComments
+        ([FromQuery] Guid? discussionId, [FromQuery] Guid? authorId, [FromQuery, BindRequired] int page, [FromQuery, BindRequired] int size) =>
+        await _comments.SearchAsync(discussionId, authorId, page, size);
 
     /// <summary>
     /// Creates a top-level comment in discussion.
