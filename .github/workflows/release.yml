@@ -79,7 +79,7 @@ jobs:
     secrets: inherit
   deploy:
     name: Deploy
-    needs: deliver
+    needs: [ version, deliver ]
     uses: ./.github/workflows/deployment.yml
     with:
       version: ${{ needs.version.outputs.tag  }}
