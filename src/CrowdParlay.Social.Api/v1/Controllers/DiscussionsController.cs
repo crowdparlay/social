@@ -23,18 +23,12 @@ public class DiscussionsController : ControllerBase
         await _discussions.GetByIdAsync(discussionId);
 
     /// <summary>
-    /// Returns all discussions.
-    /// </summary>
-    [HttpGet]
-    public async Task<IEnumerable<DiscussionDto>> GetAllDiscussions() =>
-        await _discussions.GetAllAsync();
-
-    /// <summary>
     /// Returns all discussions created by author with the specified ID.
     /// </summary>
     [HttpGet]
-    public async Task<IEnumerable<DiscussionDto>> GetDiscussionsByAuthor([FromQuery] Guid authorId) =>
-        await _discussions.GetByAuthorAsync(authorId);
+    public async Task<IEnumerable<DiscussionDto>> GetDiscussions([FromQuery] Guid? authorId) => authorId is null
+        ? await _discussions.GetAllAsync()
+        : await _discussions.GetByAuthorAsync(authorId.Value);
 
     /// <summary>
     /// Creates a discussion.
