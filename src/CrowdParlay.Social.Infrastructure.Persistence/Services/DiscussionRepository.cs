@@ -52,7 +52,7 @@ public class DiscussionRepository : IDiscussionRepository
             {
                 Id: d.Id,
                 Title: d.Title,
-                Description: d.Description
+                Description: d.Description,
                 Author: {
                     Id: a.Id,
                     Username: a.Username,
