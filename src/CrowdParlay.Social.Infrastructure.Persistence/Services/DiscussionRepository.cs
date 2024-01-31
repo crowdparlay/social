@@ -16,6 +16,21 @@ public class DiscussionRepository : IDiscussionRepository
         var results = await _graphClient.Cypher
             .WithParams(new { id })
             .Match("(d:Discussion { Id: $id })")
+            .With(
+                """
+                {
+                    Id: d.Id,
+                    Title: d.Title,
+                    Description: d.Description,
+                    Author: {
+                        Id: a.Id,
+                        Username: a.Username,
+                        DisplayName: a.DisplayName,
+                        AvatarUrl: a.AvatarUrl
+                    }
+                }
+                AS d
+                """)
             .Return<DiscussionDto>("d")
             .ResultsAsync;
 
@@ -85,6 +100,21 @@ public class DiscussionRepository : IDiscussionRepository
                 })
                 """)
             .Create("(d)-[:AUTHORED_BY]->(a)")
+            .With(
+                """
+                {
+                    Id: d.Id,
+                    Title: d.Title,
+                    Description: d.Description,
+                    Author: {
+                        Id: a.Id,
+                        Username: a.Username,
+                        DisplayName: a.DisplayName,
+                        AvatarUrl: a.AvatarUrl
+                    }
+                }
+                AS d
+                """)
             .Return<DiscussionDto>("d")
             .ResultsAsync;
 
