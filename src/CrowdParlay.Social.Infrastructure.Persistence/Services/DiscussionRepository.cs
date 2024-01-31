@@ -15,7 +15,7 @@ public class DiscussionRepository : IDiscussionRepository
     {
         var results = await _graphClient.Cypher
             .WithParams(new { id })
-            .Match("(d:Discussion { Id: $id })")
+            .Match("(d:Discussion { Id: $id })-[:AUTHORED_BY]->(a:Author)")
             .With(
                 """
                 {
