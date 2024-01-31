@@ -23,6 +23,7 @@ public class DiscussionsControllerTests : IClassFixture<WebApplicationContext>
         _harness = context.Harness;
     }
 
+    [Fact(DisplayName = "Get discussion by ID returns discussion with author")]
     public async Task GetDiscussionByIdHasAuthor_Positive()
     {
         // Create author
