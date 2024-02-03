@@ -23,11 +23,14 @@ public class CommentsController : ControllerBase
         await _comments.GetByIdAsync(commentId);
 
     /// <summary>
-    /// Returns all comments created in discussion or by author with the specified ID.
+    /// Get comments by filters.
     /// </summary>
     [HttpGet]
-    public async Task<IEnumerable<CommentDto>> SearchComments
-        ([FromQuery] Guid? discussionId, [FromQuery] Guid? authorId, [FromQuery, BindRequired] int page, [FromQuery, BindRequired] int size) =>
+    public async Task<IEnumerable<CommentDto>> SearchComments(
+        [FromQuery] Guid? discussionId,
+        [FromQuery] Guid? authorId,
+        [FromQuery, BindRequired] int page,
+        [FromQuery, BindRequired] int size) =>
         await _comments.SearchAsync(discussionId, authorId, page, size);
 
     /// <summary>
@@ -45,16 +48,26 @@ public class CommentsController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a reply to comment with the specified ID.
+    /// Get replies to the comment with the specified ID.
     /// </summary>
-    [HttpPost("{targetCommentId}")]
-    public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid targetCommentId, [FromBody] ReplyRequest request)
+    [HttpGet("{targetCommentId}/replies")]
+    public async Task<IEnumerable<CommentDto>> GetRepliesToComment(
+        [FromRoute] Guid parentCommentId,
+        [FromQuery, BindRequired] int page,
+        [FromQuery, BindRequired] int size) =>
+        await _comments.GetRepliesToCommentAsync(parentCommentId, page, size);
+
+    /// <summary>
+    /// Creates a reply to the comment with the specified ID.
+    /// </summary>
+    [HttpPost("{targetCommentId}/replies")]
+    public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid parentCommentId, [FromBody] ReplyRequest request)
     {
         var authorId =
             User.GetUserId()
             ?? throw new ForbiddenException();
 
-        var response = await _comments.ReplyToCommentAsync(authorId, targetCommentId, request.Content);
+        var response = await _comments.ReplyToCommentAsync(authorId, parentCommentId, request.Content);
         return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
     }
 }

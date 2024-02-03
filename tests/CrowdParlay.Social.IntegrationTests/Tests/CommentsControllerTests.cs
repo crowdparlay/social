@@ -138,7 +138,7 @@ public class CommentsControllerTests : IClassFixture<WebApplicationContext>
             new ReplyRequest("Reply comment."),
             GlobalSerializerOptions.SnakeCase);
 
-        var createReplyResponse = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"/api/v1/comments/{comment!.Id}")
+        var createReplyResponse = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"/api/v1/comments/{comment!.Id}/replies")
         {
             Content = new StringContent(serializedCreateReplyRequest, Encoding.UTF8, "application/json"),
             Headers = { { "Authorization", $"Bearer {accessToken}" } }
