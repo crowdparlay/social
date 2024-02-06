@@ -25,15 +25,11 @@ jobs:
         with:
           dotnet-version: '7.0.x'
       - name: Install Swashbuckle.AspNetCore.Cli
-        run: dotnet tool install Swashbuckle.AspNetCore.Cli --global
-      - name: List files in .NET tools root
         run: |
-          cd ${HOME}/.dotnet/tools
-          ls
-      - name: Update GITHUB_PATH
-        run: 'echo "${HOME}/.dotnet/tools/swagger" >> $GITHUB_PATH'
+          dotnet tool install Swashbuckle.AspNetCore.Cli --global
+          echo "${HOME}/.dotnet/tools/swagger" >> $GITHUB_PATH
       - name: Generate OpenAPI YAML
-        run: swagger tofile --output openapi.yaml --yaml .\src\CrowdParlay.Social.Api\bin\Debug\net7.0\CrowdParlay.Social.Api.dll v1
+        run: swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net7.0/CrowdParlay.Social.Api.dll v1
       - name: Deploy API documentation
         uses: bump-sh/github-action@v1
         with:
