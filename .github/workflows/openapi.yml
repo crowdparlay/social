@@ -1,0 +1,65 @@
+name: Check & deploy API documentation
+permissions:
+  contents: read
+  pull-requests: write
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+jobs:
+  deploy-doc:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    name: Deploy API documentation on Bump.sh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Create openapi.yaml
+        run: |
+          cat <<EOF > openapi.yaml
+          openapi: "3.0.0"
+          info:
+            title: Sample API
+            version: 1.0.0
+            description: |
+              This is a sample OpenAPI documentation
+              with multiline description.
+            contact:
+              name: John Doe
+              email: john.doe@example.com
+              url: https://example.com
+            license:
+              name: Apache 2.0
+              url: https://www.apache.org/licenses/LICENSE-2.0.html
+          EOF
+      - name: Deploy API documentation
+        uses: bump-sh/github-action@v1
+        with:
+          doc: DOCUMENTATION_SLUG_OR_ID
+          token: ${{ secrets.BUMP_SH_TOKEN }}
+          file: openapi.yaml
+  api-diff:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Check API diff on Bump.sh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Comment pull request with API diff
+        uses: bump-sh/github-action@v1
+        with:
+          doc: DOCUMENTATION_SLUG_OR_ID
+          token: 2JVHFHevbrg6NrmZz1WPENCJxyeWpV6c
+          file: openapi.yaml
+          command: diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+    
