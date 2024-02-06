@@ -50,7 +50,7 @@ public class CommentsController : ControllerBase
     /// <summary>
     /// Get replies to the comment with the specified ID.
     /// </summary>
-    [HttpGet("{targetCommentId}/replies")]
+    [HttpGet("{parentCommentId}/replies")]
     public async Task<IEnumerable<CommentDto>> GetRepliesToComment(
         [FromRoute] Guid parentCommentId,
         [FromQuery, BindRequired] int page,
@@ -60,7 +60,7 @@ public class CommentsController : ControllerBase
     /// <summary>
     /// Creates a reply to the comment with the specified ID.
     /// </summary>
-    [HttpPost("{targetCommentId}/replies")]
+    [HttpPost("{parentCommentId}/replies")]
     public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid parentCommentId, [FromBody] ReplyRequest request)
     {
         var authorId =

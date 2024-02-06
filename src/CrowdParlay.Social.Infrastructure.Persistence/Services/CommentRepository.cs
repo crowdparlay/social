@@ -38,7 +38,7 @@ public class CommentRepository : ICommentRepository
                         DisplayName: a.DisplayName,
                         AvatarUrl: a.AvatarUrl
                     },
-                    CreatedAt: c.CreatedAt,
+                    CreatedAt: datetime(c.CreatedAt),
                     ReplyCount: rc,
                     FirstRepliesAuthors: fras
                 }
@@ -56,45 +56,44 @@ public class CommentRepository : ICommentRepository
     {
         var query = _graphClient.Cypher.WithParams(new { discussionId, authorId });
 
-        var matchSelector = (discussionId, authorId) switch
-        {
-            (not null, not null) => "(a:Author { Id: $authorId })<-[:AUTHORED_BY]-(c:Comment)-[:REPLIES_TO]->(d:Discussion { Id: $discussionId })",
-            (not null, null) => "(a:Author)<-[:AUTHORED_BY]-(c:Comment)-[:REPLIES_TO]->(d:Discussion { Id: $discussionId })",
-            (null, not null) => "(a:Author { Id: $authorId })<-[:AUTHORED_BY]-(c:Comment)",
-            (null, null) => "(a:Author)<-[:AUTHORED_BY]-(c:Comment)"
-        };
+        var matchSelector = authorId is not null
+            ? "(author:Author { Id: $authorId })<-[:AUTHORED_BY]-(comment:Comment)"
+            : "(author:Author)<-[:AUTHORED_BY]-(comment:Comment)";
+
+        if (discussionId is not null)
+            matchSelector += "-[:REPLIES_TO]->(discussion:Discussion { Id: $discussionId })";
 
         return await query
             .Match(matchSelector)
-            .OptionalMatch("(ra:Author)<-[:AUTHORED_BY]-(r:Comment)-[:REPLIES_TO]->(c)")
+            .OptionalMatch("(replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)")
             .With(
                 """
-                c, a, COUNT(r) AS rc,
-                CASE WHEN COUNT(r) > 0 THEN COLLECT(DISTINCT {
-                    Id: ra.Id,
-                    Username: ra.Username,
-                    DisplayName: ra.DisplayName,
-                    AvatarUrl: ra.AvatarUrl
-                })[0..3] ELSE [] END AS fras
+                comment, author, COUNT(reply) AS replyCount,
+                CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
+                    Id: replyAuthor.Id,
+                    Username: replyAuthor.Username,
+                    DisplayName: replyAuthor.DisplayName,
+                    AvatarUrl: replyAuthor.AvatarUrl
+                })[0..3] ELSE [] END AS firstRepliesAuthors
                 """)
             .With(
                 """
                 {
-                    Id: c.Id,
-                    Content: c.Content,
+                    Id: comment.Id,
+                    Content: comment.Content,
                     Author: {
-                        Id: a.Id,
-                        Username: a.Username,
-                        DisplayName: a.DisplayName,
-                        AvatarUrl: a.AvatarUrl
+                        Id: author.Id,
+                        Username: author.Username,
+                        DisplayName: author.DisplayName,
+                        AvatarUrl: author.AvatarUrl
                     },
-                    CreatedAt: c.CreatedAt,
-                    ReplyCount: rc,
-                    FirstRepliesAuthors: fras
+                    CreatedAt: datetime(comment.CreatedAt),
+                    ReplyCount: replyCount,
+                    FirstRepliesAuthors: firstRepliesAuthors
                 }
-                AS c
+                AS comment
                 """)
-            .Return<CommentDto>("c")
+            .Return<CommentDto>("comment")
             .Skip(page * size)
             .Limit(size)
             .ResultsAsync;
@@ -109,18 +108,18 @@ public class CommentRepository : ICommentRepository
                 content,
                 discussionId
             })
-            .Match("(a:Author {Id: $authorId})")
-            .Match("(d:Discussion {Id: $discussionId})")
+            .Match("(author:Author {Id: $authorId})")
+            .Match("(discussion:Discussion {Id: $discussionId})")
             .Create(
                 """
-                (r:Comment {
+                (comment:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
                 """)
-            .Create("(d)<-[:REPLIES_TO]-(r)-[:AUTHORED_BY]->(a)")
-            .Return<CommentDto>("r")
+            .Create("(discussion)<-[:REPLIES_TO]-(comment)-[:AUTHORED_BY]->(author)")
+            .Return<CommentDto>("comment")
             .ResultsAsync;
 
         return results.Single();
@@ -153,13 +152,13 @@ public class CommentRepository : ICommentRepository
                         DisplayName: commentAuthor.DisplayName,
                         AvatarUrl: commentAuthor.AvatarUrl
                     },
-                    CreatedAt: comment.CreatedAt,
+                    CreatedAt: datetime(comment.CreatedAt),
                     ReplyCount: replyCount,
                     FirstRepliesAuthors: firstRepliesAuthors
                 }
-                AS replies
+                AS reply
                 """)
-            .Return<CommentDto>("replies")
+            .Return<CommentDto>("reply")
             .Skip(page * size)
             .Limit(size)
             .ResultsAsync;
@@ -174,18 +173,18 @@ public class CommentRepository : ICommentRepository
                 content,
                 parentCommentId
             })
-            .Match("(a:Author {Id: $authorId})")
-            .Match("(c:Comment {Id: $parentCommentId})")
+            .Match("(replyAuthor:Author {Id: $authorId})")
+            .Match("(parent:Comment {Id: $parentCommentId})")
             .Create(
                 """
-                (r:Comment {
+                (reply:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
                 """)
-            .Create("(c)<-[:REPLIES_TO]-(r)-[:AUTHORED_BY]->(a)")
-            .Return<CommentDto>("r")
+            .Create("(parent)<-[:REPLIES_TO]-(reply)-[:AUTHORED_BY]->(replyAuthor)")
+            .Return<CommentDto>("reply")
             .ResultsAsync;
 
         return results.Single();
@@ -195,9 +194,9 @@ public class CommentRepository : ICommentRepository
     {
         var results = await _graphClient.Cypher
             .WithParams(new { id })
-            .OptionalMatch("(c:Comment { Id: $id })")
-            .Delete("c")
-            .Return<bool>("COUNT(c) = 0")
+            .OptionalMatch("(comment:Comment { Id: $id })")
+            .Delete("comment")
+            .Return<bool>("COUNT(comment) = 0")
             .ResultsAsync;
 
         if (results.Single())
