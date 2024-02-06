@@ -35,7 +35,7 @@ jobs:
       - name: Deploy API documentation
         uses: bump-sh/github-action@v1
         with:
-          doc: DOCUMENTATION_SLUG_OR_ID
+          doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
           token: ${{ secrets.BUMP_SH_TOKEN }}
           file: openapi.yaml
   api-diff:
@@ -48,8 +48,8 @@ jobs:
       - name: Comment pull request with API diff
         uses: bump-sh/github-action@v1
         with:
-          doc: DOCUMENTATION_SLUG_OR_ID
-          token: 2JVHFHevbrg6NrmZz1WPENCJxyeWpV6c
+          doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
+          token: ${{ secrets.BUMP_SH_TOKEN }}
           file: openapi.yaml
           command: diff
         env:
