@@ -22,22 +22,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Create openapi.yaml
         run: |
-          cat <<EOF > openapi.yaml
-          openapi: "3.0.0"
-          info:
-            title: Sample API
-            version: 1.0.0
-            description: |
-              This is a sample OpenAPI documentation
-              with multiline description.
-            contact:
-              name: John Doe
-              email: john.doe@example.com
-              url: https://example.com
-            license:
-              name: Apache 2.0
-              url: https://www.apache.org/licenses/LICENSE-2.0.html
-          EOF
+          echo 'openapi: "3.0.0"' > openapi.yaml
       - name: Deploy API documentation
         uses: bump-sh/github-action@v1
         with:
