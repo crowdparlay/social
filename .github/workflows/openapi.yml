@@ -27,7 +27,7 @@ jobs:
       - name: Install Swashbuckle.AspNetCore.Cli
         run: |
           dotnet tool install Swashbuckle.AspNetCore.Cli --global
-          "${HOME}/.dotnet/bin" >> $GITHUB_PATH
+          "${PATH}" >> $GITHUB_PATH
       - name: Generate OpenAPI YAML
         run: dotnet swagger tofile --output openapi.yaml --yaml .\src\CrowdParlay.Social.Api\bin\Debug\net7.0\CrowdParlay.Social.Api.dll v1
       - name: Deploy API documentation
