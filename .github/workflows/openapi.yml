@@ -2,22 +2,21 @@ name: Check & deploy API documentation
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
+  workflow_call:
+    inputs:
+      openapi-asset-upload-url:
+        required: true
+        type: string
   pull_request:
     branches:
-      - main
       - master
 jobs:
-  deploy-doc:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    name: Deploy API documentation on Bump.sh
+  create-doc:
+    name: Produce openapi.yaml
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🎁 Publish GitHub release
         id: publish-github-release
         uses: actions/create-release@v1
@@ -36,24 +35,53 @@ jobs:
       - name: Install Swashbuckle.AspNetCore.Cli
         run: |
           dotnet tool install Swashbuckle.AspNetCore.Cli --global
-          echo "${DOTNET_ROOT}/tools/swagger" >> $GITHUB_PATH
+          echo "$DOTNET_ROOT/tools/swagger" >> $GITHUB_PATH
       - name: Generate OpenAPI YAML
         run: swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net7.0/CrowdParlay.Social.Api.dll v1
+      - name: Upload OpenAPI YAML as release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ inputs.openapi-asset-upload-url }}
+          asset_path: openapi.yaml
+          asset_name: openapi.yaml
+          asset_content_type: application/yaml
+  deploy-doc:
+    if: ${{ github.event_name != 'pull_request' }}
+    name: Deploy API documentation on Bump.sh
+    runs-on: ubuntu-latest
+    env:
+      COMMON_OPENAPI_CONTENT: |
+        openapi: 3.0.1
+        info:
+          title: Crowd Parlay API
+          description: Crowd Parlay's RESTful API.
+          version: 'v1'
+        servers:
+          - url: https://crowdparlay.com
+            description: Production
+    steps:
+      - name: Produce common.yaml
+        run: echo "$COMMON_CONTENT" > common.yaml
+      - name: Download OpenAPIs of all services
+        run: |
+          repos=("crowdparlay/users" "crowdparlay/social")
+          for repo in "${repos[@]}"
+          do
+              echo "Downloading openapi.yaml asset from the latest release of $repo"
+              wget -O "${repo//\//_}_openapi.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
+          done
+      - name: Download OpenAPIs of all services
+        uses: seeebiii/redoc-cli-github-action@v10
+        with:
+          # args: join common.yaml users.yaml social.yaml -o openapi.yaml
       - name: Deploy API documentation
         uses: bump-sh/github-action@v1
         with:
           doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
           token: ${{ secrets.BUMP_SH_TOKEN }}
           file: openapi.yaml
-      - name: Upload OpenAPI YAML as Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.publish-github-release.outputs.upload_url }}
-          asset_path: ./openapi.yaml
-          asset_name: openapi.yaml
-          asset_content_type: application/yaml
   api-diff:
     if: ${{ github.event_name == 'pull_request' }}
     name: Check API diff on Bump.sh
