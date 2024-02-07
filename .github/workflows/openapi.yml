@@ -20,6 +20,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: 🎁 Publish GitHub release
+        id: publish-github-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: test
+          release_name: test
+          body: Sample body.
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v1
         with:
@@ -38,15 +47,6 @@ jobs:
           doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
           token: ${{ secrets.BUMP_SH_TOKEN }}
           file: openapi.yaml
-      - name: 🎁 Publish GitHub release
-        id: publish-github-release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: test
-          release_name: test
-          body: Sample body.
       - name: Upload OpenAPI YAML as Asset
         uses: actions/upload-release-asset@v1
         env:
