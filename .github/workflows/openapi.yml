@@ -45,7 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: test
-          release_name: Sample release
+          release_name: test
           body: Sample body.
       - name: Upload OpenAPI YAML as Asset
         uses: actions/upload-release-asset@v1
