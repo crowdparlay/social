@@ -38,6 +38,26 @@ jobs:
           doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
           token: ${{ secrets.BUMP_SH_TOKEN }}
           file: openapi.yaml
+      - name: 🎁 Publish GitHub release
+        id: publish-github-release
+        uses: actions/create-release@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+        with:
+          tag_name: test
+          release_name: Sample release
+          body: Sample body.
+      - name: Upload OpenAPI YAML as Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.publish-github-release.outputs.upload_url }}
+          asset_path: ./openapi.yaml
+          asset_name: openapi.yaml
+          asset_content_type: application/yaml
   api-diff:
     if: ${{ github.event_name == 'pull_request' }}
     name: Check API diff on Bump.sh
@@ -54,6 +74,3 @@ jobs:
           command: diff
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-    
