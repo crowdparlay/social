@@ -1,0 +1,44 @@
+name: Check & deploy API documentation
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  deploy-doc:
+    if: ${{ github.event_name != 'pull_request' }}
+    name: Deploy API documentation on Bump.sh
+    runs-on: ubuntu-latest
+    env:
+      COMMON_OPENAPI_CONTENT: |
+        openapi: 3.0.1
+        info:
+          title: Crowd Parlay API
+          description: Crowd Parlay's RESTful API.
+          version: 'v1'
+        servers:
+          - url: https://crowdparlay.com
+            description: Production
+    steps:
+      - name: Produce common.yaml
+        run: echo "$COMMON_CONTENT" > common.yaml
+      - name: Download OpenAPIs of all services
+        run: |
+          repos=("crowdparlay/users" "crowdparlay/social")
+          for repo in "${repos[@]}"
+          do
+              echo "Downloading openapi.yaml asset from the latest release of $repo"
+              wget -O "${repo//\//_}_openapi.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
+          done
+      - name: Download OpenAPIs of all services
+        uses: seeebiii/redoc-cli-github-action@v10
+        with:
+          args: join *.yaml -o openapi.yaml
+      - name: Print openapi.yaml
+        run: cat openapi.yaml
+      - name: Deploy API documentation
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
+          token: ${{ secrets.BUMP_SH_TOKEN }}
+          file: openapi.yaml
