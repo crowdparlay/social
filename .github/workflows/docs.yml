@@ -1,4 +1,4 @@
-name: Check & deploy API documentation
+name: Deploy API documentation
 
 on:
   workflow_dispatch:
@@ -22,9 +22,9 @@ jobs:
     steps:
       - name: Produce common.yaml
         run: echo "$COMMON_CONTENT" > common.yaml
-      - name: Download OpenAPIs of all services
+      - name: Download OpenAPIs of all services # ("crowdparlay/users" "crowdparlay/social")
         run: |
-          repos=("crowdparlay/users" "crowdparlay/social")
+          repos=("crowdparlay/social")
           for repo in "${repos[@]}"
           do
               echo "Downloading openapi.yaml asset from the latest release of $repo"
