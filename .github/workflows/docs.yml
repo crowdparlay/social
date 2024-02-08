@@ -32,7 +32,7 @@ jobs:
               wget -O "${repo//\//_}.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
           done
       - name: Install Redocly CLI
-        run: npm install -g @redocly/cli@1.8.1
+        run: npm install -g @redocly/cli@1.8.0
       - name: Merge OpenAPI files
         run: redocly join ./*.yaml
       - name: Print openapi.yaml
