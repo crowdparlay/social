@@ -24,6 +24,7 @@ jobs:
         run: echo "$COMMON_CONTENT" > _common.yaml
       - name: Download OpenAPIs of all services # ("crowdparlay/users" "crowdparlay/social")
         run: |
+          cat _common.yaml
           repos=("crowdparlay/social")
           for repo in "${repos[@]}"
           do
