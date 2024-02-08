@@ -28,12 +28,12 @@ jobs:
           for repo in "${repos[@]}"
           do
               echo "Downloading openapi.yaml asset from the latest release of $repo"
-              wget -O "oapi/${repo//\//_}.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
+              wget -O "${repo//\//_}.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
           done
       - name: Install Redocly CLI
         run: npm install -g @redocly/cli
       - name: Merge OpenAPI files
-        run: redocly join $(ls oapi | grep '\.yaml$' | xargs) -o openapi.yaml
+        run: redocly join $(ls | grep '\.yaml$' | xargs) -o openapi.yaml
       - name: Print openapi.yaml
         run: cat openapi.yaml
       - name: Deploy API documentation
@@ -41,4 +41,4 @@ jobs:
         with:
           doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
           token: ${{ secrets.BUMP_SH_TOKEN }}
-          file: oapi/openapi.yaml
+          file: openapi.yaml
