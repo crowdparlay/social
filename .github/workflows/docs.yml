@@ -21,19 +21,19 @@ jobs:
             description: Production
     steps:
       - name: Produce common.yaml
-        run: echo "$COMMON_CONTENT" > common_openapi.yaml
+        run: echo "$COMMON_CONTENT" > _common.oapi.yaml
       - name: Download OpenAPIs of all services # ("crowdparlay/users" "crowdparlay/social")
         run: |
           repos=("crowdparlay/social")
           for repo in "${repos[@]}"
           do
               echo "Downloading openapi.yaml asset from the latest release of $repo"
-              wget -O "${repo//\//_}_openapi.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
+              wget -O "openapi/${repo//\//_}.oapi.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
           done
       - name: Install Redocly CLI
         run: npm install -g @redocly/cli
       - name: Merge OpenAPI files
-        run: redocly join $(ls | grep '_openapi\.yaml$' | xargs) -o openapi.yaml
+        run: redocly join $(ls | grep '.oapi\.yaml$' | xargs) -o openapi.yaml
       - name: Print openapi.yaml
         run: cat openapi.yaml
       - name: Deploy API documentation
