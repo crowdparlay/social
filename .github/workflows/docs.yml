@@ -33,7 +33,7 @@ jobs:
       - name: Install Redocly CLI
         run: npm install -g @redocly/cli
       - name: Merge OpenAPI files
-        run: redocly join $(ls | grep '_openapi\.yaml$' | xargs) -o openapi.yaml
+        run: redocly join "$(ls | grep '_openapi\.yaml$' | xargs)" -o openapi.yaml
       - name: Print openapi.yaml
         run: cat openapi.yaml
       - name: Deploy API documentation
