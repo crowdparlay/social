@@ -31,7 +31,7 @@ jobs:
               wget -O "${repo//\//_}_openapi.yaml" "https://github.com/$repo/releases/latest/download/openapi.yaml"
           done
       - name: Download OpenAPIs of all services
-        uses: seeebiii/redoc-cli-github-action@v10
+        uses: DeltaLaboratory/redocly-cli-action@v1.0.0
         with:
           args: join *.yaml -o openapi.yaml
       - name: Print openapi.yaml
