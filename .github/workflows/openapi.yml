@@ -2,6 +2,10 @@ name: Check & deploy API documentation
 
 on:
   workflow_dispatch:
+    inputs:
+      openapi-asset-upload-url:
+        required: true
+        type: string
   workflow_call:
     inputs:
       openapi-asset-upload-url:
