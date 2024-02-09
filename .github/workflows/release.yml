@@ -62,6 +62,13 @@ jobs:
           tag_name: ${{ needs.version.outputs.tag }}
           release_name: ${{ needs.version.outputs.tag }}
           body: ${{ steps.changelog.outputs.clean_changelog }}
+  publish-api:
+    name: Publish API
+    needs: release
+    uses: ./.github/workflows/openapi.yml
+    with:
+      openapi-asset-upload-url: ${{ needs.release.outputs.upload_url  }}
+    secrets: inherit
   deliver:
     name: Deliver
     needs: version
