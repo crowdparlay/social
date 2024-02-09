@@ -32,17 +32,17 @@ jobs:
         run: |
           dotnet tool install Swashbuckle.AspNetCore.Cli --global
           echo "$DOTNET_ROOT/tools/swagger" >> $GITHUB_PATH
-      - name: Generate OpenAPI YAML
-        run: swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net7.0/CrowdParlay.Social.Api.dll v1
-      - name: Upload OpenAPI YAML as release asset
+      - name: Generate OpenAPI JSON
+        run: swagger tofile --output openapi.json ./src/CrowdParlay.Social.Api/bin/Debug/net7.0/CrowdParlay.Social.Api.dll v1
+      - name: Upload OpenAPI JSON as release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ inputs.openapi-asset-upload-url }}
-          asset_path: openapi.yaml
-          asset_name: openapi.yaml
-          asset_content_type: application/yaml
+          asset_path: openapi.json
+          asset_name: openapi.json
+          asset_content_type: application/json
   upload-docs:
     name: Deliver
     needs: create-doc
