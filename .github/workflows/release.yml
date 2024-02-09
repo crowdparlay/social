@@ -40,6 +40,8 @@ jobs:
     name: Publish GitHub release
     needs: version
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
     steps:
       - name: 🔽 Checkout repository
         uses: actions/checkout@v4
@@ -55,6 +57,7 @@ jobs:
           skip-tag: true
           skip-commit: true
       - name: 🎁 Publish GitHub release
+        id: release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
@@ -67,7 +70,7 @@ jobs:
     needs: release
     uses: ./.github/workflows/openapi.yml
     with:
-      openapi-asset-upload-url: ${{ needs.release.outputs.upload_url  }}
+      openapi_asset_upload_url: ${{ needs.release.outputs.upload_url  }}
     secrets: inherit
   deliver:
     name: Deliver
