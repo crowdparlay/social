@@ -47,6 +47,7 @@ jobs:
     secrets: inherit
   spec-diff:
     name: Check API diff on Bump.sh
+    if: ${{ github.event_name == 'pull_request' }}
     needs: integrate-spec
     runs-on: ubuntu-latest
     steps:
