@@ -3,7 +3,7 @@ name: Check & deploy API documentation
 on:
   workflow_call:
     inputs:
-      openapi-asset-upload-url:
+      openapi_asset_upload_url:
         required: true
         type: string
   pull_request:
@@ -34,7 +34,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ inputs.openapi-asset-upload-url }}
+          upload_url: ${{ inputs.openapi_asset_upload_url }}
           asset_path: openapi.yaml
           asset_name: openapi.yaml
           asset_content_type: application/yaml
