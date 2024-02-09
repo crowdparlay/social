@@ -27,7 +27,7 @@ jobs:
         }
     steps:
       - name: Produce common.yaml
-        run: echo "$COMMON_CONTENT" > _common.json
+        run: echo "$COMMON_OPENAPI_CONTENT" > _common.json
       - name: Download OpenAPIs of all services # ("crowdparlay/users" "crowdparlay/social")
         run: |
           cat _common.json
