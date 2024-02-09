@@ -1,0 +1,64 @@
+name: OpenAPI specification
+
+on:
+  workflow_call:
+    inputs:
+      openapi_asset_upload_url:
+        required: true
+        type: string
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  produce-spec:
+    name: Produce openapi.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔽 Checkout repository
+        uses: actions/checkout@v4
+      - name: ⚙️ Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '7.0.x'
+      - name: ⚒ Build solution
+        run: dotnet build
+      - name: ⚙️ Install Swashbuckle.AspNetCore.Cli
+        run: |
+          dotnet tool install Swashbuckle.AspNetCore.Cli --global
+          echo "$DOTNET_ROOT/tools/swagger" >> $GITHUB_PATH
+      - name: 📝 Generate OpenAPI specification
+        run: swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net7.0/CrowdParlay.Social.Api.dll v1
+      - name: 🔗 Upload OpenAPI specification as release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ inputs.openapi_asset_upload_url }}
+          asset_path: openapi.yaml
+          asset_name: openapi.yaml
+          asset_content_type: application/yaml
+  integrate-spec:
+    name: Update API documentation
+    needs: produce-spec
+    uses: crowdparlay/foundation/.github/workflows/api-docs.yml@master
+    with:
+      publish: ${{ github.event_name != 'pull_request' }}
+    secrets: inherit
+  spec-diff:
+    name: Check API diff on Bump.sh
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: integrate-spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔽 Checkout repository
+        uses: actions/checkout@v4
+      - name: 🤖 Comment pull request with API diff
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
+          token: ${{ secrets.BUMP_SH_TOKEN }}
+          file: openapi.yaml
+          command: diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
