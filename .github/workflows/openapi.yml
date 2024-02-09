@@ -18,6 +18,7 @@ on:
 jobs:
   produce-spec:
     name: Produce openapi.yaml
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,8 +50,8 @@ jobs:
     uses: crowdparlay/foundation/.github/workflows/api-docs.yml@master
     secrets: inherit
   spec-diff:
-    if: ${{ github.event_name == 'pull_request' }}
     name: Check API diff on Bump.sh
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
