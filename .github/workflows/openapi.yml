@@ -13,7 +13,6 @@ on:
 jobs:
   produce-spec:
     name: Produce openapi.yaml
-    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: 🔽 Checkout repository
@@ -39,14 +38,16 @@ jobs:
           asset_path: openapi.yaml
           asset_name: openapi.yaml
           asset_content_type: application/yaml
-  update-docs:
-    name: Update documentation
+  integrate-spec:
+    name: Update API documentation
     needs: produce-spec
     uses: crowdparlay/foundation/.github/workflows/api-docs.yml@master
+    with:
+      publish: ${{ github.event_name != 'pull_request' }}
     secrets: inherit
   spec-diff:
     name: Check API diff on Bump.sh
-    if: ${{ github.event_name == 'pull_request' }}
+    needs: integrate-spec
     runs-on: ubuntu-latest
     steps:
       - name: 🔽 Checkout repository
