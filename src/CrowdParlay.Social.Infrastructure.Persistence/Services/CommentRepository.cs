@@ -117,16 +117,26 @@ public class CommentRepository : ICommentRepository
                 (comment:Comment {
                     Id: randomUUID(),
                     Content: $content,
+                    CreatedAt: datetime()
+                })
+                """)
+            .Create("(discussion)<-[:REPLIES_TO]-(comment)-[:AUTHORED_BY]->(author)")
+            .With(
+                """
+                {
+                    Id: comment.Id,
+                    Content: comment.Content,
                     Author: {
                         Id: author.Id,
                         Username: author.Username,
                         DisplayName: author.DisplayName,
                         AvatarUrl: author.AvatarUrl
                     },
-                    CreatedAt: datetime()
-                })
-                """)
-            .Create("(discussion)<-[:REPLIES_TO]-(comment)-[:AUTHORED_BY]->(author)")
+                    CreatedAt: datetime(comment.CreatedAt)
+                }
+                AS comment
+                """
+            )
             .Return<CommentDto>("comment")
             .ResultsAsync;
 
