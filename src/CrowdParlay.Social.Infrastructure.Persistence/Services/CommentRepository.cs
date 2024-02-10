@@ -117,6 +117,12 @@ public class CommentRepository : ICommentRepository
                 (comment:Comment {
                     Id: randomUUID(),
                     Content: $content,
+                    Author: {
+                        Id: author.Id,
+                        Username: author.Username,
+                        DisplayName: author.DisplayName,
+                        AvatarUrl: author.AvatarUrl
+                    },
                     CreatedAt: datetime()
                 })
                 """)
