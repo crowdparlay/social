@@ -19,7 +19,7 @@ public class CommentRepository : ICommentRepository
             .OptionalMatch("(replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)")
             .With(
                 """
-                *, COUNT(reply) AS replyCount,
+                comment, author, COUNT(reply) AS replyCount,
                 CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
                     Id: replyAuthor.Id,
                     Username: replyAuthor.Username,
@@ -72,7 +72,7 @@ public class CommentRepository : ICommentRepository
             .OptionalMatch("(replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)")
             .With(
                 """
-                *, COUNT(reply) AS replyCount,
+                comment, author, COUNT(reply) AS replyCount,
                 CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
                     Id: replyAuthor.Id,
                     Username: replyAuthor.Username,
@@ -131,7 +131,7 @@ public class CommentRepository : ICommentRepository
     {
         return await _graphClient.Cypher
             .WithParams(new { parentCommentId })
-            .Match("(commentAuthor:Author)<-[:AUTHORED_BY]-(comment:Comment)-[:REPLIES_TO]->(parent:Comment { Id: $parentCommentId })")
+            .Match("(author:Author)<-[:AUTHORED_BY]-(comment:Comment)-[:REPLIES_TO]->(parent:Comment { Id: $parentCommentId })")
             .With("*")
             .OrderBy("comment.CreatedAt")
             .Skip(page * size)
@@ -139,7 +139,7 @@ public class CommentRepository : ICommentRepository
             .OptionalMatch("(replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)")
             .With(
                 """
-                *, COUNT(reply) AS replyCount,
+                comment, author, COUNT(reply) AS replyCount,
                 CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
                     Id: replyAuthor.Id,
                     Username: replyAuthor.Username,
@@ -153,10 +153,10 @@ public class CommentRepository : ICommentRepository
                     Id: comment.Id,
                     Content: comment.Content,
                     Author: {
-                        Id: commentAuthor.Id,
-                        Username: commentAuthor.Username,
-                        DisplayName: commentAuthor.DisplayName,
-                        AvatarUrl: commentAuthor.AvatarUrl
+                        Id: author.Id,
+                        Username: author.Username,
+                        DisplayName: author.DisplayName,
+                        AvatarUrl: author.AvatarUrl
                     },
                     CreatedAt: datetime(comment.CreatedAt),
                     ReplyCount: replyCount,
