@@ -1,3 +1,4 @@
+using System.Net;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,9 @@ public class AuthorsController : ControllerBase
     /// Returns author with the specified ID.
     /// </summary>
     [HttpGet("{authorId}")]
+    [ProducesResponseType(typeof(AuthorDto), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
     public async Task<AuthorDto> GetAuthorById([FromRoute] Guid authorId) =>
         await _authors.GetByIdAsync(authorId);
 }

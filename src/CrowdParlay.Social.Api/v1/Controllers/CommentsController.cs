@@ -1,3 +1,4 @@
+using System.Net;
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
@@ -19,6 +20,9 @@ public class CommentsController : ControllerBase
     /// Returns comment with the specified ID.
     /// </summary>
     [HttpGet("{commentId}")]
+    [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
     public async Task<CommentDto> GetCommentById([FromRoute] Guid commentId) =>
         await _comments.GetByIdAsync(commentId);
 
@@ -26,6 +30,9 @@ public class CommentsController : ControllerBase
     /// Get comments by filters.
     /// </summary>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<CommentDto>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
     public async Task<IEnumerable<CommentDto>> SearchComments(
         [FromQuery] Guid? discussionId,
         [FromQuery] Guid? authorId,
@@ -37,6 +44,10 @@ public class CommentsController : ControllerBase
     /// Creates a top-level comment in discussion.
     /// </summary>
     [HttpPost]
+    [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.Created)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden)]
     public async Task<ActionResult<CommentDto>> Create([FromBody] CommentRequest request)
     {
         var authorId =
@@ -44,13 +55,17 @@ public class CommentsController : ControllerBase
             ?? throw new ForbiddenException();
 
         var response = await _comments.CreateAsync(authorId, request.DiscussionId, request.Content);
-        return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
+        return CreatedAtAction(nameof(GetCommentById), new { commentId = response.Id }, response);
     }
 
     /// <summary>
     /// Get replies to the comment with the specified ID.
     /// </summary>
     [HttpGet("{parentCommentId}/replies")]
+    [ProducesResponseType(typeof(IEnumerable<CommentDto>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
     public async Task<IEnumerable<CommentDto>> GetRepliesToComment(
         [FromRoute] Guid parentCommentId,
         [FromQuery, BindRequired] int page,
@@ -61,6 +76,11 @@ public class CommentsController : ControllerBase
     /// Creates a reply to the comment with the specified ID.
     /// </summary>
     [HttpPost("{parentCommentId}/replies")]
+    [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.Created)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
     public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid parentCommentId, [FromBody] ReplyRequest request)
     {
         var authorId =
@@ -68,6 +88,6 @@ public class CommentsController : ControllerBase
             ?? throw new ForbiddenException();
 
         var response = await _comments.ReplyToCommentAsync(authorId, parentCommentId, request.Content);
-        return CreatedAtAction(nameof(GetCommentById), new { CommentId = response.Id }, response);
+        return CreatedAtAction(nameof(GetCommentById), new { commentId = response.Id }, response);
     }
 }
