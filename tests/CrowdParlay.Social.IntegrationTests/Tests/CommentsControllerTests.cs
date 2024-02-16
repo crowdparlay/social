@@ -2,47 +2,43 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using CrowdParlay.Communication;
 using CrowdParlay.Social.Api.v1.DTOs;
+using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.IntegrationTests.Fixtures;
-using FluentAssertions;
-using MassTransit.Testing;
-using Authorization = CrowdParlay.Social.IntegrationTests.Services.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
 public class CommentsControllerTests : IClassFixture<WebApplicationContext>
 {
     private readonly HttpClient _client;
-    private readonly ITestHarness _harness;
+    private readonly IServiceProvider _services;
 
     public CommentsControllerTests(WebApplicationContext context)
     {
         _client = context.Client;
-        _harness = context.Harness;
+        _services = context.Services;
     }
 
     [Fact(DisplayName = "Search comments returns comments")]
     public async Task SearchComments_Positive()
     {
-        var authorId = Guid.NewGuid();
-
-        // Create author
-        var @event = new UserCreatedEvent(
-            UserId: authorId.ToString(),
-            Username: "drcrxwn",
-            DisplayName: "Степной ишак",
-            AvatarUrl: null);
-
-        await _harness.Bus.Publish(@event);
+        // Arrange
+        await using var scope = _services.CreateAsyncScope();
+        var authors = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
+        var author = await authors.CreateAsync(
+            id: Guid.NewGuid(),
+            username: "drcrxwn",
+            displayName: "Степной ишак",
+            avatarUrl: null);
 
         // Create discussion
         var serializedCreateDiscussionRequest = JsonSerializer.Serialize(
             new DiscussionRequest("Test discussion", "Something"),
             GlobalSerializerOptions.SnakeCase);
 
-        var accessToken = Authorization.ProduceAccessToken(@event.UserId);
+        var accessToken = Authorization.ProduceAccessToken(author.Id);
         var createDiscussionResponse = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, "/api/v1/discussions")
         {
             Content = new StringContent(serializedCreateDiscussionRequest, Encoding.UTF8, "application/json"),
@@ -78,16 +74,17 @@ public class CommentsControllerTests : IClassFixture<WebApplicationContext>
 
         createSecondCommentResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var getCommentsResponse =
-            await _client.GetAsync($"/api/v1/comments?discussionId={discussion.Id}&page=0&size=3");
+        // Act
+        var getCommentsResponse = await _client.GetAsync($"/api/v1/comments?discussionId={discussion.Id}&page=0&size=3");
         var comments = await getCommentsResponse.Content.ReadFromJsonAsync<IEnumerable<CommentDto>>(GlobalSerializerOptions.SnakeCase);
 
+        // Assert
         var commentList = comments.Should().NotBeNullOrEmpty()
             .And.Subject.ToList();
 
         commentList.Should().HaveCount(2)
             .And.OnlyContain(comment => comment.ReplyCount == 0)
-            .And.OnlyContain(comment => comment.Author.Id == authorId)
+            .And.OnlyContain(comment => comment.Author.Id == author.Id)
             .And.Contain(comment => comment.Content == "This is the first comment.")
             .And.Contain(comment => comment.Content == "This is the second comment.");
     }
@@ -95,21 +92,21 @@ public class CommentsControllerTests : IClassFixture<WebApplicationContext>
     [Fact(DisplayName = "Reply to comment creates reply")]
     public async Task ReplyToComment_Positive()
     {
-        // Create author
-        var @event = new UserCreatedEvent(
-            UserId: Guid.NewGuid().ToString(),
-            Username: "zendet",
-            DisplayName: "Z E N D E T",
-            AvatarUrl: null);
-
-        await _harness.Bus.Publish(@event);
+        // Arrange
+        await using var scope = _services.CreateAsyncScope();
+        var authors = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
+        var author = await authors.CreateAsync(
+            id: Guid.NewGuid(),
+            username: "zendet",
+            displayName: "Z E N D E T",
+            avatarUrl: null);
 
         // Create discussion
         var serializedCreateDiscussionRequest = JsonSerializer.Serialize(
             new DiscussionRequest("Test discussion", "Something"),
             GlobalSerializerOptions.SnakeCase);
 
-        var accessToken = Authorization.ProduceAccessToken(@event.UserId);
+        var accessToken = Authorization.ProduceAccessToken(author.Id);
         var createDiscussionResponse = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, "/api/v1/discussions")
         {
             Content = new StringContent(serializedCreateDiscussionRequest, Encoding.UTF8, "application/json"),
@@ -146,12 +143,12 @@ public class CommentsControllerTests : IClassFixture<WebApplicationContext>
 
         createReplyResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        // Get parent comment
+        // Assert
         var getCommentResponse = await _client.GetAsync($"/api/v1/comments/{comment.Id}");
         getCommentResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         comment = await getCommentResponse.Content.ReadFromJsonAsync<CommentDto>(GlobalSerializerOptions.SnakeCase);
 
         comment!.ReplyCount.Should().Be(1);
-        comment.FirstRepliesAuthors.Should().ContainSingle(x => x.Id == Guid.Parse(@event.UserId));
+        comment.FirstRepliesAuthors.Should().ContainSingle(x => x.Id == author.Id);
     }
 }
