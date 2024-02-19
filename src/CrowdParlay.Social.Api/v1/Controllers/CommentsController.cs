@@ -30,7 +30,7 @@ public class CommentsController : ControllerBase
     /// Get comments by filters.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<CommentDto>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Page<CommentDto>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
     public async Task<Page<CommentDto>> SearchComments(
@@ -62,7 +62,7 @@ public class CommentsController : ControllerBase
     /// Get replies to the comment with the specified ID.
     /// </summary>
     [HttpGet("{parentCommentId}/replies")]
-    [ProducesResponseType(typeof(IEnumerable<CommentDto>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Page<CommentDto>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
