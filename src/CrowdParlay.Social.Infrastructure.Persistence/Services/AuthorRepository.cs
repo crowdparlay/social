@@ -1,89 +1,127 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
-using Neo4jClient;
+using Mapster;
+using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class AuthorRepository : IAuthorRepository
 {
-    private readonly IGraphClient _graphClient;
+    private readonly IDriver _driver;
 
-    public AuthorRepository(IGraphClient graphClient) => _graphClient = graphClient;
+    public AuthorRepository(IDriver driver) => _driver = driver;
 
     public async Task<AuthorDto> GetByIdAsync(Guid id)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new { id })
-            .Match("(a:Author { Id: $id })")
-            .Return<AuthorDto>("a")
-            .ResultsAsync;
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteReadAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
+                """
+                MATCH (author:Author { Id: $id })
+                RETURN {
+                    Id: author.Id,
+                    Username: author.Username,
+                    DisplayName: author.DisplayName,
+                    AvatarUrl: author.AvatarUrl
+                }
+                """,
+                new { id = id.ToString() });
 
-        return
-            results.SingleOrDefault()
-            ?? throw new NotFoundException();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<AuthorDto>();
+        });
     }
 
     public async Task<AuthorDto> CreateAsync(Guid id, string username, string displayName, string? avatarUrl)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new
-            {
-                id,
-                username,
-                displayName,
-                avatarUrl
-            })
-            .Create(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteWriteAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                (a:Author {
+                CREATE (author:Author {
                     Id: $id,
                     Username: $username,
                     DisplayName: $displayName,
                     AvatarUrl: $avatarUrl
                 })
-                """)
-            .Return<AuthorDto>("a")
-            .ResultsAsync;
+                RETURN {
+                    Id: author.Id,
+                    Username: author.Username,
+                    DisplayName: author.DisplayName,
+                    AvatarUrl: author.AvatarUrl
+                }
+                """,
+                new
+                {
+                    id = id.ToString(),
+                    username,
+                    displayName,
+                    avatarUrl
+                });
 
-        return results.Single();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<AuthorDto>();
+        });
     }
 
     public async Task<AuthorDto> UpdateAsync(Guid id, string username, string displayName, string? avatarUrl)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new
-            {
-                id,
-                username,
-                displayName,
-                avatarUrl
-            })
-            .Match("(a:Author { Id: $id })")
-            .Set(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteWriteAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                a.Username = $username,
-                a.DisplayName = $displayName,
-                a.AvatarUrl = $avatarUrl
-                """)
-            .Return<AuthorDto>("a")
-            .ResultsAsync;
+                CREATE (author:Author {
+                    Id: $id,
+                    Username: $username,
+                    DisplayName: $displayName,
+                    AvatarUrl: $avatarUrl
+                })
+                MATCH (author:Author { Id: $id })
+                SET author.Username = $username,
+                    author.DisplayName = $displayName,
+                    author.AvatarUrl = $avatarUrl
+                RETURN {
+                    Id: author.Id,
+                    Username: author.Username,
+                    DisplayName: author.DisplayName,
+                    AvatarUrl: author.AvatarUrl
+                }
+                """,
+                new
+                {
+                    id = id.ToString(),
+                    username,
+                    displayName,
+                    avatarUrl
+                });
 
-        return
-            results.SingleOrDefault()
-            ?? throw new NotFoundException();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<AuthorDto>();
+        });
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new { id })
-            .OptionalMatch("(a:Author { Id: $id })")
-            .Delete("a")
-            .Return<bool>("COUNT(a) = 0")
-            .ResultsAsync;
+        await using var session = _driver.AsyncSession();
+        var notFount = await session.ExecuteWriteAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
+                """
+                OPTIONAL MATCH (author:Author { Id: $id })
+                DETACH DELETE author
+                RETURN COUNT(author) = 0
+                """,
+                new { id = id.ToString() });
 
-        if (results.Single())
+            var record = await data.SingleAsync();
+            return record[0].As<bool>();
+        });
+
+        if (notFount)
             throw new NotFoundException();
     }
 }

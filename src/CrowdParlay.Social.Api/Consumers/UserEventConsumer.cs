@@ -2,7 +2,7 @@ using CrowdParlay.Communication;
 using CrowdParlay.Social.Application.Abstractions;
 using MassTransit;
 
-namespace CrowdParlay.Social.Application.Consumers;
+namespace CrowdParlay.Social.Api.Consumers;
 
 public class UserEventConsumer : IConsumer<UserCreatedEvent>, IConsumer<UserUpdatedEvent>, IConsumer<UserDeletedEvent>
 {

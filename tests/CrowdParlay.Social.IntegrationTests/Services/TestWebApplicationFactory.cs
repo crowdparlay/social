@@ -1,4 +1,4 @@
-﻿using CrowdParlay.Social.Application.Consumers;
+﻿using CrowdParlay.Social.Api.Consumers;
 using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
