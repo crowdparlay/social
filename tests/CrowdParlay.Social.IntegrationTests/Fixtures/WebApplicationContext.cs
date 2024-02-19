@@ -1,6 +1,5 @@
 ﻿using CrowdParlay.Social.Api;
 using CrowdParlay.Social.IntegrationTests.Services;
-using MassTransit.Testing;
 using Nito.AsyncEx;
 using Testcontainers.Neo4j;
 
@@ -9,7 +8,7 @@ namespace CrowdParlay.Social.IntegrationTests.Fixtures;
 public class WebApplicationContext
 {
     public readonly HttpClient Client;
-    public readonly ITestHarness Harness;
+    public readonly IServiceProvider Services;
 
     public WebApplicationContext()
     {
@@ -20,7 +19,7 @@ public class WebApplicationContext
             .Build();
 
         AsyncContext.Run(async () => await neo4j.StartAsync());
-        
+
         // ReSharper disable once InconsistentNaming
         var neo4jConfiguration = new Neo4jConfiguration(
             Uri: neo4j.GetConnectionString(),
@@ -29,6 +28,6 @@ public class WebApplicationContext
 
         var webApplicationFactory = new TestWebApplicationFactory<Program>(neo4jConfiguration);
         Client = webApplicationFactory.CreateClient();
-        Harness = webApplicationFactory.Services.GetTestHarness();
+        Services = webApplicationFactory.Services;
     }
 }

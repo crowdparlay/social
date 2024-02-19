@@ -1,6 +1,6 @@
 using CrowdParlay.Communication;
+using CrowdParlay.Social.Api.Consumers;
 using CrowdParlay.Social.Api.Middlewares;
-using CrowdParlay.Social.Application.Consumers;
 using MassTransit;
 
 namespace CrowdParlay.Social.Api.Extensions;

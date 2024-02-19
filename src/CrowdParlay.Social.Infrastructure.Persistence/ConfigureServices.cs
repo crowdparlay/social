@@ -2,7 +2,7 @@ using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Infrastructure.Persistence.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Neo4jClient;
+using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence;
 
@@ -30,7 +30,7 @@ public static class ConfigurePersistenceExtensions
             configuration["NEO4J_PASSWORD"] ??
             throw new InvalidOperationException("NEO4J_PASSWORD is not set!");
 
-        var client = new BoltGraphClient(uri, username, password);
-        return services.AddSingleton<IGraphClient>(client);
+        var driver = GraphDatabase.Driver(uri, AuthTokens.Basic(username, password));
+        return services.AddSingleton(driver);
     }
 }

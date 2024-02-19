@@ -1,123 +1,131 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
-using CrowdParlay.Social.Application.Exceptions;
-using Neo4jClient;
+using Mapster;
+using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class DiscussionRepository : IDiscussionRepository
 {
-    private readonly IGraphClient _graphClient;
+    private readonly IDriver _driver;
 
-    public DiscussionRepository(IGraphClient graphClient) => _graphClient = graphClient;
+    public DiscussionRepository(IDriver driver) => _driver = driver;
 
     public async Task<DiscussionDto> GetByIdAsync(Guid id)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new { id })
-            .Match("(d:Discussion { Id: $id })-[:AUTHORED_BY]->(a:Author)")
-            .With(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteReadAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                {
-                    Id: d.Id,
-                    Title: d.Title,
-                    Description: d.Description,
+                MATCH (discussion:Discussion { Id: $id })-[:AUTHORED_BY]->(author:Author)
+                RETURN {
+                    Id: discussion.Id,
+                    Title: discussion.Title,
+                    Description: discussion.Description,
                     Author: {
-                        Id: a.Id,
-                        Username: a.Username,
-                        DisplayName: a.DisplayName,
-                        AvatarUrl: a.AvatarUrl
+                        Id: author.Id,
+                        Username: author.Username,
+                        DisplayName: author.DisplayName,
+                        AvatarUrl: author.AvatarUrl
                     }
                 }
-                AS d
-                """)
-            .Return<DiscussionDto>("d")
-            .ResultsAsync;
+                """,
+                new { id = id.ToString() });
 
-        return
-            results.SingleOrDefault()
-            ?? throw new NotFoundException();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<DiscussionDto>();
+        });
     }
 
-    public async Task<IEnumerable<DiscussionDto>> GetAllAsync() => await _graphClient.Cypher
-        .Match("(d:Discussion)-[:AUTHORED_BY]->(a:Author)")
-        .With(
-            """
-            {
-                Id: d.Id,
-                Title: d.Title,
-                Description: d.Description,
-                Author: {
-                    Id: a.Id,
-                    Username: a.Username,
-                    DisplayName: a.DisplayName,
-                    AvatarUrl: a.AvatarUrl
+    public async Task<IEnumerable<DiscussionDto>> GetAllAsync()
+    {
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteReadAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
+                """
+                MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author)
+                RETURN {
+                    Id: discussion.Id,
+                    Title: discussion.Title,
+                    Description: discussion.Description,
+                    Author: {
+                        Id: author.Id,
+                        Username: author.Username,
+                        DisplayName: author.DisplayName,
+                        AvatarUrl: author.AvatarUrl
+                    }
                 }
-            }
-            AS d
-            """)
-        .Return<DiscussionDto>("d")
-        .ResultsAsync;
+                """);
 
-    public async Task<IEnumerable<DiscussionDto>> GetByAuthorAsync(Guid authorId) => await _graphClient.Cypher
-        .WithParams(new { authorId })
-        .Match("(d:Discussion)-[:AUTHORED_BY]->(a:Author { Id: $authorId })")
-        .With(
-            """
-            {
-                Id: d.Id,
-                Title: d.Title,
-                Description: d.Description,
-                Author: {
-                    Id: a.Id,
-                    Username: a.Username,
-                    DisplayName: a.DisplayName,
-                    AvatarUrl: a.AvatarUrl
+            var record = await data.SingleAsync();
+            return record[0].Adapt<IEnumerable<DiscussionDto>>();
+        });
+    }
+
+    public async Task<IEnumerable<DiscussionDto>> GetByAuthorAsync(Guid authorId)
+    {
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteReadAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
+                """
+                MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author { Id: $authorId })
+                RETURN {
+                    Id: discussion.Id,
+                    Title: discussion.Title,
+                    Description: discussion.Description,
+                    Author: {
+                        Id: author.Id,
+                        Username: author.Username,
+                        DisplayName: author.DisplayName,
+                        AvatarUrl: author.AvatarUrl
+                    }
                 }
-            }
-            AS d
-            """)
-        .Return<DiscussionDto>("d")
-        .ResultsAsync;
+                """, new { authorId = authorId.ToString() });
+
+            var record = await data.SingleAsync();
+            return record[0].Adapt<IEnumerable<DiscussionDto>>();
+        });
+    }
 
     public async Task<DiscussionDto> CreateAsync(Guid authorId, string title, string description)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new
-            {
-                authorId,
-                title,
-                description
-            })
-            .Match("(a:Author {Id: $authorId})")
-            .Create(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteWriteAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                (d:Discussion {
+                MATCH (author:Author { Id: $authorId })
+                CREATE (discussion:Discussion {
                     Id: randomUUID(),
                     Title: $title,
                     Description: $description,
                     CreatedAt: datetime()
                 })
-                """)
-            .Create("(d)-[:AUTHORED_BY]->(a)")
-            .With(
-                """
-                {
-                    Id: d.Id,
-                    Title: d.Title,
-                    Description: d.Description,
+                CREATE (discussion)-[:AUTHORED_BY]->(author)
+                RETURN {
+                    Id: discussion.Id,
+                    Title: discussion.Title,
+                    Description: discussion.Description,
                     Author: {
-                        Id: a.Id,
-                        Username: a.Username,
-                        DisplayName: a.DisplayName,
-                        AvatarUrl: a.AvatarUrl
+                        Id: author.Id,
+                        Username: author.Username,
+                        DisplayName: author.DisplayName,
+                        AvatarUrl: author.AvatarUrl
                     }
                 }
-                AS d
-                """)
-            .Return<DiscussionDto>("d")
-            .ResultsAsync;
+                """,
+                new
+                {
+                    authorId = authorId.ToString(),
+                    title,
+                    description
+                });
 
-        return results.Single();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<DiscussionDto>();
+        });
     }
 }

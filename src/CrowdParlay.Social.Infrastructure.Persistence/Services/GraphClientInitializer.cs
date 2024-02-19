@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Hosting;
-using Neo4jClient;
+using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
@@ -8,21 +8,16 @@ namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 /// </summary>
 public class GraphClientInitializer : IHostedService
 {
-    private readonly IGraphClient _graphClient;
+    private readonly IDriver _driver;
 
-    public GraphClientInitializer(IGraphClient graphClient) => _graphClient = graphClient;
+    public GraphClientInitializer(IDriver driver) => _driver = driver;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await _graphClient.ConnectAsync();
-        await _graphClient.Cypher
-            .Create("CONSTRAINT unique_author_id IF NOT EXISTS FOR (a:Author) REQUIRE a.Id IS UNIQUE")
-            .ExecuteWithoutResultsAsync();
+        await using var session = _driver.AsyncSession();
+        await session.ExecuteWriteAsync(async runner =>
+            await runner.RunAsync("CREATE CONSTRAINT unique_author_id IF NOT EXISTS FOR (a:Author) REQUIRE a.Id IS UNIQUE"));
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _graphClient.Dispose();
-        return Task.CompletedTask;
-    }
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
