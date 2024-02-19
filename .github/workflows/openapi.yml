@@ -6,9 +6,6 @@ on:
       openapi_asset_upload_url:
         required: true
         type: string
-  pull_request:
-    branches:
-      - master
 
 jobs:
   produce-spec:
@@ -43,22 +40,5 @@ jobs:
     needs: produce-spec
     uses: crowdparlay/foundation/.github/workflows/api-docs.yml@master
     with:
-      publish: ${{ github.event_name != 'pull_request' }}
+      publish: true
     secrets: inherit
-  spec-diff:
-    name: Check API diff on Bump.sh
-    if: ${{ github.event_name == 'pull_request' }}
-    needs: integrate-spec
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🔽 Checkout repository
-        uses: actions/checkout@v4
-      - name: 🤖 Comment pull request with API diff
-        uses: bump-sh/github-action@v1
-        with:
-          doc: ${{ vars.BUMP_SH_DOCUMENTATION }}
-          token: ${{ secrets.BUMP_SH_TOKEN }}
-          file: openapi.yaml
-          command: diff
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
