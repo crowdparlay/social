@@ -1,4 +1,5 @@
 using CrowdParlay.Social.Application.Abstractions;
+using CrowdParlay.Social.Application.Exceptions;
 using CrowdParlay.Social.IntegrationTests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -6,14 +7,9 @@ namespace CrowdParlay.Social.IntegrationTests.Tests;
 
 public class CommentsRepositoryTests : IClassFixture<WebApplicationContext>
 {
-    private readonly HttpClient _client;
     private readonly IServiceProvider _services;
 
-    public CommentsRepositoryTests(WebApplicationContext context)
-    {
-        _client = context.Client;
-        _services = context.Services;
-    }
+    public CommentsRepositoryTests(WebApplicationContext context) => _services = context.Services;
 
     [Fact(DisplayName = "Create comment")]
     public async Task CreateComment()
@@ -111,5 +107,34 @@ public class CommentsRepositoryTests : IClassFixture<WebApplicationContext>
         page.Items.Should().HaveCount(2);
         page.Items.Should().BeEquivalentTo(new[] { comment1, comment2 });
         page.Items.First().FirstRepliesAuthors.Should().BeEquivalentTo(new[] { author4, author2, author1 });
+    }
+    
+    [Fact(DisplayName = "Get comment with unknown ID")]
+    public async Task GetComment_WithUnknownId_ThrowsNotFoundException()
+    {
+        // Arrange
+        await using var scope = _services.CreateAsyncScope();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentRepository>();
+
+        // Act
+        Func<Task> getComment = async () => await comments.GetByIdAsync(Guid.NewGuid());
+
+        // Assert
+        await getComment.Should().ThrowAsync<NotFoundException>();
+    }
+    
+    [Fact(DisplayName = "Create comment with unknown author and discussion")]
+    public async Task CreateComment_WithUnknownAuthorAndDiscussion_ThrowsNotFoundException()
+    {
+        // Arrange
+        await using var scope = _services.CreateAsyncScope();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentRepository>();
+
+        // Act
+        Func<Task> createComment = async () =>
+            await comments.CreateAsync(Guid.NewGuid(), Guid.NewGuid(), "Comment content");
+
+        // Assert
+        await createComment.Should().ThrowAsync<NotFoundException>();
     }
 }

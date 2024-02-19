@@ -43,6 +43,9 @@ public class CommentRepository : ICommentRepository
                 }
                 """,
                 new { id = id.ToString() });
+            
+            if (await data.PeekAsync() is null)
+                throw new NotFoundException();
 
             var record = await data.SingleAsync();
             return record[0].Adapt<CommentDto>();
@@ -104,6 +107,9 @@ public class CommentRepository : ICommentRepository
                     count
                 });
 
+            if (await data.PeekAsync() is null)
+                throw new NotFoundException();
+
             var record = await data.SingleAsync();
             return record[0].Adapt<Page<CommentDto>>();
         });
@@ -144,6 +150,9 @@ public class CommentRepository : ICommentRepository
                     discussionId = discussionId.ToString(),
                     content
                 });
+
+            if (await data.PeekAsync() is null)
+                throw new NotFoundException();
 
             var record = await data.SingleAsync();
             return record[0].Adapt<CommentDto>();
