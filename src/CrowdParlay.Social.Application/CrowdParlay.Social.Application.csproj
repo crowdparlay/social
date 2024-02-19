@@ -15,7 +15,6 @@
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
-      <PackageReference Include="Neo4jClient" Version="5.1.11" />
       <PackageReference Include="Serilog" Version="3.0.1" />
       <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
       <PackageReference Include="Serilog.Settings.AppSettings" Version="2.2.2" />

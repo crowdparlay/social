@@ -1,6 +1,5 @@
 ﻿using CrowdParlay.Social.Api;
 using CrowdParlay.Social.IntegrationTests.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Nito.AsyncEx;
 using Testcontainers.Neo4j;
 

@@ -33,12 +33,12 @@ public class CommentsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<CommentDto>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
-    public async Task<IEnumerable<CommentDto>> SearchComments(
+    public async Task<Page<CommentDto>> SearchComments(
         [FromQuery] Guid? discussionId,
         [FromQuery] Guid? authorId,
-        [FromQuery, BindRequired] int page,
-        [FromQuery, BindRequired] int size) =>
-        await _comments.SearchAsync(discussionId, authorId, page, size);
+        [FromQuery, BindRequired] int offset,
+        [FromQuery, BindRequired] int count) =>
+        await _comments.SearchAsync(discussionId, authorId, offset, count);
 
     /// <summary>
     /// Creates a top-level comment in discussion.
@@ -66,11 +66,11 @@ public class CommentsController : ControllerBase
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
-    public async Task<IEnumerable<CommentDto>> GetRepliesToComment(
+    public async Task<Page<CommentDto>> GetRepliesToComment(
         [FromRoute] Guid parentCommentId,
-        [FromQuery, BindRequired] int page,
-        [FromQuery, BindRequired] int size) =>
-        await _comments.GetRepliesToCommentAsync(parentCommentId, page, size);
+        [FromQuery, BindRequired] int offset,
+        [FromQuery, BindRequired] int count) =>
+        await _comments.GetRepliesToCommentAsync(parentCommentId, offset, count);
 
     /// <summary>
     /// Creates a reply to the comment with the specified ID.

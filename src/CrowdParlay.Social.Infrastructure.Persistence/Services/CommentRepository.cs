@@ -1,35 +1,34 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
-using Neo4jClient;
+using Mapster;
+using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class CommentRepository : ICommentRepository
 {
-    private readonly IGraphClient _graphClient;
+    private readonly IDriver _driver;
 
-    public CommentRepository(IGraphClient graphClient) => _graphClient = graphClient;
+    public CommentRepository(IDriver driver) => _driver = driver;
 
     public async Task<CommentDto> GetByIdAsync(Guid id)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new { id })
-            .Match("(comment:Comment { Id: $id })-[:AUTHORED_BY]->(author:Author)")
-            .OptionalMatch("(replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)")
-            .With(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteReadAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                comment, author, COUNT(reply) AS replyCount,
-                CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
-                    Id: replyAuthor.Id,
-                    Username: replyAuthor.Username,
-                    DisplayName: replyAuthor.DisplayName,
-                    AvatarUrl: replyAuthor.AvatarUrl
-                })[0..3] ELSE [] END AS firstRepliesAuthors
-                """)
-            .With(
-                """
-                {
+                MATCH (comment:Comment { Id: $id })-[:AUTHORED_BY]->(author:Author)
+                OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
+                WITH comment, author, COUNT(reply) AS replyCount,
+                    CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
+                        Id: replyAuthor.Id,
+                        Username: replyAuthor.Username,
+                        DisplayName: replyAuthor.DisplayName,
+                        AvatarUrl: replyAuthor.AvatarUrl
+                    })[0..3] ELSE [] END AS firstRepliesAuthors
+                RETURN {
                     Id: comment.Id,
                     Content: comment.Content,
                     Author: {
@@ -38,92 +37,94 @@ public class CommentRepository : ICommentRepository
                         DisplayName: author.DisplayName,
                         AvatarUrl: author.AvatarUrl
                     },
-                    CreatedAt: datetime(comment.CreatedAt),
+                    CreatedAt: comment.CreatedAt,
                     ReplyCount: replyCount,
                     FirstRepliesAuthors: firstRepliesAuthors
                 }
-                AS comment
-                """)
-            .Return<CommentDto>("comment")
-            .ResultsAsync;
+                """,
+                new { id = id.ToString() });
 
-        return
-            results.SingleOrDefault()
-            ?? throw new NotFoundException();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<CommentDto>();
+        });
     }
 
-    public async Task<IEnumerable<CommentDto>> SearchAsync(Guid? discussionId, Guid? authorId, int page, int size)
+    public async Task<Page<CommentDto>> SearchAsync(Guid? discussionId, Guid? authorId, int offset, int count)
     {
-        var query = _graphClient.Cypher.WithParams(new { discussionId, authorId });
-
         var matchSelector = authorId is not null
-            ? "(author:Author { Id: $authorId })<-[:AUTHORED_BY]-(comment:Comment)"
-            : "(author:Author)<-[:AUTHORED_BY]-(comment:Comment)";
+            ? "MATCH (author:Author { Id: $authorId })<-[:AUTHORED_BY]-(comment:Comment)"
+            : "MATCH (author:Author)<-[:AUTHORED_BY]-(comment:Comment)";
 
         if (discussionId is not null)
             matchSelector += "-[:REPLIES_TO]->(discussion:Discussion { Id: $discussionId })";
 
-        return await query
-            .Match(matchSelector)
-            .With("*")
-            .OrderBy("comment.CreatedAt")
-            .Skip(page * size)
-            .Limit(size)
-            .OptionalMatch("(replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)")
-            .With(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteReadAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
+                matchSelector +
                 """
-                comment, author, COUNT(reply) AS replyCount,
-                CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
-                    Id: replyAuthor.Id,
-                    Username: replyAuthor.Username,
-                    DisplayName: replyAuthor.DisplayName,
-                    AvatarUrl: replyAuthor.AvatarUrl
-                })[0..3] ELSE [] END AS firstRepliesAuthors
-                """)
-            .With(
-                """
-                {
-                    Id: comment.Id,
-                    Content: comment.Content,
-                    Author: {
-                        Id: author.Id,
-                        Username: author.Username,
-                        DisplayName: author.DisplayName,
-                        AvatarUrl: author.AvatarUrl
-                    },
-                    CreatedAt: datetime(comment.CreatedAt),
-                    ReplyCount: replyCount,
-                    FirstRepliesAuthors: firstRepliesAuthors
+                OPTIONAL MATCH (deepReplyAuthor:Author)<-[:AUTHORED_BY]-(deepReply:Comment)-[:REPLIES_TO*]->(comment)
+
+                WITH author, comment, deepReplyAuthor, deepReply
+                ORDER BY comment.CreatedAt, deepReply.CreatedAt DESC
+
+                WITH author, comment, {
+                    DeepReplyCount: COUNT(deepReply),
+                    FirstDeepRepliesAuthors: CASE WHEN COUNT(deepReply) > 0 THEN COLLECT(DISTINCT {
+                        Id: deepReplyAuthor.Id,
+                        Username: deepReplyAuthor.Username,
+                        DisplayName: deepReplyAuthor.DisplayName,
+                        AvatarUrl: deepReplyAuthor.AvatarUrl
+                    })[0..3] ELSE [] END
+                } AS deepRepliesData
+
+                RETURN {
+                    TotalCount: COUNT(comment),
+                    Items: COLLECT({
+                        Id: comment.Id,
+                        Content: comment.Content,
+                        Author: {
+                            Id: author.Id,
+                            Username: author.Username,
+                            DisplayName: author.DisplayName,
+                            AvatarUrl: author.AvatarUrl
+                        },
+                        CreatedAt: comment.CreatedAt,
+                        ReplyCount: deepRepliesData.DeepReplyCount,
+                        FirstRepliesAuthors: deepRepliesData.FirstDeepRepliesAuthors
+                    })[$offset..$offset + $count]
                 }
-                AS comment
-                """)
-            .Return<CommentDto>("comment")
-            .ResultsAsync;
+                """,
+                new
+                {
+                    discussionId = discussionId.ToString(),
+                    authorId = authorId.ToString(),
+                    offset,
+                    count
+                });
+
+            var record = await data.SingleAsync();
+            return record[0].Adapt<Page<CommentDto>>();
+        });
     }
 
     public async Task<CommentDto> CreateAsync(Guid authorId, Guid discussionId, string content)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new
-            {
-                authorId,
-                content,
-                discussionId
-            })
-            .Match("(author:Author {Id: $authorId})")
-            .Match("(discussion:Discussion {Id: $discussionId})")
-            .Create(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteWriteAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                (comment:Comment {
+                MATCH (author:Author { Id: $authorId })
+                MATCH (discussion:Discussion { Id: $discussionId })
+                CREATE (comment:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
-                """)
-            .Create("(discussion)<-[:REPLIES_TO]-(comment)-[:AUTHORED_BY]->(author)")
-            .With(
-                """
-                {
+                CREATE (discussion)<-[:REPLIES_TO]-(comment)-[:AUTHORED_BY]->(author)
+                RETURN {
                     Id: comment.Id,
                     Content: comment.Content,
                     Author: {
@@ -132,81 +133,88 @@ public class CommentRepository : ICommentRepository
                         DisplayName: author.DisplayName,
                         AvatarUrl: author.AvatarUrl
                     },
-                    CreatedAt: datetime(comment.CreatedAt)
+                    CreatedAt: datetime(),
+                    ReplyCount: 0,
+                    FirstRepliesAuthors: []
                 }
-                AS comment
-                """
-            )
-            .Return<CommentDto>("comment")
-            .ResultsAsync;
+                """,
+                new
+                {
+                    authorId = authorId.ToString(),
+                    discussionId = discussionId.ToString(),
+                    content
+                });
 
-        return results.Single();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<CommentDto>();
+        });
     }
 
-    public async Task<IEnumerable<CommentDto>> GetRepliesToCommentAsync(Guid parentCommentId, int page, int size)
+    public async Task<Page<CommentDto>> GetRepliesToCommentAsync(Guid parentCommentId, int offset, int count)
     {
-        return await _graphClient.Cypher
-            .WithParams(new { parentCommentId })
-            .Match("(author:Author)<-[:AUTHORED_BY]-(comment:Comment)-[:REPLIES_TO]->(parent:Comment { Id: $parentCommentId })")
-            .With("*")
-            .OrderBy("comment.CreatedAt")
-            .Skip(page * size)
-            .Limit(size)
-            .OptionalMatch("(replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)")
-            .With(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteReadAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                comment, author, COUNT(reply) AS replyCount,
-                CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
-                    Id: replyAuthor.Id,
-                    Username: replyAuthor.Username,
-                    DisplayName: replyAuthor.DisplayName,
-                    AvatarUrl: replyAuthor.AvatarUrl
-                })[0..3] ELSE [] END AS firstRepliesAuthors
-                """)
-            .With(
-                """
-                {
-                    Id: comment.Id,
-                    Content: comment.Content,
-                    Author: {
-                        Id: author.Id,
-                        Username: author.Username,
-                        DisplayName: author.DisplayName,
-                        AvatarUrl: author.AvatarUrl
-                    },
-                    CreatedAt: datetime(comment.CreatedAt),
-                    ReplyCount: replyCount,
-                    FirstRepliesAuthors: firstRepliesAuthors
+                MATCH (author:Author)<-[:AUTHORED_BY]-(comment:Comment)-[:REPLIES_TO]->(parent:Comment { Id: $parentCommentId })
+                WITH author, comment, COUNT(comment) AS totalCount
+                ORDER BY comment.CreatedAt
+                SKIP $offset
+                LIMIT $count
+                OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
+                WITH totalCount, comment, author, COUNT(reply) AS replyCount,
+                    CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
+                        Id: replyAuthor.Id,
+                        Username: replyAuthor.Username,
+                        DisplayName: replyAuthor.DisplayName,
+                        AvatarUrl: replyAuthor.AvatarUrl
+                    })[0..3] ELSE [] END AS firstRepliesAuthors
+                RETURN {
+                    TotalCount = totalCount,
+                    Items = {
+                        Id: comment.Id,
+                        Content: comment.Content,
+                        Author: {
+                            Id: author.Id,
+                            Username: author.Username,
+                            DisplayName: author.DisplayName,
+                            AvatarUrl: author.AvatarUrl
+                        },
+                        CreatedAt: datetime(comment.CreatedAt),
+                        ReplyCount: replyCount,
+                        FirstRepliesAuthors: firstRepliesAuthors
+                    }
                 }
-                AS comment
-                """)
-            .Return<CommentDto>("comment")
-            .ResultsAsync;
+                """,
+                new
+                {
+                    parentCommentId = parentCommentId.ToString(),
+                    offset,
+                    count
+                });
+
+            var record = await data.SingleAsync();
+            return record[0].Adapt<Page<CommentDto>>();
+        });
     }
 
     public async Task<CommentDto> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new
-            {
-                authorId,
-                content,
-                parentCommentId
-            })
-            .Match("(replyAuthor:Author {Id: $authorId})")
-            .Match("(parent:Comment {Id: $parentCommentId})")
-            .Create(
+        await using var session = _driver.AsyncSession();
+        return await session.ExecuteWriteAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
                 """
-                (reply:Comment {
+                MATCH (replyAuthor:Author { Id: $authorId })
+                MATCH (parent:Comment {Id: $parentCommentId})
+                CREATE (reply:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
-                """)
-            .Create("(parent)<-[:REPLIES_TO]-(reply)-[:AUTHORED_BY]->(replyAuthor)")
-            .With(
-                """
-                {
+                CREATE (parent)<-[:REPLIES_TO]-(reply)-[:AUTHORED_BY]->(replyAuthor)
+                RETURN {
                     Id: reply.Id,
                     Content: reply.Content,
                     Author: {
@@ -219,24 +227,37 @@ public class CommentRepository : ICommentRepository
                     ReplyCount: 0,
                     FirstRepliesAuthors: []
                 }
-                AS reply
-                """)
-            .Return<CommentDto>("reply")
-            .ResultsAsync;
+                """,
+                new
+                {
+                    parentCommentId = parentCommentId.ToString(),
+                    authorId = authorId.ToString(),
+                    content
+                });
 
-        return results.Single();
+            var record = await data.SingleAsync();
+            return record[0].Adapt<CommentDto>();
+        });
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        var results = await _graphClient.Cypher
-            .WithParams(new { id })
-            .OptionalMatch("(comment:Comment { Id: $id })")
-            .DetachDelete("comment")
-            .Return<bool>("COUNT(comment) = 0")
-            .ResultsAsync;
+        await using var session = _driver.AsyncSession();
+        var notFount = await session.ExecuteWriteAsync(async runner =>
+        {
+            var data = await runner.RunAsync(
+                """
+                OPTIONAL MATCH (comment:Comment { Id: $id })
+                DETACH DELETE comment
+                RETURN COUNT(comment) = 0
+                """,
+                new { id = id.ToString() });
 
-        if (results.Single())
+            var record = await data.SingleAsync();
+            return record[0].As<bool>();
+        });
+
+        if (notFount)
             throw new NotFoundException();
     }
 }
