@@ -1,5 +1,6 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Application.Exceptions;
 using Mapster;
 using Neo4j.Driver;
 
@@ -32,6 +33,9 @@ public class DiscussionRepository : IDiscussionRepository
                 }
                 """,
                 new { id = id.ToString() });
+
+            if (await data.PeekAsync() is null)
+                throw new NotFoundException();
 
             var record = await data.SingleAsync();
             return record[0].Adapt<DiscussionDto>();
