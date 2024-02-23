@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
@@ -10,12 +10,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CrowdParlay.Communication" Version="2.0.0" />
+        <PackageReference Include="CrowdParlay.Communication" Version="2.0.1" />
         <PackageReference Include="FluentAssertions" Version="6.12.0" />
-        <PackageReference Include="JWT" Version="10.1.1" />
-        <PackageReference Include="MassTransit" Version="8.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.11" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+        <PackageReference Include="MassTransit" Version="8.0.16" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="Testcontainers.Neo4j" Version="3.7.0" />
         <PackageReference Include="xunit" Version="2.5.1" />
