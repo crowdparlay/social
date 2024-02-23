@@ -1,14 +1,8 @@
-using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.IntegrationTests.Fixtures;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class AuthorsRepositoryTests : IClassFixture<WebApplicationContext>
+public class AuthorsRepositoryTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
 {
-    private readonly IServiceProvider _services;
-
-    public AuthorsRepositoryTests(WebApplicationContext context) => _services = context.Services;
+    private readonly IServiceProvider _services = context.Services;
 
     [Fact(DisplayName = "Get user by ID returns user")]
     public async Task GetAuthorById_Positive()

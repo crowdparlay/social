@@ -3,23 +3,13 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using CrowdParlay.Social.Api.v1.DTOs;
-using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.Application.DTOs;
-using CrowdParlay.Social.IntegrationTests.Fixtures;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class DiscussionsControllerTests : IClassFixture<WebApplicationContext>
+public class DiscussionsControllerTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
 {
-    private readonly HttpClient _client;
-    private readonly IServiceProvider _services;
-
-    public DiscussionsControllerTests(WebApplicationContext context)
-    {
-        _client = context.Client;
-        _services = context.Services;
-    }
+    private readonly IServiceProvider _services = context.Services;
+    private readonly HttpClient _client = context.Server.CreateClient();
 
     [Fact(DisplayName = "Get discussion by ID returns discussion")]
     public async Task GetDiscussionByIdHasAuthor_Positive()
