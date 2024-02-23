@@ -29,7 +29,11 @@ public class Startup(IConfiguration configuration)
         app.UseAuthentication();
         app.UseRouting();
         app.UseAuthorization();
-        app.UseEndpoints(builder => builder.MapControllers());
+        app.UseEndpoints(builder =>
+        {
+            builder.MapHub<CommentsHub>("/api/v1/hubs/comments", options => options.Transports = HttpTransportType.ServerSentEvents);
+            builder.MapControllers();
+        });
     }
 
     public void ConfigureServices(IServiceCollection services) => services
