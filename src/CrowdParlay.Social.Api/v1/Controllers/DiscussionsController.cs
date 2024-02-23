@@ -11,20 +11,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace CrowdParlay.Social.Api.v1.Controllers;
 
 [ApiController, ApiRoute("[controller]")]
-public class DiscussionsController : ControllerBase
+public class DiscussionsController(IDiscussionRepository discussions) : ControllerBase
 {
-    private readonly IDiscussionRepository _discussions;
-
-    public DiscussionsController(IDiscussionRepository discussions) => _discussions = discussions;
-
     /// <summary>
     /// Returns discussion with the specified ID.
     /// </summary>
-    [HttpGet("{discussionId}")]
+    [HttpGet("{discussionId:guid}")]
     [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound, MediaTypeNames.Application.Json)]
     public async Task<DiscussionDto> GetDiscussionById([FromRoute] Guid discussionId) =>
-        await _discussions.GetByIdAsync(discussionId);
+        await discussions.GetByIdAsync(discussionId);
 
     /// <summary>
     /// Returns all discussions created by author with the specified ID.
@@ -32,8 +28,8 @@ public class DiscussionsController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<DiscussionDto>), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
     public async Task<IEnumerable<DiscussionDto>> GetDiscussions([FromQuery] Guid? authorId) => authorId is null
-        ? await _discussions.GetAllAsync()
-        : await _discussions.GetByAuthorAsync(authorId.Value);
+        ? await discussions.GetAllAsync()
+        : await discussions.GetByAuthorAsync(authorId.Value);
 
     /// <summary>
     /// Creates a discussion.
@@ -47,7 +43,7 @@ public class DiscussionsController : ControllerBase
             User.GetUserId()
             ?? throw new ForbiddenException();
 
-        var response = await _discussions.CreateAsync(authorId, request.Title, request.Description);
+        var response = await discussions.CreateAsync(authorId, request.Title, request.Description);
         return CreatedAtAction(nameof(GetDiscussionById), new { DiscussionId = response.Id }, response);
     }
 }

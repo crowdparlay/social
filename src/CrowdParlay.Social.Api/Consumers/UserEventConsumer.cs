@@ -4,15 +4,12 @@ using MassTransit;
 
 namespace CrowdParlay.Social.Api.Consumers;
 
-public class UserEventConsumer : IConsumer<UserCreatedEvent>, IConsumer<UserUpdatedEvent>, IConsumer<UserDeletedEvent>
+// ReSharper disable once ClassNeverInstantiated.Global
+public class UserEventConsumer(IAuthorRepository authors) : IConsumer<UserCreatedEvent>, IConsumer<UserUpdatedEvent>, IConsumer<UserDeletedEvent>
 {
-    private readonly IAuthorRepository _authors;
-
-    public UserEventConsumer(IAuthorRepository authors) => _authors = authors;
-
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
-        await _authors.CreateAsync(
+        await authors.CreateAsync(
             Guid.Parse(context.Message.UserId),
             context.Message.Username,
             context.Message.DisplayName,
@@ -21,7 +18,7 @@ public class UserEventConsumer : IConsumer<UserCreatedEvent>, IConsumer<UserUpda
 
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
     {
-        await _authors.UpdateAsync(
+        await authors.UpdateAsync(
             Guid.Parse(context.Message.UserId),
             context.Message.Username,
             context.Message.DisplayName,
@@ -29,5 +26,5 @@ public class UserEventConsumer : IConsumer<UserCreatedEvent>, IConsumer<UserUpda
     }
 
     public async Task Consume(ConsumeContext<UserDeletedEvent> context) =>
-        await _authors.DeleteAsync(Guid.Parse(context.Message.UserId));
+        await authors.DeleteAsync(Guid.Parse(context.Message.UserId));
 }

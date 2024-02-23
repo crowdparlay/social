@@ -11,8 +11,5 @@ public class ValidationException : Exception
         Errors = errors;
 
     public ValidationException(string propertyName, IEnumerable<string> errorDescriptions)
-        : this(new Dictionary<string, IEnumerable<string>>
-        {
-            [propertyName] = errorDescriptions
-        }) { }
+        : this(new Dictionary<string, IEnumerable<string>> { [propertyName] = errorDescriptions }) { }
 }

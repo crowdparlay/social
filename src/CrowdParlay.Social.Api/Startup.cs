@@ -1,24 +1,24 @@
 using CrowdParlay.Social.Api.Extensions;
+using CrowdParlay.Social.Api.Hubs;
 using CrowdParlay.Social.Api.Middlewares;
 using CrowdParlay.Social.Application;
 using CrowdParlay.Social.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http.Connections;
 using Serilog;
 
 namespace CrowdParlay.Social.Api;
 
-public class Startup
+public class Startup(IConfiguration configuration)
 {
-    private readonly IConfiguration _configuration;
-
-    public Startup(IConfiguration configuration) => _configuration = configuration;
-
     public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
     {
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
+            .CreateLogger();
+
         app.UseMiddleware<ExceptionHandlingMiddleware>();
-        // TODO: implement TraceIdMiddleware
-        // app.UseMiddleware<TraceIdMiddleware>();
         app.UseSerilogRequestLogging();
-        app.UseHealthChecks("/health");
+        app.UseHealthChecks("/healthz");
 
         app.UseCors(builder => builder
             .AllowAnyOrigin()
@@ -33,7 +33,7 @@ public class Startup
     }
 
     public void ConfigureServices(IServiceCollection services) => services
-        .AddApi(_configuration)
+        .AddApi(configuration)
         .AddApplication()
-        .AddPersistence(_configuration);
+        .AddPersistence(configuration);
 }

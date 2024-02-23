@@ -2,8 +2,8 @@ namespace CrowdParlay.Social.Application.DTOs;
 
 public class DiscussionDto
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
-    public AuthorDto Author { get; set; }
+    public required Guid Id { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
+    public required AuthorDto Author { get; set; }
 }
