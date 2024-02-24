@@ -6,15 +6,11 @@ using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
-public class CommentRepository : ICommentRepository
+public class CommentsRepository(IDriver driver) : ICommentRepository
 {
-    private readonly IDriver _driver;
-
-    public CommentRepository(IDriver driver) => _driver = driver;
-
     public async Task<CommentDto> GetByIdAsync(Guid id)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -61,7 +57,7 @@ public class CommentRepository : ICommentRepository
         if (discussionId is not null)
             matchSelector += "-[:REPLIES_TO]->(discussion:Discussion { Id: $discussionId })";
 
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -117,7 +113,7 @@ public class CommentRepository : ICommentRepository
 
     public async Task<CommentDto> CreateAsync(Guid authorId, Guid discussionId, string content)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -161,7 +157,7 @@ public class CommentRepository : ICommentRepository
 
     public async Task<Page<CommentDto>> GetRepliesToCommentAsync(Guid parentCommentId, int offset, int count)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -210,7 +206,7 @@ public class CommentRepository : ICommentRepository
 
     public async Task<CommentDto> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -251,7 +247,7 @@ public class CommentRepository : ICommentRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         var notFount = await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(

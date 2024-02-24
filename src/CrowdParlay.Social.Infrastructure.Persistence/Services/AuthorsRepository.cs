@@ -6,15 +6,11 @@ using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
-public class AuthorRepository : IAuthorRepository
+public class AuthorsRepository(IDriver driver) : IAuthorRepository
 {
-    private readonly IDriver _driver;
-
-    public AuthorRepository(IDriver driver) => _driver = driver;
-
     public async Task<AuthorDto> GetByIdAsync(Guid id)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -36,7 +32,7 @@ public class AuthorRepository : IAuthorRepository
 
     public async Task<AuthorDto> CreateAsync(Guid id, string username, string displayName, string? avatarUrl)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -69,17 +65,11 @@ public class AuthorRepository : IAuthorRepository
 
     public async Task<AuthorDto> UpdateAsync(Guid id, string username, string displayName, string? avatarUrl)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(
                 """
-                CREATE (author:Author {
-                    Id: $id,
-                    Username: $username,
-                    DisplayName: $displayName,
-                    AvatarUrl: $avatarUrl
-                })
                 MATCH (author:Author { Id: $id })
                 SET author.Username = $username,
                     author.DisplayName = $displayName,
@@ -106,7 +96,7 @@ public class AuthorRepository : IAuthorRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         var notFount = await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(

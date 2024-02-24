@@ -1,19 +1,16 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Application.Exceptions;
 using Mapster;
 using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
-public class DiscussionRepository : IDiscussionRepository
+public class DiscussionsRepository(IDriver driver) : IDiscussionRepository
 {
-    private readonly IDriver _driver;
-
-    public DiscussionRepository(IDriver driver) => _driver = driver;
-
     public async Task<DiscussionDto> GetByIdAsync(Guid id)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -33,6 +30,9 @@ public class DiscussionRepository : IDiscussionRepository
                 """,
                 new { id = id.ToString() });
 
+            if (await data.PeekAsync() is null)
+                throw new NotFoundException();
+
             var record = await data.SingleAsync();
             return record[0].Adapt<DiscussionDto>();
         });
@@ -40,7 +40,7 @@ public class DiscussionRepository : IDiscussionRepository
 
     public async Task<IEnumerable<DiscussionDto>> GetAllAsync()
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -66,7 +66,7 @@ public class DiscussionRepository : IDiscussionRepository
 
     public async Task<IEnumerable<DiscussionDto>> GetByAuthorAsync(Guid authorId)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
         {
             var data = await runner.RunAsync(
@@ -92,7 +92,7 @@ public class DiscussionRepository : IDiscussionRepository
 
     public async Task<DiscussionDto> CreateAsync(Guid authorId, string title, string description)
     {
-        await using var session = _driver.AsyncSession();
+        await using var session = driver.AsyncSession();
         return await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(

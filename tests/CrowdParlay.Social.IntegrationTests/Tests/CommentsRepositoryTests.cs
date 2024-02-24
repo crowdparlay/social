@@ -1,15 +1,11 @@
-using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.Application.Exceptions;
-using CrowdParlay.Social.IntegrationTests.Fixtures;
-using Microsoft.Extensions.DependencyInjection;
+// ReSharper disable UnusedVariable
+// ReSharper disable RedundantAssignment
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class CommentsRepositoryTests : IClassFixture<WebApplicationContext>
+public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
 {
-    private readonly IServiceProvider _services;
-
-    public CommentsRepositoryTests(WebApplicationContext context) => _services = context.Services;
+    private readonly IServiceProvider _services = context.Services;
 
     [Fact(DisplayName = "Create comment")]
     public async Task CreateComment()
@@ -43,21 +39,21 @@ public class CommentsRepositoryTests : IClassFixture<WebApplicationContext>
     public async Task SearchComments()
     {
         /*
-        ┌───────────────────────┬────────────────────┐
-        │  COMMENT              |  AUTHOR            │
-        ├───────────────────────┼────────────────────┤
-        │  comment1             │  author1           │
-        │   • comment11         │  author1           │
-        │      • comment111     │  author1           │
-        │      • comment112     │  author2           │
-        │   • comment12         │  author1           │
-        │      • comment121     │  author4           │
-        │   • comment13         │  author3           │
-        │   • comment14         │  author4           │
-        │  comment2             │  author1           │
-        │   • comment21         │  author3           │
-        │  comment3             │  author4           │
-        └───────────────────────┴────────────────────┘
+        ┌───────────────────────┬───────────────────────┐
+        │  COMMENT              │  AUTHOR               │
+        ├───────────────────────┼───────────────────────┤
+        │  comment1             │  author1              │
+        │   • comment11         │  author1              │
+        │      • comment111     │  author1              │
+        │      • comment112     │  author2              │
+        │   • comment12         │  author1              │
+        │      • comment121     │  author4              │
+        │   • comment13         │  author3              │
+        │   • comment14         │  author4              │
+        │  comment2             │  author1              │
+        │   • comment21         │  author3              │
+        │  comment3             │  author4              │
+        └───────────────────────┴───────────────────────┘
         */
 
         // Arrange
@@ -108,7 +104,7 @@ public class CommentsRepositoryTests : IClassFixture<WebApplicationContext>
         page.Items.Should().BeEquivalentTo(new[] { comment1, comment2 });
         page.Items.First().FirstRepliesAuthors.Should().BeEquivalentTo(new[] { author4, author2, author1 });
     }
-    
+
     [Fact(DisplayName = "Get comment with unknown ID")]
     public async Task GetComment_WithUnknownId_ThrowsNotFoundException()
     {
@@ -122,7 +118,7 @@ public class CommentsRepositoryTests : IClassFixture<WebApplicationContext>
         // Assert
         await getComment.Should().ThrowAsync<NotFoundException>();
     }
-    
+
     [Fact(DisplayName = "Create comment with unknown author and discussion")]
     public async Task CreateComment_WithUnknownAuthorAndDiscussion_ThrowsNotFoundException()
     {

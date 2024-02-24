@@ -5,7 +5,7 @@ namespace CrowdParlay.Social.Api;
 
 public static class GlobalSerializerOptions
 {
-    public static JsonSerializerOptions SnakeCase { get; } = new()
+    public static readonly JsonSerializerOptions SnakeCase = new()
     {
         PropertyNamingPolicy = new SnakeCaseJsonNamingPolicy(), 
         DictionaryKeyPolicy = new SnakeCaseJsonNamingPolicy() 

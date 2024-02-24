@@ -5,7 +5,7 @@ namespace CrowdParlay.Social.Api;
 
 public class Problem
 {
-    [JsonIgnore] public HttpStatusCode HttpStatusCode { get; init; }
+    [JsonIgnore] public HttpStatusCode HttpStatusCode { get; set; }
     public required string ErrorDescription { get; set; }
 }
 

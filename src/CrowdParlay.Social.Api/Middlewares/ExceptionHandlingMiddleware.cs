@@ -3,12 +3,8 @@ using CrowdParlay.Social.Application.Exceptions;
 
 namespace CrowdParlay.Social.Api.Middlewares;
 
-public class ExceptionHandlingMiddleware : IMiddleware
+public class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger) : IMiddleware
 {
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-
-    public ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger) => _logger = logger;
-
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
@@ -17,13 +13,13 @@ public class ExceptionHandlingMiddleware : IMiddleware
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "{ExceptionMessage}", exception.Message);
+            logger.LogError(exception, "{ExceptionMessage}", exception.Message);
             var problem = exception switch
             {
                 ValidationException e => SanitizeValidationException(e),
                 FluentValidation.ValidationException e => SanitizeFluentValidationException(e),
-                NotFoundException e => SanitizeNotFoundException(e, context),
-                ForbiddenException e => SanitizeForbiddenException(e, context),
+                NotFoundException => SanitizeNotFoundException(),
+                ForbiddenException => SanitizeForbiddenException(),
                 _ => SanitizeGenericException()
             };
 
@@ -61,13 +57,13 @@ public class ExceptionHandlingMiddleware : IMiddleware
                     .ToArray())
     };
 
-    private static Problem SanitizeNotFoundException(NotFoundException exception, HttpContext context) => new()
+    private static Problem SanitizeNotFoundException() => new()
     {
         HttpStatusCode = HttpStatusCode.NotFound,
         ErrorDescription = "The requested resource doesn't exist."
     };
 
-    private static Problem SanitizeForbiddenException(ForbiddenException exception, HttpContext context) => new()
+    private static Problem SanitizeForbiddenException() => new()
     {
         HttpStatusCode = HttpStatusCode.Forbidden,
         ErrorDescription = "You have no permission for this action."
