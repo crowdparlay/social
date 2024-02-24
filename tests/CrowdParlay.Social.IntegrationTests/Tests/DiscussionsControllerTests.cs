@@ -41,7 +41,7 @@ public class DiscussionsControllerTests(WebApplicationContext context) : IClassF
         // Act
         var getDiscussionResponse = await _client.GetAsync($"/api/v1/discussions/{discussionId}");
         getDiscussionResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var discussion = await getDiscussionResponse.Content.ReadFromJsonAsync<CommentDto>(GlobalSerializerOptions.SnakeCase);
+        var discussion = await getDiscussionResponse.Content.ReadFromJsonAsync<DiscussionDto>(GlobalSerializerOptions.SnakeCase);
 
         // Assert
         discussion!.Author.Should().BeEquivalentTo(author);
