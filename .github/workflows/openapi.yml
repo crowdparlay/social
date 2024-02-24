@@ -17,7 +17,13 @@ jobs:
       - name: ⚙️ Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: 8.0.x
+      - name: ⚙️ Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            7.0.x
+            8.0.x
       - name: ⚒ Build solution
         run: dotnet build
       - name: ⚙️ Install Swashbuckle.AspNetCore.Cli
@@ -25,7 +31,7 @@ jobs:
           dotnet tool install Swashbuckle.AspNetCore.Cli --global
           echo "$DOTNET_ROOT/tools/swagger" >> $GITHUB_PATH
       - name: 📝 Generate OpenAPI specification
-        run: swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net7.0/CrowdParlay.Social.Api.dll v1
+        run: swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net8.0/CrowdParlay.Social.Api.dll v1
       - name: 🔗 Upload OpenAPI specification as release asset
         uses: actions/upload-release-asset@v1
         env:
