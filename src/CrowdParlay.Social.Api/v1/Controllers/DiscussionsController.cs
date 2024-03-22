@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Mime;
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
@@ -16,6 +17,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     /// Returns discussion with the specified ID.
     /// </summary>
     [HttpGet("{discussionId:guid}")]
+    [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
     public async Task<DiscussionDto> GetDiscussionById([FromRoute] Guid discussionId) =>
@@ -25,6 +27,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     /// Returns all discussions created by author with the specified ID.
     /// </summary>
     [HttpGet]
+    [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(IEnumerable<DiscussionDto>), (int)HttpStatusCode.OK)]
     public async Task<IEnumerable<DiscussionDto>> GetDiscussions([FromQuery] Guid? authorId) => authorId is null
         ? await discussions.GetAllAsync()
@@ -34,6 +37,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     /// Creates a discussion.
     /// </summary>
     [HttpPost, Authorize]
+    [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.Created)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden)]
     public async Task<ActionResult<DiscussionDto>> CreateDiscussion([FromBody] DiscussionRequest request)
