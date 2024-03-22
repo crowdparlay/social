@@ -1,6 +1,6 @@
 using CrowdParlay.Communication;
 using CrowdParlay.Social.Api.Consumers;
-using CrowdParlay.Social.Api.Middlewares;
+using CrowdParlay.Social.Api.Services;
 using MassTransit;
 
 namespace CrowdParlay.Social.Api.Extensions;
@@ -10,10 +10,11 @@ public static class ConfigureApiExtensions
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services
+            .AddExceptionHandler<GlobalExceptionHandler>()
+            .AddProblemDetails()
             .ConfigureEndpoints()
             .ConfigureAuthentication()
-            .AddAuthorization()
-            .AddTransient<ExceptionHandlingMiddleware>();
+            .AddAuthorization();
 
         return services.AddMassTransit(bus =>
         {

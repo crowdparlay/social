@@ -1,6 +1,5 @@
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.Hubs;
-using CrowdParlay.Social.Api.Middlewares;
 using CrowdParlay.Social.Application;
 using CrowdParlay.Social.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http.Connections;
@@ -16,7 +15,7 @@ public class Startup(IConfiguration configuration)
             .ReadFrom.Configuration(configuration)
             .CreateLogger();
 
-        app.UseMiddleware<ExceptionHandlingMiddleware>();
+        app.UseExceptionHandler();
         app.UseSerilogRequestLogging();
         app.UseHealthChecks("/healthz");
 
