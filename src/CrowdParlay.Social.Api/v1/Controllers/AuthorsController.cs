@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Mime;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ public class AuthorsController(IAuthorRepository authors) : ControllerBase
     /// <summary>
     /// Returns author with the specified ID.
     /// </summary>
-    [HttpGet("{authorId:guid}")]
+    [HttpGet("{authorId:guid}"), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(AuthorDto), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]

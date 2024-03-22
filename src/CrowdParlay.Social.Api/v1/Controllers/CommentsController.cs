@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Mime;
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.Hubs;
 using CrowdParlay.Social.Api.v1.DTOs;
@@ -18,7 +19,7 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     /// <summary>
     /// Returns comment with the specified ID.
     /// </summary>
-    [HttpGet("{commentId:guid}")]
+    [HttpGet("{commentId:guid}"), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
@@ -28,7 +29,7 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     /// <summary>
     /// Get comments by filters.
     /// </summary>
-    [HttpGet]
+    [HttpGet, Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(Page<CommentDto>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
@@ -42,7 +43,7 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     /// <summary>
     /// Creates a top-level comment in discussion.
     /// </summary>
-    [HttpPost, Authorize]
+    [HttpPost, Authorize, Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.Created)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
@@ -65,7 +66,7 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     /// <summary>
     /// Get replies to the comment with the specified ID.
     /// </summary>
-    [HttpGet("{parentCommentId:guid}/replies")]
+    [HttpGet("{parentCommentId:guid}/replies"), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(Page<CommentDto>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
@@ -79,7 +80,7 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     /// <summary>
     /// Creates a reply to the comment with the specified ID.
     /// </summary>
-    [HttpPost("{parentCommentId:guid}/replies"), Authorize]
+    [HttpPost("{parentCommentId:guid}/replies"), Authorize, Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.Created)]
     [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
     [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
