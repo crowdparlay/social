@@ -22,8 +22,8 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     [HttpGet("{commentId:guid}")]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.OK)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.NotFound)]
     public async Task<CommentDto> GetCommentById([FromRoute] Guid commentId) =>
         await comments.GetByIdAsync(commentId);
 
@@ -33,8 +33,8 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     [HttpGet]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(Page<CommentDto>), (int)HttpStatusCode.OK)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
     public async Task<Page<CommentDto>> SearchComments(
         [FromQuery] Guid? discussionId,
         [FromQuery] Guid? authorId,
@@ -48,9 +48,9 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     [HttpPost, Authorize]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.Created)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.Forbidden)]
     public async Task<ActionResult<CommentDto>> Create([FromBody] CommentRequest request)
     {
         var authorId =
@@ -72,9 +72,9 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     [HttpGet("{parentCommentId:guid}/replies")]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(Page<CommentDto>), (int)HttpStatusCode.OK)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.NotFound)]
     public async Task<Page<CommentDto>> GetRepliesToComment(
         [FromRoute] Guid parentCommentId,
         [FromQuery, BindRequired] int offset,
@@ -87,10 +87,10 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
     [HttpPost("{parentCommentId:guid}/replies"), Authorize]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.Created)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType(typeof(ValidationProblem), (int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.NotFound)]
     public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid parentCommentId, [FromBody] ReplyRequest request)
     {
         var authorId =

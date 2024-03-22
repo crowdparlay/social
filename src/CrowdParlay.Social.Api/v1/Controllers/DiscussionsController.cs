@@ -19,7 +19,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     [HttpGet("{discussionId:guid}")]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.OK)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.NotFound)]
     public async Task<DiscussionDto> GetDiscussionById([FromRoute] Guid discussionId) =>
         await discussions.GetByIdAsync(discussionId);
 
@@ -39,7 +39,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     [HttpPost, Authorize]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.Created)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.Forbidden)]
     public async Task<ActionResult<DiscussionDto>> CreateDiscussion([FromBody] DiscussionRequest request)
     {
         var authorId =

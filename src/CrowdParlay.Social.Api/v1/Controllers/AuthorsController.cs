@@ -15,8 +15,8 @@ public class AuthorsController(IAuthorRepository authors) : ControllerBase
     [HttpGet("{authorId:guid}")]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(AuthorDto), (int)HttpStatusCode.OK)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.NotFound)]
     public async Task<AuthorDto> GetAuthorById([FromRoute] Guid authorId) =>
         await authors.GetByIdAsync(authorId);
 }
