@@ -25,6 +25,9 @@ public class AuthorsRepository(IDriver driver) : IAuthorRepository
                 """,
                 new { id = id.ToString() });
 
+            if (await data.PeekAsync() is null)
+                throw new NotFoundException();
+
             var record = await data.SingleAsync();
             return record[0].Adapt<AuthorDto>();
         });
