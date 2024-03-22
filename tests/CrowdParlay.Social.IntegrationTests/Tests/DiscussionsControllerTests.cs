@@ -12,7 +12,7 @@ public class DiscussionsControllerTests(WebApplicationContext context) : IClassF
     private readonly HttpClient _client = context.Server.CreateClient();
 
     [Fact(DisplayName = "Get discussion by ID returns discussion")]
-    public async Task GetDiscussionByIdHasAuthor_Positive()
+    public async Task GetDiscussionByIdHasAuthor()
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();

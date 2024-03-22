@@ -5,7 +5,7 @@ public class AuthorsRepositoryTests(WebApplicationContext context) : IClassFixtu
     private readonly IServiceProvider _services = context.Services;
 
     [Fact(DisplayName = "Get user by ID returns user")]
-    public async Task GetAuthorById_Positive()
+    public async Task GetAuthorById()
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
