@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Mime;
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
@@ -17,8 +16,8 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     /// Returns discussion with the specified ID.
     /// </summary>
     [HttpGet("{discussionId:guid}")]
-    [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.NotFound)]
     public async Task<DiscussionDto> GetDiscussionById([FromRoute] Guid discussionId) =>
         await discussions.GetByIdAsync(discussionId);
 
@@ -26,7 +25,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     /// Returns all discussions created by author with the specified ID.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<DiscussionDto>), (int)HttpStatusCode.OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(IEnumerable<DiscussionDto>), (int)HttpStatusCode.OK)]
     public async Task<IEnumerable<DiscussionDto>> GetDiscussions([FromQuery] Guid? authorId) => authorId is null
         ? await discussions.GetAllAsync()
         : await discussions.GetByAuthorAsync(authorId.Value);
@@ -35,8 +34,8 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     /// Creates a discussion.
     /// </summary>
     [HttpPost, Authorize]
-    [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.Created, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.Created)]
+    [ProducesResponseType(typeof(Problem), (int)HttpStatusCode.Forbidden)]
     public async Task<ActionResult<DiscussionDto>> CreateDiscussion([FromBody] DiscussionRequest request)
     {
         var authorId =
