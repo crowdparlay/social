@@ -19,7 +19,8 @@ internal class TestWebApplicationFactory<TProgram>(
             ["NEO4J_URI"] = neo4jConfiguration.Uri,
             ["NEO4J_USERNAME"] = neo4jConfiguration.Username,
             ["NEO4J_PASSWORD"] = neo4jConfiguration.Password,
-            ["REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString
+            ["REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString,
+            ["CORS_ORIGINS"] = "http://localhost;http://localhost:1234"
         }));
 
         builder.ConfigureServices(services =>

@@ -101,8 +101,8 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
         // Assert
         page.TotalCount.Should().Be(3);
         page.Items.Should().HaveCount(2);
-        page.Items.Should().BeEquivalentTo(new[] { comment1, comment2 });
-        page.Items.First().FirstRepliesAuthors.Should().BeEquivalentTo(new[] { author4, author2, author1 });
+        page.Items.Should().BeEquivalentTo([comment1, comment2]);
+        page.Items.First().FirstRepliesAuthors.Should().BeEquivalentTo([author4, author2, author1]);
     }
 
     [Fact(DisplayName = "Get comment with unknown ID")]
