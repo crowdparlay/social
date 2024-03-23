@@ -10,10 +10,11 @@ public static class ConfigureApiExtensions
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services
-            .AddExceptionHandler<GlobalExceptionHandler>()
-            .AddProblemDetails()
             .ConfigureEndpoints()
             .ConfigureAuthentication()
+            .ConfigureCors(configuration)
+            .AddExceptionHandler<GlobalExceptionHandler>()
+            .AddProblemDetails()
             .AddAuthorization();
 
         return services.AddMassTransit(bus =>

@@ -18,16 +18,11 @@ public class Startup(IConfiguration configuration)
         app.UseExceptionHandler();
         app.UseSerilogRequestLogging();
         app.UseHealthChecks("/healthz");
-
-        app.UseCors(builder => builder
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod());
-
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseRouting();
         app.UseAuthorization();
+        app.UseCors();
         app.UseEndpoints(builder =>
         {
             builder.MapHub<CommentsHub>("/api/v1/hubs/comments", options => options.Transports = HttpTransportType.ServerSentEvents);
