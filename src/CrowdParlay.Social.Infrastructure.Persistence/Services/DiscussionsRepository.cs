@@ -59,8 +59,8 @@ public class DiscussionsRepository(IDriver driver) : IDiscussionRepository
                 }
                 """);
 
-            var record = await data.SingleAsync();
-            return record[0].Adapt<IEnumerable<DiscussionDto>>();
+            var records = await data.ToListAsync();
+            return records.Select(x => x[0]).Adapt<IEnumerable<DiscussionDto>>();
         });
     }
 
@@ -85,8 +85,8 @@ public class DiscussionsRepository(IDriver driver) : IDiscussionRepository
                 }
                 """, new { authorId = authorId.ToString() });
 
-            var record = await data.SingleAsync();
-            return record[0].Adapt<IEnumerable<DiscussionDto>>();
+            var records = await data.ToListAsync();
+            return records.Select(x => x[0]).Adapt<IEnumerable<DiscussionDto>>();
         });
     }
 
