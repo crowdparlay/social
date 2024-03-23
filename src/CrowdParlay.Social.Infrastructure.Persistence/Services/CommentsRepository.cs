@@ -174,16 +174,15 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                 SKIP $offset
                 LIMIT $count
                 OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
-                WITH totalCount, comment, author, COUNT(reply) AS replyCount,
+                WITH totalCount, author, comment, COUNT(reply) AS replyCount,
                     CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
                         Id: replyAuthor.Id,
                         Username: replyAuthor.Username,
                         DisplayName: replyAuthor.DisplayName,
                         AvatarUrl: replyAuthor.AvatarUrl
                     })[0..3] ELSE [] END AS firstRepliesAuthors
-                RETURN {
-                    TotalCount: totalCount,
-                    Items: {
+                WITH totalCount,
+                    COLLECT({
                         Id: comment.Id,
                         Content: comment.Content,
                         Author: {
@@ -195,7 +194,10 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                         CreatedAt: datetime(comment.CreatedAt),
                         ReplyCount: replyCount,
                         FirstRepliesAuthors: firstRepliesAuthors
-                    }
+                    }) AS comments
+                RETURN {
+                    TotalCount: totalCount,
+                    Items: comments
                 }
                 """,
                 new
