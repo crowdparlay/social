@@ -182,8 +182,8 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                         AvatarUrl: replyAuthor.AvatarUrl
                     })[0..3] ELSE [] END AS firstRepliesAuthors
                 RETURN {
-                    TotalCount = totalCount,
-                    Items = {
+                    TotalCount: totalCount,
+                    Items: {
                         Id: comment.Id,
                         Content: comment.Content,
                         Author: {
