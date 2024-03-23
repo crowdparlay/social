@@ -119,6 +119,31 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
         await getComment.Should().ThrowAsync<NotFoundException>();
     }
 
+    [Fact(DisplayName = "Get replies to comment")]
+    public async Task GetRepliesToComment()
+    {
+        // Arrange
+        await using var scope = _services.CreateAsyncScope();
+        var authors = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
+        var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionRepository>();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentRepository>();
+
+        var author = await authors.CreateAsync(Guid.NewGuid(), "an_author", "An author", null);
+        var discussion = await discussions.CreateAsync(author.Id, "Discussion", "Test discussion.");
+        var comment = await comments.CreateAsync(author.Id, discussion.Id, "Comment content");
+        var reply = await comments.ReplyToCommentAsync(author.Id, comment.Id, "Reply content");
+        
+        // Act
+        var page = await comments.GetRepliesToCommentAsync(comment.Id, offset: 0, count: 1);
+
+        // Assert
+        page.Should().BeEquivalentTo(new Page<CommentDto>
+        {
+            TotalCount = 1,
+            Items = [reply]
+        });
+    }
+
     [Fact(DisplayName = "Create comment with unknown author and discussion")]
     public async Task CreateComment_WithUnknownAuthorAndDiscussion_ThrowsNotFoundException()
     {
