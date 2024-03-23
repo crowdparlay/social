@@ -39,7 +39,7 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                 }
                 """,
                 new { id = id.ToString() });
-            
+
             if (await data.PeekAsync() is null)
                 throw new NotFoundException();
 
@@ -104,7 +104,13 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                 });
 
             if (await data.PeekAsync() is null)
-                throw new NotFoundException();
+            {
+                return new Page<CommentDto>
+                {
+                    TotalCount = 0,
+                    Items = Enumerable.Empty<CommentDto>()
+                };
+            }
 
             var record = await data.SingleAsync();
             return record[0].Adapt<Page<CommentDto>>();
@@ -198,6 +204,15 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                     offset,
                     count
                 });
+
+            if (await data.PeekAsync() is null)
+            {
+                return new Page<CommentDto>
+                {
+                    TotalCount = 0,
+                    Items = Enumerable.Empty<CommentDto>()
+                };
+            }
 
             var record = await data.SingleAsync();
             return record[0].Adapt<Page<CommentDto>>();
