@@ -1,2 +1,2 @@
 MATCH (author:Author)
-REMOVE author.Username, author.DisplayName, author.AvatarUrl
+REMOVE author.Username, author.DisplayName, author.AvatarUrl;
