@@ -11,8 +11,6 @@ public static class ConfigurePersistenceExtensions
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
         .AddSignalR(configuration)
         .AddNeo4j(configuration)
-        .AddHostedService<Neo4jDriverInitializer>()
-        .AddScoped<IAuthorRepository, AuthorsRepository>()
         .AddScoped<ICommentRepository, CommentsRepository>()
         .AddScoped<IDiscussionsRepository, DiscussionsRepository>();
 
