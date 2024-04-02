@@ -1,8 +1,7 @@
-﻿using CrowdParlay.Social.Api.Consumers;
-using MassTransit;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace CrowdParlay.Social.IntegrationTests.Services;
 
@@ -20,23 +19,14 @@ internal class TestWebApplicationFactory<TProgram>(
             ["NEO4J_USERNAME"] = neo4jConfiguration.Username,
             ["NEO4J_PASSWORD"] = neo4jConfiguration.Password,
             ["REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString,
+            ["USERS_GRPC_ADDRESS"] = "https://fake-users-host:5104",
             ["CORS_ORIGINS"] = "http://localhost;http://localhost:1234"
         }));
 
         builder.ConfigureServices(services =>
         {
-            var massTransitDescriptors = services
-                .Where(x => x.ServiceType.Namespace?.StartsWith(nameof(MassTransit)) == true)
-                .ToArray();
-
-            foreach (var descriptor in massTransitDescriptors)
-                services.Remove(descriptor);
-
-            services.AddMassTransitTestHarness(bus =>
-            {
-                bus.AddDelayedMessageScheduler();
-                bus.AddConsumersFromNamespaceContaining<UserEventConsumer>();
-            });
+            services.RemoveAll(typeof(IUsersService));
+            services.AddScoped<IUsersService, UsersServiceMock>();
         });
     }
 }
