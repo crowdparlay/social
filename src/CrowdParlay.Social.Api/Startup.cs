@@ -1,6 +1,7 @@
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.Hubs;
 using CrowdParlay.Social.Application;
+using CrowdParlay.Social.Infrastructure.Communication.Extensions;
 using CrowdParlay.Social.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http.Connections;
 using Serilog;
@@ -33,5 +34,6 @@ public class Startup(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services) => services
         .AddApi(configuration)
         .AddApplication()
-        .AddPersistence(configuration);
+        .AddPersistence(configuration)
+        .AddCommunication(configuration);
 }

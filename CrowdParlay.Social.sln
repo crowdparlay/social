@@ -12,6 +12,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Integrat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Infrastructure.Persistence", "src\CrowdParlay.Social.Infrastructure.Persistence\CrowdParlay.Social.Infrastructure.Persistence.csproj", "{F4BE8BEE-161C-4B02-803A-0CC558016BA2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Domain", "src\CrowdParlay.Social.Domain\CrowdParlay.Social.Domain.csproj", "{640B084C-59F5-448D-845A-7D6A8E1A7F99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Infrastructure.Communication", "src\CrowdParlay.Social.Infrastructure.Communication\CrowdParlay.Social.Infrastructure.Communication.csproj", "{47776236-58AD-449A-B3BF-6ED960C3D12C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,11 +38,21 @@ Global
 		{F4BE8BEE-161C-4B02-803A-0CC558016BA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4BE8BEE-161C-4B02-803A-0CC558016BA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4BE8BEE-161C-4B02-803A-0CC558016BA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{640B084C-59F5-448D-845A-7D6A8E1A7F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{640B084C-59F5-448D-845A-7D6A8E1A7F99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{640B084C-59F5-448D-845A-7D6A8E1A7F99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{640B084C-59F5-448D-845A-7D6A8E1A7F99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47776236-58AD-449A-B3BF-6ED960C3D12C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47776236-58AD-449A-B3BF-6ED960C3D12C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47776236-58AD-449A-B3BF-6ED960C3D12C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47776236-58AD-449A-B3BF-6ED960C3D12C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1C0DE505-4898-4FB4-A5AA-C01630770F79} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 		{34501CA3-78D7-4AAC-9B47-219F1C51E075} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 		{1BAE49C8-2A8C-424B-B21E-B73D76FAC2DB} = {00C5EC71-2662-4897-8C51-8C1355111519}
 		{F4BE8BEE-161C-4B02-803A-0CC558016BA2} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
+		{640B084C-59F5-448D-845A-7D6A8E1A7F99} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
+		{47776236-58AD-449A-B3BF-6ED960C3D12C} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 	EndGlobalSection
 EndGlobal
