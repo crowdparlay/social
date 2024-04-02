@@ -1,10 +1,7 @@
-using System.Net.Http.Json;
-using System.Text;
 using CrowdParlay.Social.Api.Hubs;
-using CrowdParlay.Social.Api.v1.DTOs;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
@@ -19,17 +16,29 @@ public class SignalRTests(WebApplicationContext context) : IClassFixture<WebAppl
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
-
-        var authors = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
-        var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionRepository>();
-
-        var author = await authors.CreateAsync(Guid.NewGuid(), "test123", "Test author", null);
-        var discussion = await discussions.CreateAsync(author.Id, "Test discussion", "Test discussion");
+        var commentsHub = scope.ServiceProvider.GetRequiredService<IHubContext<CommentsHub>>();
         var newComments = new List<CommentDto>();
+
+        var discussionId = new Guid("6ef436dc-8e38-4a4b-b0e7-ff9fcd55ac0e");
+        var expectedComment = new CommentDto
+        {
+            Id = Guid.NewGuid(),
+            Content = "Sample comment.",
+            Author = new AuthorDto
+            {
+                Id = new Guid("df194a2d-368c-43ea-b48d-66042f74691d"),
+                Username = "sample_author",
+                DisplayName = "Sample Author",
+                AvatarUrl = null
+            },
+            CreatedAt = DateTimeOffset.Now,
+            ReplyCount = 0,
+            FirstRepliesAuthors = []
+        };
 
         // Act
         var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(_client.BaseAddress!, $"/api/v1/hubs/comments?discussionId={discussion.Id}"), options =>
+            .WithUrl(new Uri(_client.BaseAddress!, $"/api/v1/hubs/comments?discussionId={discussionId}"), options =>
             {
                 options.Transports = HttpTransportType.ServerSentEvents;
                 options.HttpMessageHandlerFactory = _ => _handler;
@@ -42,21 +51,14 @@ public class SignalRTests(WebApplicationContext context) : IClassFixture<WebAppl
             CommentsHub.Events.NewComment.ToString(),
             comment => newComments.Add(comment));
 
-        var request = JsonSerializer.Serialize(
-            new CommentRequest(discussion.Id, "Test comment"),
-            GlobalSerializerOptions.SnakeCase);
+        await commentsHub.Clients
+            .Group(CommentsHub.GroupNames.NewCommentInDiscussion(discussionId))
+            .SendCoreAsync(CommentsHub.Events.NewComment.ToString(), [expectedComment]);
 
-        var accessToken = Authorization.ProduceAccessToken(author.Id);
-        var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Post, "/api/v1/comments")
-        {
-            Content = new StringContent(request, Encoding.UTF8, "application/json"),
-            Headers = { { "Authorization", $"Bearer {accessToken}" } }
-        });
-
-        var comment = await response.Content.ReadFromJsonAsync<CommentDto>(GlobalSerializerOptions.SnakeCase);
         await Task.Delay(1000);
+        await connection.StopAsync();
 
         // Assert
-        newComments.Should().BeEquivalentTo([comment]);
+        newComments.Should().BeEquivalentTo([expectedComment]);
     }
 }

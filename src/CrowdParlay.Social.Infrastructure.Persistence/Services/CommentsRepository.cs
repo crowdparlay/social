@@ -1,6 +1,7 @@
-using CrowdParlay.Social.Application.Abstractions;
-using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Domain.Abstractions;
+using CrowdParlay.Social.Domain.DTOs;
+using CrowdParlay.Social.Domain.Entities;
 using Mapster;
 using Neo4j.Driver;
 
@@ -8,7 +9,7 @@ namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class CommentsRepository(IDriver driver) : ICommentRepository
 {
-    public async Task<CommentDto> GetByIdAsync(Guid id)
+    public async Task<Comment> GetByIdAsync(Guid id)
     {
         await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
@@ -17,25 +18,19 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                 """
                 MATCH (comment:Comment { Id: $id })-[:AUTHORED_BY]->(author:Author)
                 OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
+
                 WITH comment, author, COUNT(reply) AS replyCount,
-                    CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
-                        Id: replyAuthor.Id,
-                        Username: replyAuthor.Username,
-                        DisplayName: replyAuthor.DisplayName,
-                        AvatarUrl: replyAuthor.AvatarUrl
-                    })[0..3] ELSE [] END AS firstRepliesAuthors
+                    CASE WHEN COUNT(reply) > 0
+                        THEN COLLECT(DISTINCT replyAuthor.Id)[0..3]
+                        ELSE [] END AS firstRepliesAuthorIds
+                    
                 RETURN {
                     Id: comment.Id,
                     Content: comment.Content,
-                    Author: {
-                        Id: author.Id,
-                        Username: author.Username,
-                        DisplayName: author.DisplayName,
-                        AvatarUrl: author.AvatarUrl
-                    },
+                    AuthorId: author.Id,
                     CreatedAt: comment.CreatedAt,
                     ReplyCount: replyCount,
-                    FirstRepliesAuthors: firstRepliesAuthors
+                    FirstRepliesAuthorIds: firstRepliesAuthorIds
                 }
                 """,
                 new { id = id.ToString() });
@@ -44,11 +39,11 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                 throw new NotFoundException();
 
             var record = await data.SingleAsync();
-            return record[0].Adapt<CommentDto>();
+            return record[0].Adapt<Comment>();
         });
     }
 
-    public async Task<Page<CommentDto>> SearchAsync(Guid? discussionId, Guid? authorId, int offset, int count)
+    public async Task<Page<Comment>> SearchAsync(Guid? discussionId, Guid? authorId, int offset, int count)
     {
         var matchSelector = authorId is not null
             ? "MATCH (author:Author { Id: $authorId })<-[:AUTHORED_BY]-(comment:Comment)"
@@ -70,12 +65,9 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
 
                 WITH author, comment, {
                     DeepReplyCount: COUNT(deepReply),
-                    FirstDeepRepliesAuthors: CASE WHEN COUNT(deepReply) > 0 THEN COLLECT(DISTINCT {
-                        Id: deepReplyAuthor.Id,
-                        Username: deepReplyAuthor.Username,
-                        DisplayName: deepReplyAuthor.DisplayName,
-                        AvatarUrl: deepReplyAuthor.AvatarUrl
-                    })[0..3] ELSE [] END
+                    FirstDeepRepliesAuthorIds: CASE WHEN COUNT(deepReply) > 0
+                        THEN COLLECT(DISTINCT deepReplyAuthor.Id)[0..3]
+                        ELSE [] END
                 } AS deepRepliesData
 
                 RETURN {
@@ -83,15 +75,10 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                     Items: COLLECT({
                         Id: comment.Id,
                         Content: comment.Content,
-                        Author: {
-                            Id: author.Id,
-                            Username: author.Username,
-                            DisplayName: author.DisplayName,
-                            AvatarUrl: author.AvatarUrl
-                        },
+                        AuthorId: author.Id,
                         CreatedAt: comment.CreatedAt,
                         ReplyCount: deepRepliesData.DeepReplyCount,
-                        FirstRepliesAuthors: deepRepliesData.FirstDeepRepliesAuthors
+                        FirstRepliesAuthorIds: deepRepliesData.FirstDeepRepliesAuthorIds
                     })[$offset..$offset + $count]
                 }
                 """,
@@ -105,45 +92,42 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
 
             if (await data.PeekAsync() is null)
             {
-                return new Page<CommentDto>
+                return new Page<Comment>
                 {
                     TotalCount = 0,
-                    Items = Enumerable.Empty<CommentDto>()
+                    Items = Enumerable.Empty<Comment>()
                 };
             }
 
             var record = await data.SingleAsync();
-            return record[0].Adapt<Page<CommentDto>>();
+            return record[0].Adapt<Page<Comment>>();
         });
     }
 
-    public async Task<CommentDto> CreateAsync(Guid authorId, Guid discussionId, string content)
+    public async Task<Comment> CreateAsync(Guid authorId, Guid discussionId, string content)
     {
         await using var session = driver.AsyncSession();
         return await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(
                 """
-                MATCH (author:Author { Id: $authorId })
                 MATCH (discussion:Discussion { Id: $discussionId })
+                MERGE (author:Author { Id: $authorId })
+
                 CREATE (comment:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
                 CREATE (discussion)<-[:REPLIES_TO]-(comment)-[:AUTHORED_BY]->(author)
+
                 RETURN {
                     Id: comment.Id,
                     Content: comment.Content,
-                    Author: {
-                        Id: author.Id,
-                        Username: author.Username,
-                        DisplayName: author.DisplayName,
-                        AvatarUrl: author.AvatarUrl
-                    },
+                    AuthorId: author.Id,
                     CreatedAt: datetime(),
                     ReplyCount: 0,
-                    FirstRepliesAuthors: []
+                    FirstRepliesAuthorIds: []
                 }
                 """,
                 new
@@ -157,11 +141,11 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                 throw new NotFoundException();
 
             var record = await data.SingleAsync();
-            return record[0].Adapt<CommentDto>();
+            return record[0].Adapt<Comment>();
         });
     }
 
-    public async Task<Page<CommentDto>> GetRepliesToCommentAsync(Guid parentCommentId, int offset, int count)
+    public async Task<Page<Comment>> GetRepliesToCommentAsync(Guid parentCommentId, int offset, int count)
     {
         await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
@@ -169,32 +153,29 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
             var data = await runner.RunAsync(
                 """
                 MATCH (author:Author)<-[:AUTHORED_BY]-(comment:Comment)-[:REPLIES_TO]->(parent:Comment { Id: $parentCommentId })
+
                 WITH author, comment, COUNT(comment) AS totalCount
                 ORDER BY comment.CreatedAt
                 SKIP $offset
                 LIMIT $count
+
                 OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
+
                 WITH totalCount, author, comment, COUNT(reply) AS replyCount,
-                    CASE WHEN COUNT(reply) > 0 THEN COLLECT(DISTINCT {
-                        Id: replyAuthor.Id,
-                        Username: replyAuthor.Username,
-                        DisplayName: replyAuthor.DisplayName,
-                        AvatarUrl: replyAuthor.AvatarUrl
-                    })[0..3] ELSE [] END AS firstRepliesAuthors
+                    CASE WHEN COUNT(reply) > 0
+                        THEN COLLECT(DISTINCT replyAuthor.Id)[0..3]
+                        ELSE [] END AS firstRepliesAuthorIds
+                    
                 WITH totalCount,
                     COLLECT({
                         Id: comment.Id,
                         Content: comment.Content,
-                        Author: {
-                            Id: author.Id,
-                            Username: author.Username,
-                            DisplayName: author.DisplayName,
-                            AvatarUrl: author.AvatarUrl
-                        },
+                        AuthorId: author.Id,
                         CreatedAt: datetime(comment.CreatedAt),
                         ReplyCount: replyCount,
-                        FirstRepliesAuthors: firstRepliesAuthors
+                        FirstRepliesAuthorIds: firstRepliesAuthorIds
                     }) AS comments
+                    
                 RETURN {
                     TotalCount: totalCount,
                     Items: comments
@@ -209,45 +190,42 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
 
             if (await data.PeekAsync() is null)
             {
-                return new Page<CommentDto>
+                return new Page<Comment>
                 {
                     TotalCount = 0,
-                    Items = Enumerable.Empty<CommentDto>()
+                    Items = Enumerable.Empty<Comment>()
                 };
             }
 
             var record = await data.SingleAsync();
-            return record[0].Adapt<Page<CommentDto>>();
+            return record[0].Adapt<Page<Comment>>();
         });
     }
 
-    public async Task<CommentDto> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
+    public async Task<Comment> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
     {
         await using var session = driver.AsyncSession();
         return await session.ExecuteWriteAsync(async runner =>
         {
             var data = await runner.RunAsync(
                 """
-                MATCH (replyAuthor:Author { Id: $authorId })
                 MATCH (parent:Comment {Id: $parentCommentId})
+                MERGE (replyAuthor:Author { Id: $authorId })
+
                 CREATE (reply:Comment {
                     Id: randomUUID(),
                     Content: $content,
                     CreatedAt: datetime()
                 })
                 CREATE (parent)<-[:REPLIES_TO]-(reply)-[:AUTHORED_BY]->(replyAuthor)
+
                 RETURN {
                     Id: reply.Id,
                     Content: reply.Content,
-                    Author: {
-                        Id: replyAuthor.Id,
-                        Username: replyAuthor.Username,
-                        DisplayName: replyAuthor.DisplayName,
-                        AvatarUrl: replyAuthor.AvatarUrl
-                    },
+                    AuthorId: replyAuthor.Id,
                     CreatedAt: reply.CreatedAt,
                     ReplyCount: 0,
-                    FirstRepliesAuthors: []
+                    FirstRepliesAuthorIds: []
                 }
                 """,
                 new
@@ -258,7 +236,7 @@ public class CommentsRepository(IDriver driver) : ICommentRepository
                 });
 
             var record = await data.SingleAsync();
-            return record[0].Adapt<CommentDto>();
+            return record[0].Adapt<Comment>();
         });
     }
 

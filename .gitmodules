@@ -1,0 +1,9 @@
+[submodule "src/CrowdParlay.Social.Infrastructure.gRPC/Users"]
+	path = src/CrowdParlay.Social.Infrastructure.gRPC/Users
+	url = https://github.com/crowdparlay/users-proto
+[submodule "src/CrowdParlay.Social.Application/gRPC/Users"]
+	path = src/CrowdParlay.Social.Application/gRPC/Users
+	url = https://github.com/crowdparlay/users-proto
+[submodule "src/CrowdParlay.Social.Infrastructure.Communication/gRPC/Users"]
+	path = src/CrowdParlay.Social.Infrastructure.Communication/gRPC/Users
+	url = https://github.com/crowdparlay/users-proto.git

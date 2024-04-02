@@ -1,3 +1,6 @@
+using CrowdParlay.Social.Domain.Abstractions;
+using CrowdParlay.Social.Domain.Entities;
+
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
 public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
@@ -9,23 +12,17 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassF
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
-        var authors = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
-        var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionRepository>();
+        var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
 
-        var author = await authors.CreateAsync(
-            id: Guid.NewGuid(),
-            username: "compartmental",
-            displayName: "Степной ишак",
-            avatarUrl: null);
-
-        DiscussionDto[] expected =
+        var authorId = Guid.NewGuid();
+        Discussion[] expected =
         [
-            await discussions.CreateAsync(author.Id, "Discussion 1", "bla bla bla"),
-            await discussions.CreateAsync(author.Id, "Discussion 2", "numa numa e")
+            await discussions.CreateAsync(authorId, "Discussion 1", "bla bla bla"),
+            await discussions.CreateAsync(authorId, "Discussion 2", "numa numa e")
         ];
 
         // Act
-        var response = await discussions.GetByAuthorAsync(author.Id);
+        var response = await discussions.GetByAuthorAsync(authorId);
 
         // Assert
         response.Should().BeEquivalentTo(expected);
@@ -36,17 +33,10 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassF
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
-        var authors = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
-        var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionRepository>();
-
-        var author = await authors.CreateAsync(
-            id: Guid.NewGuid(),
-            username: "compartmental",
-            displayName: "Степной ишак",
-            avatarUrl: null);
+        var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
 
         // Act
-        var response = await discussions.GetByAuthorAsync(author.Id);
+        var response = await discussions.GetByAuthorAsync(Guid.NewGuid());
 
         // Assert
         response.Should().BeEmpty();

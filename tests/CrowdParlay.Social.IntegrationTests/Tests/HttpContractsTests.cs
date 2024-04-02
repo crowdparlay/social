@@ -1,3 +1,6 @@
+using System.Net.Http.Json;
+using System.Text.Json;
+
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
 public class HttpContractsTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
@@ -29,10 +32,23 @@ public class HttpContractsTests(WebApplicationContext context) : IClassFixture<W
         const string expected = """{"status":404,"detail":"The requested resource doesn\u0027t exist."}""";
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/authors/{Guid.Empty}");
+        var response = await _client.GetAsync($"/api/v1/comments/{Guid.Empty}");
         var actual = await response.Content.ReadAsStringAsync();
 
         // Assert
         actual.Should().BeEquivalentTo(expected);
+    }
+
+    [Fact(DisplayName = "Responses are JSON-serialized in snake case")]
+    public async Task ResponsesAreJsonSerializedInSnakeCase()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/discussions/6ef436dc-8e38-4a4b-b0e7-ff9fcd55ac0e");
+        var rawResponseContent = await response.Content.ReadAsStringAsync();
+        var discussion = await response.Content.ReadFromJsonAsync<DiscussionDto>(GlobalSerializerOptions.SnakeCase);
+        var serializedInSnakeCase = JsonSerializer.Serialize(discussion, GlobalSerializerOptions.SnakeCase);
+
+        // Assert
+        rawResponseContent.Should().Be(serializedInSnakeCase);
     }
 }

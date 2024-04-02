@@ -1,4 +1,4 @@
-namespace CrowdParlay.Social.Application.DTOs;
+namespace CrowdParlay.Social.Domain.DTOs;
 
 public class Page<T>
 {
