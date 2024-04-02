@@ -2,7 +2,7 @@ using CrowdParlay.Social.Application.DTOs;
 
 namespace CrowdParlay.Social.Application.Abstractions;
 
-public interface IDiscussionRepository
+public interface IDiscussionsService
 {
     public Task<DiscussionDto> GetByIdAsync(Guid id);
     public Task<IEnumerable<DiscussionDto>> GetAllAsync();

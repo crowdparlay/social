@@ -6,6 +6,7 @@ using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -14,7 +15,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace CrowdParlay.Social.Api.v1.Controllers;
 
 [ApiController, ApiRoute("[controller]")]
-public class CommentsController(ICommentRepository comments, IHubContext<CommentsHub> commentHub) : ControllerBase
+public class CommentsController(ICommentsService comments, IHubContext<CommentsHub> commentHub) : ControllerBase
 {
     /// <summary>
     /// Returns comment with the specified ID.
@@ -62,7 +63,7 @@ public class CommentsController(ICommentRepository comments, IHubContext<Comment
         _ = commentHub.Clients
             .Group(CommentsHub.GroupNames.NewCommentInDiscussion(request.DiscussionId))
             .SendCoreAsync(CommentsHub.Events.NewComment.ToString(), [response]);
-        
+
         return CreatedAtAction(nameof(GetCommentById), new { commentId = response.Id }, response);
     }
 

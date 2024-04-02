@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mime;
 using CrowdParlay.Social.Application.Exceptions;
+using Grpc.Core;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             FluentValidation.ValidationException e => ConvertToProblemDetails(e),
             NotFoundException => GetNotFoundProblemDetails(),
             ForbiddenException => GetForbiddenProblemDetails(),
+            RpcException => GetUnavailableDependencyProblemDetails(),
             _ => GetDefaultProblemDetails()
         };
 
@@ -70,5 +72,11 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
     {
         Status = (int)HttpStatusCode.Forbidden,
         Detail = "You have no permission for this action."
+    };
+
+    private static ProblemDetails GetUnavailableDependencyProblemDetails() => new()
+    {
+        Status = (int)HttpStatusCode.ServiceUnavailable,
+        Detail = "Failed to handle the request due to an unavailable dependency. Try again later."
     };
 }
