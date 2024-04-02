@@ -1,8 +1,9 @@
 using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Domain.DTOs;
 
 namespace CrowdParlay.Social.Application.Abstractions;
 
-public interface ICommentRepository
+public interface ICommentsService
 {
     public Task<CommentDto> GetByIdAsync(Guid id);
     public Task<Page<CommentDto>> SearchAsync(Guid? discussionId, Guid? authorId, int offset, int count);

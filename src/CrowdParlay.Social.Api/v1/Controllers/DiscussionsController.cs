@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CrowdParlay.Social.Api.v1.Controllers;
 
 [ApiController, ApiRoute("[controller]")]
-public class DiscussionsController(IDiscussionRepository discussions) : ControllerBase
+public class DiscussionsController(IDiscussionsService discussionsService) : ControllerBase
 {
     /// <summary>
     /// Returns discussion with the specified ID.
@@ -21,7 +21,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     [ProducesResponseType(typeof(DiscussionDto), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.NotFound)]
     public async Task<DiscussionDto> GetDiscussionById([FromRoute] Guid discussionId) =>
-        await discussions.GetByIdAsync(discussionId);
+        await discussionsService.GetByIdAsync(discussionId);
 
     /// <summary>
     /// Returns all discussions created by author with the specified ID.
@@ -30,8 +30,8 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(IEnumerable<DiscussionDto>), (int)HttpStatusCode.OK)]
     public async Task<IEnumerable<DiscussionDto>> GetDiscussions([FromQuery] Guid? authorId) => authorId is null
-        ? await discussions.GetAllAsync()
-        : await discussions.GetByAuthorAsync(authorId.Value);
+        ? await discussionsService.GetAllAsync()
+        : await discussionsService.GetByAuthorAsync(authorId.Value);
 
     /// <summary>
     /// Creates a discussion.
@@ -46,7 +46,7 @@ public class DiscussionsController(IDiscussionRepository discussions) : Controll
             User.GetUserId()
             ?? throw new ForbiddenException();
 
-        var response = await discussions.CreateAsync(authorId, request.Title, request.Description);
+        var response = await discussionsService.CreateAsync(authorId, request.Title, request.Description);
         return CreatedAtAction(nameof(GetDiscussionById), new { DiscussionId = response.Id }, response);
     }
 }
