@@ -1,4 +1,4 @@
-using CrowdParlay.Social.Application.Abstractions;
+using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Infrastructure.Persistence.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +14,7 @@ public static class ConfigurePersistenceExtensions
         .AddHostedService<Neo4jDriverInitializer>()
         .AddScoped<IAuthorRepository, AuthorsRepository>()
         .AddScoped<ICommentRepository, CommentsRepository>()
-        .AddScoped<IDiscussionRepository, DiscussionsRepository>();
+        .AddScoped<IDiscussionsRepository, DiscussionsRepository>();
 
     private static IServiceCollection AddSignalR(this IServiceCollection services, IConfiguration configuration)
     {
