@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using CrowdParlay.Social.Infrastructure.Communication.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -27,6 +28,7 @@ internal class TestWebApplicationFactory<TProgram>(
         {
             services.RemoveAll(typeof(IUsersService));
             services.AddScoped<IUsersService, UsersServiceMock>();
+            services.Decorate<IUsersService, UsersServiceCachingDecorator>();
         });
     }
 }
