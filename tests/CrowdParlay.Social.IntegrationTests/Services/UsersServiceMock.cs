@@ -10,7 +10,7 @@ public class UsersServiceMock : IUsersService
         AvatarUrl = null
     });
 
-    public IAsyncEnumerable<UserDto> GetUsersAsync(IEnumerable<Guid> ids)
+    public Task<IDictionary<Guid, UserDto>> GetUsersAsync(ISet<Guid> ids)
     {
         var users = ids.Select(id => new UserDto
         {
@@ -20,6 +20,6 @@ public class UsersServiceMock : IUsersService
             AvatarUrl = null
         });
 
-        return users.ToAsyncEnumerable();
+        return Task.FromResult<IDictionary<Guid, UserDto>>(users.ToDictionary(x => x.Id, x => x));
     }
 }

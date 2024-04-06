@@ -56,7 +56,7 @@ public class CommentsService(ICommentRepository commentRepository, IUsersService
     private async Task<CommentDto> EnrichAsync(Comment comment)
     {
         var author = await usersService.GetByIdAsync(comment.AuthorId);
-        var firstRepliesAuthors = await usersService.GetUsersAsync(comment.FirstRepliesAuthorIds).ToArrayAsync();
+        var firstRepliesAuthors = await usersService.GetUsersAsync(comment.FirstRepliesAuthorIds);
 
         return new CommentDto
         {
@@ -65,24 +65,27 @@ public class CommentsService(ICommentRepository commentRepository, IUsersService
             Author = author.Adapt<AuthorDto>(),
             CreatedAt = comment.CreatedAt,
             ReplyCount = comment.ReplyCount,
-            FirstRepliesAuthors = firstRepliesAuthors.Adapt<IEnumerable<AuthorDto>>()
+            FirstRepliesAuthors = firstRepliesAuthors.Values.Adapt<IEnumerable<AuthorDto>>()
         };
     }
 
     private async Task<IEnumerable<CommentDto>> EnrichAsync(IReadOnlyList<Comment> comments)
     {
-        var authorIds = comments.SelectMany(comment => comment.FirstRepliesAuthorIds.Append(comment.AuthorId));
-        var authors = await usersService.GetUsersAsync(authorIds).ToArrayAsync();
-        var authorsById = authors.ToDictionary(user => user.Id, user => user.Adapt<AuthorDto>());
+        var authorIds = comments.SelectMany(comment => comment.FirstRepliesAuthorIds.Append(comment.AuthorId)).ToHashSet();
+        var authorsById = await usersService.GetUsersAsync(authorIds);
 
-        return comments.Select(x => new CommentDto
+        return comments.Select(comment =>
         {
-            Id = x.Id,
-            Content = x.Content,
-            Author = authorsById[x.AuthorId],
-            CreatedAt = x.CreatedAt,
-            ReplyCount = x.ReplyCount,
-            FirstRepliesAuthors = x.FirstRepliesAuthorIds.Select(id => authorsById[id]).ToArray()
+            return new CommentDto
+            {
+                Id = comment.Id,
+                Content = comment.Content,
+                Author = authorsById[comment.AuthorId].Adapt<AuthorDto>(),
+                CreatedAt = comment.CreatedAt,
+                ReplyCount = comment.ReplyCount,
+                FirstRepliesAuthors = comment.FirstRepliesAuthorIds
+                    .Select(replyAuthorId => authorsById[replyAuthorId].Adapt<AuthorDto>())
+            };
         });
     }
 }

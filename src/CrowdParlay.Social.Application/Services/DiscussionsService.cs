@@ -47,15 +47,14 @@ public class DiscussionsService(IDiscussionsRepository discussionsRepository, IU
     private async Task<IEnumerable<DiscussionDto>> EnrichAsync(IReadOnlyList<Discussion> discussions)
     {
         var authorIds = discussions.Select(discussion => discussion.AuthorId);
-        var authors = await usersService.GetUsersAsync(authorIds).ToArrayAsync();
-        var authorsById = authors.ToDictionary(user => user.Id, user => user.Adapt<AuthorDto>());
+        var authorsById = await usersService.GetUsersAsync(authorIds.ToHashSet());
 
-        return discussions.Select(x => new DiscussionDto
+        return discussions.Select(discussion => new DiscussionDto
         {
-            Id = x.Id,
-            Title = x.Title,
-            Description = x.Description,
-            Author = authorsById[x.AuthorId]
+            Id = discussion.Id,
+            Title = discussion.Title,
+            Description = discussion.Description,
+            Author = authorsById[discussion.AuthorId].Adapt<AuthorDto>()
         });
     }
 }

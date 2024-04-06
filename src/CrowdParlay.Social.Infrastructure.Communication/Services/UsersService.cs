@@ -14,11 +14,14 @@ public class UsersService(Users.gRPC.UsersService.UsersServiceClient usersClient
         return user.Adapt<UserDto>();
     }
 
-    public IAsyncEnumerable<UserDto> GetUsersAsync(IEnumerable<Guid> ids)
+    public async Task<IDictionary<Guid, UserDto>> GetUsersAsync(ISet<Guid> ids)
     {
         var request = new GetUsersRequest();
-        request.Ids.AddRange(ids.Select(x => x.ToString()));
-        var response = usersClient.GetUsers(request).ResponseStream;
-        return response.ReadAllAsync().Select(x => x.Adapt<UserDto>());
+        request.Ids.AddRange(ids.Select(id => id.ToString()));
+        var users = await usersClient.GetUsers(request).ResponseStream.ReadAllAsync().ToArrayAsync();
+
+        return users.ToDictionary(
+            user => new Guid(user.Id),
+            user => user.Adapt<UserDto>());
     }
 }
