@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Domain",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.Infrastructure.Communication", "src\CrowdParlay.Social.Infrastructure.Communication\CrowdParlay.Social.Infrastructure.Communication.csproj", "{47776236-58AD-449A-B3BF-6ED960C3D12C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdParlay.Social.UnitTests", "tests\CrowdParlay.Social.UnitTests\CrowdParlay.Social.UnitTests.csproj", "{8F95AF80-A278-49DB-97EB-F8DB96F083D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{47776236-58AD-449A-B3BF-6ED960C3D12C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47776236-58AD-449A-B3BF-6ED960C3D12C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47776236-58AD-449A-B3BF-6ED960C3D12C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F95AF80-A278-49DB-97EB-F8DB96F083D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F95AF80-A278-49DB-97EB-F8DB96F083D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F95AF80-A278-49DB-97EB-F8DB96F083D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F95AF80-A278-49DB-97EB-F8DB96F083D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1C0DE505-4898-4FB4-A5AA-C01630770F79} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
@@ -54,5 +60,6 @@ Global
 		{F4BE8BEE-161C-4B02-803A-0CC558016BA2} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 		{640B084C-59F5-448D-845A-7D6A8E1A7F99} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
 		{47776236-58AD-449A-B3BF-6ED960C3D12C} = {340CE817-E3FB-4753-94AA-E5BFB13E6F6A}
+		{8F95AF80-A278-49DB-97EB-F8DB96F083D5} = {00C5EC71-2662-4897-8C51-8C1355111519}
 	EndGlobalSection
 EndGlobal
