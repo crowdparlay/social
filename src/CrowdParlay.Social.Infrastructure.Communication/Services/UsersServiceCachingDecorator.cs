@@ -32,6 +32,9 @@ public class UsersServiceCachingDecorator(IUsersService usersService, IDatabase 
         }).ToArray();
 
         var usersById = distinctUserIds.Zip(users).ToDictionary(x => x.First, x => x.Second);
+        if (usersById.Count == ids.Count)
+            return usersById!;
+
         var missingUserIds = usersById.Where(x => x.Value is null).Select(x => x.Key).ToHashSet();
         var missingUsersMap = await usersService.GetUsersAsync(missingUserIds);
 
