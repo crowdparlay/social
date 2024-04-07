@@ -43,6 +43,7 @@ public class SignalRTests(WebApplicationContext context) : IClassFixture<WebAppl
                 options.Transports = HttpTransportType.ServerSentEvents;
                 options.HttpMessageHandlerFactory = _ => _handler;
             })
+            .AddJsonProtocol(options => options.PayloadSerializerOptions = GlobalSerializerOptions.SnakeCase)
             .Build();
 
         await connection.StartAsync();

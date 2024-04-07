@@ -9,20 +9,9 @@ namespace CrowdParlay.Social.Infrastructure.Persistence;
 public static class ConfigurePersistenceExtensions
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
-        .AddSignalR(configuration)
         .AddNeo4j(configuration)
         .AddScoped<ICommentRepository, CommentsRepository>()
         .AddScoped<IDiscussionsRepository, DiscussionsRepository>();
-
-    private static IServiceCollection AddSignalR(this IServiceCollection services, IConfiguration configuration)
-    {
-        var redisConnectionString =
-            configuration["REDIS_CONNECTION_STRING"] ??
-            throw new InvalidOperationException("REDIS_CONNECTION_STRING is not set!");
-
-        services.AddSignalR().AddStackExchangeRedis(redisConnectionString);
-        return services;
-    }
 
     // ReSharper disable once InconsistentNaming
     private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)
