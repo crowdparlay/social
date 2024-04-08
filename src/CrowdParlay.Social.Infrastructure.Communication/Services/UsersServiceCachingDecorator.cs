@@ -27,12 +27,12 @@ public class UsersServiceCachingDecorator(IUsersService usersService, IDatabase 
 
         var users = cacheValues.Select(cacheValue => cacheValue switch
         {
-            { IsNullOrEmpty: true } => null,
+            { HasValue: false } => null,
             _ => JsonSerializer.Deserialize<UserDto>(cacheValue.ToString())
         }).ToArray();
 
         var usersById = distinctUserIds.Zip(users).ToDictionary(x => x.First, x => x.Second);
-        if (usersById.Count == ids.Count)
+        if (cacheValues.All(cacheValue => cacheValue.HasValue))
             return usersById!;
 
         var missingUserIds = usersById.Where(x => x.Value is null).Select(x => x.Key).ToHashSet();
