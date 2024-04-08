@@ -74,18 +74,15 @@ public class CommentsService(ICommentRepository commentRepository, IUsersService
         var authorIds = comments.SelectMany(comment => comment.FirstRepliesAuthorIds.Append(comment.AuthorId)).ToHashSet();
         var authorsById = await usersService.GetUsersAsync(authorIds);
 
-        return comments.Select(comment =>
+        return comments.Select(comment => new CommentDto
         {
-            return new CommentDto
-            {
-                Id = comment.Id,
-                Content = comment.Content,
-                Author = authorsById[comment.AuthorId].Adapt<AuthorDto>(),
-                CreatedAt = comment.CreatedAt,
-                ReplyCount = comment.ReplyCount,
-                FirstRepliesAuthors = comment.FirstRepliesAuthorIds
-                    .Select(replyAuthorId => authorsById[replyAuthorId].Adapt<AuthorDto>())
-            };
+            Id = comment.Id,
+            Content = comment.Content,
+            Author = authorsById[comment.AuthorId].Adapt<AuthorDto>(),
+            CreatedAt = comment.CreatedAt,
+            ReplyCount = comment.ReplyCount,
+            FirstRepliesAuthors = comment.FirstRepliesAuthorIds
+                .Select(replyAuthorId => authorsById[replyAuthorId].Adapt<AuthorDto>())
         });
     }
 }
