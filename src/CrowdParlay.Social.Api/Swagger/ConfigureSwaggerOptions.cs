@@ -13,6 +13,8 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) : 
         foreach (var description in provider.ApiVersionDescriptions)
             swaggerOptions.SwaggerDoc(description.GroupName, CreateInfoForApiVersion(description));
 
+        swaggerOptions.SupportNonNullableReferenceTypes();
+        swaggerOptions.UseAllOfToExtendReferenceSchemas();
         swaggerOptions.AddSignalRSwaggerGen(options => options.ScanAssembly(Assembly.GetExecutingAssembly()));
     }
 
