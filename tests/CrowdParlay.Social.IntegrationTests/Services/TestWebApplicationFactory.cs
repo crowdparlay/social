@@ -20,7 +20,9 @@ internal class TestWebApplicationFactory<TProgram>(
             ["NEO4J_USERNAME"] = neo4jConfiguration.Username,
             ["NEO4J_PASSWORD"] = neo4jConfiguration.Password,
             ["REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString,
-            ["USERS_GRPC_ADDRESS"] = "https://fake-users-host:5104",
+            ["USERS_GRPC_ADDRESS"] = "https://users:5104",
+            ["TELEMETRY_SOURCE_NAME"] = "Social",
+            ["TELEMETRY_OTLP_EXPORTER_ENDPOINT"] = "http://localhost:8200",
             ["CORS_ORIGINS"] = "http://localhost;http://localhost:1234"
         }));
 

@@ -1,8 +1,7 @@
-using System.Text.Json;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Infrastructure.Communication.Abstractions;
 using CrowdParlay.Social.Infrastructure.Communication.Services;
-using StackExchange.Redis;
 
 namespace CrowdParlay.Social.UnitTests;
 
@@ -26,12 +25,12 @@ public class UsersServiceCachingDecoratorTests
             .Setup(service => service.GetByIdAsync(user.Id))
             .ReturnsAsync(user);
 
-        var redisDatabaseMock = new Mock<IDatabase>();
-        redisDatabaseMock
-            .Setup(database => database.StringGetAsync(user.Id.ToString(), It.IsAny<CommandFlags>()))
-            .ReturnsAsync(userPresentInCache ? JsonSerializer.Serialize(user) : RedisValue.Null);
+        var usersCacheMock = new Mock<IUsersCache>();
+        usersCacheMock
+            .Setup(cache => cache.GetUserByIdAsync(user.Id))
+            .ReturnsAsync(userPresentInCache ? user : null);
 
-        var cachedUsersService = new UsersServiceCachingDecorator(usersServiceMock.Object, redisDatabaseMock.Object);
+        var cachedUsersService = new UsersServiceCachingDecorator(usersServiceMock.Object, usersCacheMock.Object);
 
         // Act
         var result = await cachedUsersService.GetByIdAsync(user.Id);
@@ -68,24 +67,20 @@ public class UsersServiceCachingDecoratorTests
 
         var userIds = users.Select(user => user.Id).ToHashSet();
         var usersById = users.ToDictionary(user => user.Id, user => user);
-
+        var nullsById = userIds.ToDictionary(userId => userId, _ => (UserDto?)null);
+        
         var usersServiceMock = new Mock<IUsersService>();
         usersServiceMock
             .Setup(service => service.GetUsersAsync(userIds))
-            .ReturnsAsync(usersById);
+            .ReturnsAsync(usersPresentInCache ? nullsById! : usersById);
 
-        var cacheKeys = userIds.Select(id => new RedisKey(id.ToString())).ToArray();
-        var cachedUsers = users
-            .Select(user => JsonSerializer.Serialize(user))
-            .Select(serializedUser => new RedisValue(serializedUser))
-            .ToArray();
+        var cachedUsers = users.ToDictionary(user => user.Id, user => (UserDto?)user);
+        var usersCacheMock = new Mock<IUsersCache>();
+        usersCacheMock
+            .Setup(cache => cache.GetUsersByIdsAsync(userIds))
+            .ReturnsAsync(usersPresentInCache ? cachedUsers : nullsById);
 
-        var redisDatabaseMock = new Mock<IDatabase>();
-        redisDatabaseMock
-            .Setup(database => database.StringGetAsync(cacheKeys, It.IsAny<CommandFlags>()))
-            .ReturnsAsync(usersPresentInCache ? cachedUsers : [RedisValue.Null, RedisValue.Null]);
-
-        var cachedUsersService = new UsersServiceCachingDecorator(usersServiceMock.Object, redisDatabaseMock.Object);
+        var cachedUsersService = new UsersServiceCachingDecorator(usersServiceMock.Object, usersCacheMock.Object);
 
         // Act
         var results = await cachedUsersService.GetUsersAsync(userIds);
