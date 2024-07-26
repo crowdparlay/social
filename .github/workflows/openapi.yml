@@ -28,12 +28,10 @@ jobs:
             8.0.x
       - name: ⚒ Build solution
         run: dotnet build
-      - name: ⚙️ Install Swashbuckle.AspNetCore.Cli
-        run: |
-          dotnet tool install Swashbuckle.AspNetCore.Cli --global
-          echo "$DOTNET_ROOT/tools/swagger" >> $GITHUB_PATH
-      - name: 📝 Generate OpenAPI specification
-        run: swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net8.0/CrowdParlay.Social.Api.dll v1
+      - name: ⚙️ Restore .NET tools
+        run: dotnet tool restore
+      - name: 📝 Produce OpenAPI specification
+        run: dotnet swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net8.0/CrowdParlay.Social.Api.dll v1
       - name: 🔗 Upload OpenAPI specification as release asset
         uses: actions/upload-release-asset@v1
         env:
