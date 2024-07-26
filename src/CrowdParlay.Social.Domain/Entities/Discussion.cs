@@ -6,4 +6,5 @@ public class Discussion
     public required string Title { get; set; }
     public required string Description { get; set; }
     public required Guid AuthorId { get; set; }
+    public required DateTimeOffset CreatedAt { get; set; }
 }

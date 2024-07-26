@@ -21,7 +21,8 @@ public class DiscussionsRepository(IDriver driver) : IDiscussionsRepository
                     Id: discussion.Id,
                     Title: discussion.Title,
                     Description: discussion.Description,
-                    AuthorId: author.Id
+                    AuthorId: author.Id,
+                    CreatedAt: discussion.CreatedAt
                 }
                 """,
                 new { id = id.ToString() });
@@ -134,7 +135,8 @@ public class DiscussionsRepository(IDriver driver) : IDiscussionsRepository
                     Id: discussion.Id,
                     Title: discussion.Title,
                     Description: discussion.Description,
-                    AuthorId: author.Id
+                    AuthorId: author.Id,
+                    CreatedAt: discussion.CreatedAt
                 }
                 """,
                 new

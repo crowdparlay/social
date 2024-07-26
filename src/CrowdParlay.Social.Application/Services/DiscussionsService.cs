@@ -49,7 +49,8 @@ public class DiscussionsService(IDiscussionsRepository discussionsRepository, IU
             Id = discussion.Id,
             Title = discussion.Title,
             Description = discussion.Description,
-            Author = author.Adapt<AuthorDto>()
+            Author = author.Adapt<AuthorDto>(),
+            CreatedAt = discussion.CreatedAt
         };
     }
 
@@ -63,7 +64,8 @@ public class DiscussionsService(IDiscussionsRepository discussionsRepository, IU
             Id = discussion.Id,
             Title = discussion.Title,
             Description = discussion.Description,
-            Author = authorsById[discussion.AuthorId].Adapt<AuthorDto>()
+            Author = authorsById[discussion.AuthorId].Adapt<AuthorDto>(),
+            CreatedAt = discussion.CreatedAt
         });
     }
 }
