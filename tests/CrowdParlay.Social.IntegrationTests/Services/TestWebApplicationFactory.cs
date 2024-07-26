@@ -21,7 +21,8 @@ internal class TestWebApplicationFactory<TProgram>(
             ["NEO4J_PASSWORD"] = neo4jConfiguration.Password,
             ["REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString,
             ["USERS_GRPC_ADDRESS"] = "https://fake-users-host:5104",
-            ["CORS_ORIGINS"] = "http://localhost;http://localhost:1234"
+            ["CORS_ORIGINS"] = "http://localhost;http://localhost:1234",
+            ["DATA_PROTECTION_REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString
         }));
 
         builder.ConfigureServices(services =>

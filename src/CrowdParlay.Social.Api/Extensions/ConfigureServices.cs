@@ -9,7 +9,7 @@ public static class ConfigureApiExtensions
         services.AddHealthChecks();
         return services
             .ConfigureEndpoints()
-            .ConfigureAuthentication()
+            .ConfigureAuthentication(configuration)
             .ConfigureCors(configuration)
             .ConfigureSignalR(configuration)
             .AddExceptionHandler<GlobalExceptionHandler>()

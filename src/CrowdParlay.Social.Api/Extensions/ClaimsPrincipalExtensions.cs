@@ -6,9 +6,10 @@ public static class ClaimsPrincipalExtensions
 {
     public static Guid? GetUserId(this ClaimsPrincipal principal)
     {
-        var subject = principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-        return subject is not null
-            ? Guid.Parse(subject)
-            : null;
+        var userIdClaim = principal.Claims.FirstOrDefault(claim => claim.Type
+            is AuthenticationConstants.CookieAuthenticationUserIdClaim
+            or AuthenticationConstants.BearerAuthenticationUserIdClaim);
+
+        return Guid.TryParse(userIdClaim?.Value, out var value) ? value : null;
     }
 }
