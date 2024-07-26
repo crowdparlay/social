@@ -1,6 +1,7 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Domain.Abstractions;
+using CrowdParlay.Social.Domain.DTOs;
 using CrowdParlay.Social.Domain.Entities;
 using Mapster;
 
@@ -14,16 +15,24 @@ public class DiscussionsService(IDiscussionsRepository discussionsRepository, IU
         return await EnrichAsync(discussion);
     }
 
-    public async Task<IEnumerable<DiscussionDto>> GetAllAsync()
+    public async Task<Page<DiscussionDto>> GetAllAsync(int offset, int count)
     {
-        var discussions = await discussionsRepository.GetAllAsync();
-        return await EnrichAsync(discussions.ToArray());
+        var page = await discussionsRepository.GetAllAsync(offset, count);
+        return new Page<DiscussionDto>
+        {
+            TotalCount = page.TotalCount,
+            Items = await EnrichAsync(page.Items.ToArray())
+        };
     }
 
-    public async Task<IEnumerable<DiscussionDto>> GetByAuthorAsync(Guid authorId)
+    public async Task<Page<DiscussionDto>> GetByAuthorAsync(Guid authorId, int offset, int count)
     {
-        var discussions = await discussionsRepository.GetByAuthorAsync(authorId);
-        return await EnrichAsync(discussions.ToArray());
+        var page = await discussionsRepository.GetByAuthorAsync(authorId, offset, count);
+        return new Page<DiscussionDto>
+        {
+            TotalCount = page.TotalCount,
+            Items = await EnrichAsync(page.Items.ToArray())
+        };
     }
 
     public async Task<DiscussionDto> CreateAsync(Guid authorId, string title, string description)

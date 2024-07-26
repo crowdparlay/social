@@ -1,5 +1,6 @@
 using CrowdParlay.Social.Application.Exceptions;
 using CrowdParlay.Social.Domain.Abstractions;
+using CrowdParlay.Social.Domain.DTOs;
 using CrowdParlay.Social.Domain.Entities;
 using Mapster;
 using Neo4j.Driver;
@@ -33,7 +34,7 @@ public class DiscussionsRepository(IDriver driver) : IDiscussionsRepository
         });
     }
 
-    public async Task<IEnumerable<Discussion>> GetAllAsync()
+    public async Task<Page<Discussion>> GetAllAsync(int offset, int count)
     {
         await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
@@ -41,20 +42,39 @@ public class DiscussionsRepository(IDriver driver) : IDiscussionsRepository
             var data = await runner.RunAsync(
                 """
                 MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author)
+                WITH discussion, author ORDER BY discussion.CreatedAt DESC
                 RETURN {
-                    Id: discussion.Id,
-                    Title: discussion.Title,
-                    Description: discussion.Description,
-                    AuthorId: author.Id
+                    TotalCount: COUNT(discussion),
+                    Items: COLLECT({
+                        Id: discussion.Id,
+                        Title: discussion.Title,
+                        Description: discussion.Description,
+                        AuthorId: author.Id,
+                        CreatedAt: discussion.CreatedAt
+                    })[$offset..$offset + $count]
                 }
-                """);
+                """,
+                new
+                {
+                    offset,
+                    count
+                });
 
-            var records = await data.ToListAsync();
-            return records.Select(x => x[0]).Adapt<IEnumerable<Discussion>>();
+            if (await data.PeekAsync() is null)
+            {
+                return new Page<Discussion>
+                {
+                    TotalCount = 0,
+                    Items = Enumerable.Empty<Discussion>()
+                };
+            }
+
+            var record = await data.SingleAsync();
+            return record[0].Adapt<Page<Discussion>>();
         });
     }
 
-    public async Task<IEnumerable<Discussion>> GetByAuthorAsync(Guid authorId)
+    public async Task<Page<Discussion>> GetByAuthorAsync(Guid authorId, int offset, int count)
     {
         await using var session = driver.AsyncSession();
         return await session.ExecuteReadAsync(async runner =>
@@ -62,16 +82,36 @@ public class DiscussionsRepository(IDriver driver) : IDiscussionsRepository
             var data = await runner.RunAsync(
                 """
                 MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author { Id: $authorId })
+                WITH discussion, author ORDER BY discussion.CreatedAt DESC
                 RETURN {
-                    Id: discussion.Id,
-                    Title: discussion.Title,
-                    Description: discussion.Description,
-                    AuthorId: author.Id
+                    TotalCount: COUNT(discussion),
+                    Items: COLLECT({
+                        Id: discussion.Id,
+                        Title: discussion.Title,
+                        Description: discussion.Description,
+                        AuthorId: author.Id,
+                        CreatedAt: discussion.CreatedAt
+                    })[$offset..$offset + $count]
                 }
-                """, new { authorId = authorId.ToString() });
+                """,
+                new
+                {
+                    authorId = authorId.ToString(),
+                    offset,
+                    count
+                });
 
-            var records = await data.ToListAsync();
-            return records.Select(x => x[0]).Adapt<IEnumerable<Discussion>>();
+            if (await data.PeekAsync() is null)
+            {
+                return new Page<Discussion>
+                {
+                    TotalCount = 0,
+                    Items = Enumerable.Empty<Discussion>()
+                };
+            }
+
+            var record = await data.SingleAsync();
+            return record[0].Adapt<Page<Discussion>>();
         });
     }
 

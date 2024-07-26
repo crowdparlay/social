@@ -5,8 +5,10 @@ using CrowdParlay.Social.Api.v1.DTOs;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CrowdParlay.Social.Api.v1.Controllers;
 
@@ -28,10 +30,13 @@ public class DiscussionsController(IDiscussionsService discussionsService) : Con
     /// </summary>
     [HttpGet]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(IEnumerable<DiscussionDto>), (int)HttpStatusCode.OK)]
-    public async Task<IEnumerable<DiscussionDto>> GetDiscussions([FromQuery] Guid? authorId) => authorId is null
-        ? await discussionsService.GetAllAsync()
-        : await discussionsService.GetByAuthorAsync(authorId.Value);
+    [ProducesResponseType(typeof(Page<DiscussionDto>), (int)HttpStatusCode.OK)]
+    public async Task<Page<DiscussionDto>> GetDiscussions(
+        [FromQuery] Guid? authorId,
+        [FromQuery, BindRequired] int offset,
+        [FromQuery, BindRequired] int count) => authorId is null
+        ? await discussionsService.GetAllAsync(offset, count)
+        : await discussionsService.GetByAuthorAsync(authorId.Value, offset, count);
 
     /// <summary>
     /// Creates a discussion.
