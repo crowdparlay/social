@@ -10,8 +10,12 @@ public static class ConfigurePersistenceExtensions
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
         .AddNeo4j(configuration)
-        .AddScoped<ICommentRepository, CommentsRepository>()
-        .AddScoped<IDiscussionsRepository, DiscussionsRepository>();
+        .AddScoped<ICommentsRepository, CommentsRepository>()
+        .AddScoped<IDiscussionsRepository, DiscussionsRepository>()
+        .AddScoped<IReactionsRepository, ReactionsRepository>()
+        .AddScoped<IAsyncSession>(provider => provider.GetRequiredService<IDriver>().AsyncSession())
+        .AddScoped<IAsyncQueryRunner>(provider => provider.GetRequiredService<IAsyncSession>())
+        .AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
     // ReSharper disable once InconsistentNaming
     private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)

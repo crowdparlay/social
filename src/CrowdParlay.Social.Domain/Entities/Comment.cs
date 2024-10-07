@@ -1,3 +1,5 @@
+using CrowdParlay.Social.Domain.DTOs;
+
 namespace CrowdParlay.Social.Domain.Entities;
 
 public class Comment
@@ -8,4 +10,5 @@ public class Comment
     public required DateTimeOffset CreatedAt { get; set; }
     public required int ReplyCount { get; set; }
     public required ISet<Guid> FirstRepliesAuthorIds { get; set; }
+    public required ISet<ReactionCounter> Reactions { get; set; }
 }

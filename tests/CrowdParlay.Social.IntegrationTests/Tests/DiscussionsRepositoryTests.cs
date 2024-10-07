@@ -1,5 +1,4 @@
 using CrowdParlay.Social.Domain.Abstractions;
-using CrowdParlay.Social.Domain.Entities;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
@@ -14,18 +13,21 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassF
         await using var scope = _services.CreateAsyncScope();
         var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
 
-        Discussion[] expected =
+        Guid[] expectedDiscussionIds =
         [
             await discussions.CreateAsync(Guid.NewGuid(), "Discussion 1", "bla bla bla"),
             await discussions.CreateAsync(Guid.NewGuid(), "Discussion 2", "numa numa e"),
             await discussions.CreateAsync(Guid.NewGuid(), "Discussion 3", "bara bara bara")
         ];
 
+        var expectedDiscussions = expectedDiscussionIds.Select(discussionId =>
+            discussions.GetByIdAsync(discussionId).Result).ToArray();
+
         // Act
         var response = await discussions.GetAllAsync(0, 2);
 
         // Assert
-        response.Items.Should().BeEquivalentTo(expected.TakeLast(2).Reverse());
+        response.Items.Should().BeEquivalentTo(expectedDiscussions.TakeLast(2).Reverse());
         response.TotalCount.Should().BeGreaterOrEqualTo(3);
     }
 
@@ -37,17 +39,20 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassF
         var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
 
         var authorId = Guid.NewGuid();
-        Discussion[] expected =
+        Guid[] expectedDiscussionIds =
         [
             await discussions.CreateAsync(authorId, "Discussion 1", "bla bla bla"),
             await discussions.CreateAsync(authorId, "Discussion 2", "numa numa e")
         ];
 
+        var expectedDiscussions = expectedDiscussionIds.Select(discussionId =>
+            discussions.GetByIdAsync(discussionId).Result).ToArray();
+
         // Act
         var response = await discussions.GetByAuthorAsync(authorId, 0, 10);
 
         // Assert
-        response.Items.Should().BeEquivalentTo(expected.Reverse());
+        response.Items.Should().BeEquivalentTo(expectedDiscussions.Reverse());
     }
 
     [Fact(DisplayName = "Get discussions by author of no discussions")]

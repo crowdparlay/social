@@ -7,17 +7,21 @@ using Mapster;
 
 namespace CrowdParlay.Social.Application.Services;
 
-public class CommentsService(ICommentRepository commentRepository, IUsersService usersService) : ICommentsService
+public class CommentsService(
+    IUnitOfWorkFactory unitOfWorkFactory,
+    ICommentsRepository commentsRepository,
+    IUsersService usersService)
+    : ICommentsService
 {
     public async Task<CommentDto> GetByIdAsync(Guid id)
     {
-        var comment = await commentRepository.GetByIdAsync(id);
+        var comment = await commentsRepository.GetByIdAsync(id);
         return await EnrichAsync(comment);
     }
 
     public async Task<Page<CommentDto>> SearchAsync(Guid? discussionId, Guid? authorId, int offset, int count)
     {
-        var page = await commentRepository.SearchAsync(discussionId, authorId, offset, count);
+        var page = await commentsRepository.SearchAsync(discussionId, authorId, offset, count);
         return new Page<CommentDto>
         {
             TotalCount = page.TotalCount,
@@ -27,17 +31,21 @@ public class CommentsService(ICommentRepository commentRepository, IUsersService
 
     public async Task<CommentDto> CreateAsync(Guid authorId, Guid discussionId, string content)
     {
-        var comment = await commentRepository.CreateAsync(authorId, discussionId, content);
-        var result = await EnrichAsync(comment);
+        Comment comment;
+        await using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+        {
+            var commentId = await unitOfWork.CommentsRepository.CreateAsync(authorId, discussionId, content);
+            comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId);
+        }
 
         // TODO: notify clients via SignalR
 
-        return result;
+        return await EnrichAsync(comment);
     }
 
     public async Task<Page<CommentDto>> GetRepliesToCommentAsync(Guid parentCommentId, int offset, int count)
     {
-        var page = await commentRepository.GetRepliesToCommentAsync(parentCommentId, offset, count);
+        var page = await commentsRepository.GetRepliesToCommentAsync(parentCommentId, offset, count);
         return new Page<CommentDto>
         {
             TotalCount = page.TotalCount,
@@ -47,11 +55,43 @@ public class CommentsService(ICommentRepository commentRepository, IUsersService
 
     public async Task<CommentDto> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
     {
-        var comment = await commentRepository.ReplyToCommentAsync(authorId, parentCommentId, content);
+        Comment comment;
+        await using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+        {
+            var commentId = await unitOfWork.CommentsRepository.ReplyToCommentAsync(authorId, parentCommentId, content);
+            comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId);
+        }
+
         return await EnrichAsync(comment);
     }
 
-    public async Task DeleteAsync(Guid id) => await commentRepository.DeleteAsync(id);
+    public async Task<CommentDto> AddReactionAsync(Guid authorId, Guid commentId, string reaction)
+    {
+        Comment comment;
+        await using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+        {
+            await unitOfWork.ReactionsRepository.AddAsync(authorId, commentId, reaction);
+            comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId);
+            await unitOfWork.CommitAsync();
+        }
+
+        return await EnrichAsync(comment);
+    }
+
+    public async Task<CommentDto> RemoveReactionAsync(Guid authorId, Guid commentId, string reaction)
+    {
+        Comment comment;
+        await using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+        {
+            await unitOfWork.ReactionsRepository.RemoveAsync(authorId, commentId, reaction);
+            comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId);
+            await unitOfWork.CommitAsync();
+        }
+
+        return await EnrichAsync(comment);
+    }
+
+    public async Task DeleteAsync(Guid id) => await commentsRepository.DeleteAsync(id);
 
     private async Task<CommentDto> EnrichAsync(Comment comment)
     {

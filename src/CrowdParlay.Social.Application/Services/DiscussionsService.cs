@@ -7,7 +7,11 @@ using Mapster;
 
 namespace CrowdParlay.Social.Application.Services;
 
-public class DiscussionsService(IDiscussionsRepository discussionsRepository, IUsersService usersService) : IDiscussionsService
+public class DiscussionsService(
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IDiscussionsRepository discussionsRepository,
+    IUsersService usersService)
+    : IDiscussionsService
 {
     public async Task<DiscussionDto> GetByIdAsync(Guid id)
     {
@@ -37,7 +41,13 @@ public class DiscussionsService(IDiscussionsRepository discussionsRepository, IU
 
     public async Task<DiscussionDto> CreateAsync(Guid authorId, string title, string description)
     {
-        var discussion = await discussionsRepository.CreateAsync(authorId, title, description);
+        Discussion discussion;
+        await using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+        {
+            var discussionId = await unitOfWork.DiscussionsRepository.CreateAsync(authorId, title, description);
+            discussion = await unitOfWork.DiscussionsRepository.GetByIdAsync(discussionId);
+        }
+
         return await EnrichAsync(discussion);
     }
 
