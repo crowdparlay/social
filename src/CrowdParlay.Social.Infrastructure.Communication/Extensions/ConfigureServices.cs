@@ -1,4 +1,5 @@
 using CrowdParlay.Social.Application.Abstractions;
+using CrowdParlay.Social.Infrastructure.Communication.Abstractions;
 using CrowdParlay.Social.Infrastructure.Communication.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,7 @@ public static class ConfigureServices
         });
 
         return services
+            .AddScoped<IUsersCache, RedisUsersCache>()
             .AddScoped<IUsersService, UsersService>()
             .Decorate<IUsersService, UsersServiceCachingDecorator>();
     }

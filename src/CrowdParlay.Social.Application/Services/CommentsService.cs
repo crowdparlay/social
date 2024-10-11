@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Domain.Abstractions;
@@ -27,6 +28,9 @@ public class CommentsService(ICommentRepository commentRepository, IUsersService
 
     public async Task<CommentDto> CreateAsync(Guid authorId, Guid discussionId, string content)
     {
+        var source = new ActivitySource("test source");
+        using var activity = source.CreateActivity("Create comment", ActivityKind.Server);
+        
         var comment = await commentRepository.CreateAsync(authorId, discussionId, content);
         var result = await EnrichAsync(comment);
 

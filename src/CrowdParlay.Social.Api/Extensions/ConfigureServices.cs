@@ -12,6 +12,7 @@ public static class ConfigureApiExtensions
             .ConfigureAuthentication(configuration)
             .ConfigureCors(configuration)
             .ConfigureSignalR(configuration)
+            .ConfigureTelemetry(configuration)
             .AddExceptionHandler<GlobalExceptionHandler>()
             .AddProblemDetails()
             .AddAuthorization();
