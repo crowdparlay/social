@@ -8,7 +8,7 @@ public static class ClaimsPrincipalExtensions
     {
         var userIdClaim = principal.Claims.FirstOrDefault(claim => claim.Type
             is AuthenticationConstants.CookieAuthenticationUserIdClaim
-            or AuthenticationConstants.BearerAuthenticationUserIdClaim);
+            or AuthenticationConstants.JwtBearerAuthenticationUserIdClaim);
 
         return Guid.TryParse(userIdClaim?.Value, out var value) ? value : null;
     }
