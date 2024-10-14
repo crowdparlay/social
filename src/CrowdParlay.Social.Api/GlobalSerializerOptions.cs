@@ -7,7 +7,7 @@ public static class GlobalSerializerOptions
 {
     public static readonly JsonSerializerOptions SnakeCase = new()
     {
-        PropertyNamingPolicy = new SnakeCaseJsonNamingPolicy(), 
-        DictionaryKeyPolicy = new SnakeCaseJsonNamingPolicy() 
+        PropertyNamingPolicy = new SnakeCaseJsonNamingPolicy(),
+        DictionaryKeyPolicy = new SnakeCaseJsonNamingPolicy()
     };
 }

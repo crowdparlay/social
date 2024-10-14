@@ -4,7 +4,7 @@ using CrowdParlay.Social.Api.v1.DTOs;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class AuthenticationTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
+public class AuthenticationTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly HttpClient _client = context.Server.CreateClient();
 

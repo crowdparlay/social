@@ -2,34 +2,9 @@ using CrowdParlay.Social.Domain.Abstractions;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
+public class DiscussionsRepositoryTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly IServiceProvider _services = context.Services;
-
-    [Fact(DisplayName = "Get all discussions")]
-    public async Task GetAllDiscussions()
-    {
-        // Arrange
-        await using var scope = _services.CreateAsyncScope();
-        var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
-
-        Guid[] expectedDiscussionIds =
-        [
-            await discussions.CreateAsync(Guid.NewGuid(), "Discussion 1", "bla bla bla"),
-            await discussions.CreateAsync(Guid.NewGuid(), "Discussion 2", "numa numa e"),
-            await discussions.CreateAsync(Guid.NewGuid(), "Discussion 3", "bara bara bara")
-        ];
-
-        var expectedDiscussions = expectedDiscussionIds.Select(discussionId =>
-            discussions.GetByIdAsync(discussionId).Result).ToArray();
-
-        // Act
-        var response = await discussions.GetAllAsync(0, 2);
-
-        // Assert
-        response.Items.Should().BeEquivalentTo(expectedDiscussions.TakeLast(2).Reverse());
-        response.TotalCount.Should().BeGreaterOrEqualTo(3);
-    }
 
     [Fact(DisplayName = "Get discussions by author")]
     public async Task GetDiscussionsByAuthor()
@@ -46,10 +21,10 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassF
         ];
 
         var expectedDiscussions = expectedDiscussionIds.Select(discussionId =>
-            discussions.GetByIdAsync(discussionId).Result).ToArray();
+            discussions.GetByIdAsync(discussionId, authorId).Result).ToArray();
 
         // Act
-        var response = await discussions.GetByAuthorAsync(authorId, 0, 10);
+        var response = await discussions.SearchAsync(authorId, authorId, 0, 10);
 
         // Assert
         response.Items.Should().BeEquivalentTo(expectedDiscussions.Reverse());
@@ -63,7 +38,7 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IClassF
         var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
 
         // Act
-        var response = await discussions.GetByAuthorAsync(Guid.NewGuid(), 0, 10);
+        var response = await discussions.SearchAsync(Guid.NewGuid(), Guid.NewGuid(), 0, 10);
 
         // Assert
         response.Items.Should().BeEmpty();

@@ -1,3 +1,4 @@
+using System.Text;
 using CrowdParlay.Social.Application.Exceptions;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
@@ -9,28 +10,43 @@ namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
 {
-    public async Task<Comment> GetByIdAsync(Guid id)
+    public async Task<Comment> GetByIdAsync(Guid commentId, Guid? viewerId)
     {
         var data = await runner.RunAsync(
             """
-            MATCH (comment:Comment { Id: $id })-[:AUTHORED_BY]->(author:Author)
+            MATCH (comment:Comment { Id: $commentId })-[:AUTHORED_BY]->(author:Author)
             OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
+            OPTIONAL MATCH (comment)<-[reaction:REACTED_TO]-(:Author)
+            OPTIONAL MATCH (comment)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
 
-            WITH comment, author, COUNT(reply) AS replyCount,
+            WITH comment, author, COUNT(reply) AS replyCount, reaction,
+                COLLECT(viewerReaction.Value) AS viewerReactions,
                 CASE WHEN COUNT(reply) > 0
                     THEN COLLECT(DISTINCT replyAuthor.Id)[0..3]
                     ELSE [] END AS firstRepliesAuthorIds
-                
+             
+            WITH comment, author, replyCount, firstRepliesAuthorIds, viewerReactions, reaction,
+                COUNT(reaction) AS reactionCount
+
+            WITH comment, author, replyCount, firstRepliesAuthorIds, viewerReactions,
+                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+
             RETURN {
                 Id: comment.Id,
                 Content: comment.Content,
                 AuthorId: author.Id,
                 CreatedAt: comment.CreatedAt,
                 ReplyCount: replyCount,
-                FirstRepliesAuthorIds: firstRepliesAuthorIds
+                FirstRepliesAuthorIds: firstRepliesAuthorIds,
+                Reactions: reactions,
+                ViewerReactions: viewerReactions
             }
             """,
-            new { id = id.ToString() });
+            new
+            {
+                commentId = commentId.ToString(),
+                viewerId = viewerId?.ToString()
+            });
 
         if (await data.PeekAsync() is null)
             throw new NotFoundException();
@@ -39,29 +55,41 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
         return record[0].Adapt<Comment>();
     }
 
-    public async Task<Page<Comment>> SearchAsync(Guid? discussionId, Guid? authorId, int offset, int count)
+    public async Task<Page<Comment>> SearchAsync(Guid? subjectId, Guid? authorId, Guid? viewerId, int offset, int count)
     {
-        var matchSelector = authorId is not null
-            ? "MATCH (author:Author { Id: $authorId })<-[:AUTHORED_BY]-(comment:Comment)"
-            : "MATCH (author:Author)<-[:AUTHORED_BY]-(comment:Comment)";
+        var matchSelector = new StringBuilder("MATCH (comment:Comment)-[:AUTHORED_BY]->(author:Author)");
 
-        if (discussionId is not null)
-            matchSelector += "-[:REPLIES_TO]->(discussion:Discussion { Id: $discussionId })";
+        if (subjectId is not null)
+        {
+            matchSelector.AppendLine("MATCH (comment)-[:REPLIES_TO]->(subject { Id: $subjectId })");
+            matchSelector.AppendLine("WHERE (subject:Comment OR subject:Discussion)");
+        }
+
+        if (authorId is not null)
+            matchSelector.AppendLine("WHERE author.Id = $authorId");
 
         var data = await runner.RunAsync(
             matchSelector +
             """
             OPTIONAL MATCH (deepReplyAuthor:Author)<-[:AUTHORED_BY]-(deepReply:Comment)-[:REPLIES_TO*]->(comment)
 
-            WITH author, comment, deepReplyAuthor, deepReply
+            OPTIONAL MATCH (comment)<-[reaction:REACTED_TO]-(:Author)
+            OPTIONAL MATCH (comment)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
+
+            WITH author, comment, deepReplyAuthor, deepReply, reaction,
+                COLLECT(viewerReaction.Value) AS viewerReactions
+
+            WITH author, comment, deepReplyAuthor, deepReply, viewerReactions, reaction,
+                 COUNT(reaction) AS reactionCount
+
+            WITH author, comment, deepReplyAuthor, deepReply, viewerReactions,
+                 apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+                 
             ORDER BY comment.CreatedAt, deepReply.CreatedAt DESC
 
-            WITH author, comment, {
-                DeepReplyCount: COUNT(deepReply),
-                FirstDeepRepliesAuthorIds: CASE WHEN COUNT(deepReply) > 0
-                    THEN COLLECT(DISTINCT deepReplyAuthor.Id)[0..3]
-                    ELSE [] END
-            } AS deepRepliesData
+            WITH author, comment, viewerReactions, reactions,
+                 COUNT(deepReply) AS deepReplyCount,
+                 COLLECT(DISTINCT deepReplyAuthor.Id)[0..3] AS firstDeepRepliesAuthorIds
 
             RETURN {
                 TotalCount: COUNT(comment),
@@ -70,15 +98,18 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                     Content: comment.Content,
                     AuthorId: author.Id,
                     CreatedAt: comment.CreatedAt,
-                    ReplyCount: deepRepliesData.DeepReplyCount,
-                    FirstRepliesAuthorIds: deepRepliesData.FirstDeepRepliesAuthorIds
+                    ReplyCount: deepReplyCount,
+                    FirstRepliesAuthorIds: firstDeepRepliesAuthorIds,
+                    Reactions: reactions,
+                    ViewerReactions: viewerReactions
                 })[$offset..$offset + $count]
             }
             """,
             new
             {
-                discussionId = discussionId.ToString(),
-                authorId = authorId.ToString(),
+                subjectId = subjectId?.ToString(),
+                authorId = authorId?.ToString(),
+                viewerId = viewerId?.ToString(),
                 offset,
                 count
             });
@@ -124,59 +155,6 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
         return record[0].Adapt<Guid>();
     }
 
-    public async Task<Page<Comment>> GetRepliesToCommentAsync(Guid parentCommentId, int offset, int count)
-    {
-        var data = await runner.RunAsync(
-            """
-            MATCH (author:Author)<-[:AUTHORED_BY]-(comment:Comment)-[:REPLIES_TO]->(parent:Comment { Id: $parentCommentId })
-
-            WITH author, comment, COUNT(comment) AS totalCount
-            ORDER BY comment.CreatedAt
-            SKIP $offset
-            LIMIT $count
-
-            OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
-
-            WITH totalCount, author, comment, COUNT(reply) AS replyCount,
-                CASE WHEN COUNT(reply) > 0
-                    THEN COLLECT(DISTINCT replyAuthor.Id)[0..3]
-                    ELSE [] END AS firstRepliesAuthorIds
-                
-            WITH totalCount,
-                COLLECT({
-                    Id: comment.Id,
-                    Content: comment.Content,
-                    AuthorId: author.Id,
-                    CreatedAt: datetime(comment.CreatedAt),
-                    ReplyCount: replyCount,
-                    FirstRepliesAuthorIds: firstRepliesAuthorIds
-                }) AS comments
-                
-            RETURN {
-                TotalCount: totalCount,
-                Items: comments
-            }
-            """,
-            new
-            {
-                parentCommentId = parentCommentId.ToString(),
-                offset,
-                count
-            });
-
-        if (await data.PeekAsync() is null)
-        {
-            return new Page<Comment>
-            {
-                TotalCount = 0,
-                Items = Enumerable.Empty<Comment>()
-            };
-        }
-
-        var record = await data.SingleAsync();
-        return record[0].Adapt<Page<Comment>>();
-    }
-
     public async Task<Guid> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
     {
         var cursor = await runner.RunAsync(
@@ -197,7 +175,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                 authorId = authorId.ToString(),
                 content
             });
-        
+
         if (await cursor.PeekAsync() is null)
             throw new NotFoundException();
 
@@ -205,15 +183,16 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
         return record[0].Adapt<Guid>();
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid commentId)
     {
         var data = await runner.RunAsync(
             """
-            OPTIONAL MATCH (comment:Comment { Id: $id })
-            DETACH DELETE comment
+            OPTIONAL MATCH (comment:Comment { Id: $commentId })
+            OPTIONAL MATCH (reply:Comment)-[:REPLIES_TO*]->(comment)
+            DETACH DELETE comment, reply
             RETURN COUNT(comment) = 0
             """,
-            new { id = id.ToString() });
+            new { commentId = commentId.ToString() });
 
         var record = await data.SingleAsync();
         var notFount = record[0].As<bool>();

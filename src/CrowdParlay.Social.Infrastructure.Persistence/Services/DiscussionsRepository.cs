@@ -9,20 +9,36 @@ namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepository
 {
-    public async Task<Discussion> GetByIdAsync(Guid id)
+    public async Task<Discussion> GetByIdAsync(Guid discussionId, Guid? viewerId)
     {
         var data = await runner.RunAsync(
             """
-            MATCH (discussion:Discussion { Id: $id })-[:AUTHORED_BY]->(author:Author)
+            MATCH (discussion:Discussion { Id: $discussionId })-[:AUTHORED_BY]->(author:Author)
+            OPTIONAL MATCH (discussion)<-[reaction:REACTED_TO]-(:Author)
+            OPTIONAL MATCH (discussion)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
+
+            WITH author, discussion, reaction,
+                COLLECT(viewerReaction.Value) AS viewerReactions,
+                COUNT(reaction) AS reactionCount
+
+            WITH author, discussion, viewerReactions,
+                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+
             RETURN {
                 Id: discussion.Id,
                 Title: discussion.Title,
                 Description: discussion.Description,
                 AuthorId: author.Id,
-                CreatedAt: discussion.CreatedAt
+                CreatedAt: discussion.CreatedAt,
+                Reactions: reactions,
+                ViewerReactions: viewerReactions
             }
             """,
-            new { id = id.ToString() });
+            new
+            {
+                discussionId = discussionId.ToString(),
+                viewerId = viewerId?.ToString()
+            });
 
         if (await data.PeekAsync() is null)
             throw new NotFoundException();
@@ -31,12 +47,27 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
         return record[0].Adapt<Discussion>();
     }
 
-    public async Task<Page<Discussion>> GetAllAsync(int offset, int count)
+    public async Task<Page<Discussion>> SearchAsync(Guid? authorId, Guid? viewerId, int offset, int count)
     {
+        var matchSelector = authorId is not null
+            ? "MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author { Id: $authorId })"
+            : "MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author)";
+
         var data = await runner.RunAsync(
+            matchSelector +
             """
-            MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author)
-            WITH discussion, author ORDER BY discussion.CreatedAt DESC
+            OPTIONAL MATCH (discussion)<-[reaction:REACTED_TO]-(:Author)
+            OPTIONAL MATCH (discussion)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
+
+            WITH author, discussion, reaction,
+                COLLECT(viewerReaction.Value) AS viewerReactions,
+                COUNT(reaction) AS reactionCount
+
+            WITH author, discussion, viewerReactions,
+                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+
+            ORDER BY discussion.CreatedAt DESC
+
             RETURN {
                 TotalCount: COUNT(discussion),
                 Items: COLLECT({
@@ -44,49 +75,16 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
                     Title: discussion.Title,
                     Description: discussion.Description,
                     AuthorId: author.Id,
-                    CreatedAt: discussion.CreatedAt
+                    CreatedAt: discussion.CreatedAt,
+                    Reactions: reactions,
+                    ViewerReactions: viewerReactions
                 })[$offset..$offset + $count]
             }
             """,
             new
             {
-                offset,
-                count
-            });
-
-        if (await data.PeekAsync() is null)
-        {
-            return new Page<Discussion>
-            {
-                TotalCount = 0,
-                Items = Enumerable.Empty<Discussion>()
-            };
-        }
-
-        var record = await data.SingleAsync();
-        return record[0].Adapt<Page<Discussion>>();
-    }
-
-    public async Task<Page<Discussion>> GetByAuthorAsync(Guid authorId, int offset, int count)
-    {
-        var data = await runner.RunAsync(
-            """
-            MATCH (discussion:Discussion)-[:AUTHORED_BY]->(author:Author { Id: $authorId })
-            WITH discussion, author ORDER BY discussion.CreatedAt DESC
-            RETURN {
-                TotalCount: COUNT(discussion),
-                Items: COLLECT({
-                    Id: discussion.Id,
-                    Title: discussion.Title,
-                    Description: discussion.Description,
-                    AuthorId: author.Id,
-                    CreatedAt: discussion.CreatedAt
-                })[$offset..$offset + $count]
-            }
-            """,
-            new
-            {
-                authorId = authorId.ToString(),
+                authorId = authorId?.ToString(),
+                viewerId = viewerId?.ToString(),
                 offset,
                 count
             });

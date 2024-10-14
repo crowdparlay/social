@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class SignalRTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
+public class SignalRTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly IServiceProvider _services = context.Services;
     private readonly HttpClient _client = context.Server.CreateClient();
@@ -33,7 +33,9 @@ public class SignalRTests(WebApplicationContext context) : IClassFixture<WebAppl
             },
             CreatedAt = DateTimeOffset.Now,
             ReplyCount = 0,
-            FirstRepliesAuthors = []
+            FirstRepliesAuthors = [],
+            ReactionCounters = new Dictionary<string, int>(),
+            ViewerReactions = new HashSet<string>()
         };
 
         // Act

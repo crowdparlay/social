@@ -1,8 +1,9 @@
 using CrowdParlay.Social.Domain.Abstractions;
+using CrowdParlay.Social.Domain.ValueObjects;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class ReactionsRepositoryTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
+public class ReactionsRepositoryTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly IServiceProvider _services = context.Services;
 
@@ -17,8 +18,8 @@ public class ReactionsRepositoryTests(WebApplicationContext context) : IClassFix
         var authorId = Guid.NewGuid();
         var discussionId = await discussionsRepository.CreateAsync(Guid.NewGuid(), "Title", "Description");
 
-        const string thumbUp = "\ud83d\udc4d";
-        const string thumbDown = "\ud83d\udc4e";
+        var thumbUp = new Reaction("\ud83d\udc4d");
+        var thumbDown = new Reaction("\ud83d\udc4e");
         
         // Act
         for (var i = 0; i < 4; i++)

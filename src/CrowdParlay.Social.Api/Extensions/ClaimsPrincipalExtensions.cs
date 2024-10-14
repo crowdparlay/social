@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CrowdParlay.Social.Application.Exceptions;
 
 namespace CrowdParlay.Social.Api.Extensions;
 
@@ -12,4 +13,7 @@ public static class ClaimsPrincipalExtensions
 
         return Guid.TryParse(userIdClaim?.Value, out var value) ? value : null;
     }
+    
+    public static Guid GetRequiredUserId(this ClaimsPrincipal principal) =>
+        principal.GetUserId() ?? throw new ForbiddenException();
 }

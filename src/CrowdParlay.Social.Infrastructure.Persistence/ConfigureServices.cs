@@ -1,3 +1,4 @@
+using CrowdParlay.Social.Domain;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Infrastructure.Persistence.Services;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +21,8 @@ public static class ConfigurePersistenceExtensions
     // ReSharper disable once InconsistentNaming
     private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)
     {
+        ReactionMapsterAdapterConfigurator.Configure();
+        
         var uri =
             configuration["NEO4J_URI"] ??
             throw new InvalidOperationException("NEO4J_URI is not set!");
