@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class HttpContractsTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
+public class HttpContractsTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly HttpClient _client = context.Server.CreateClient();
 

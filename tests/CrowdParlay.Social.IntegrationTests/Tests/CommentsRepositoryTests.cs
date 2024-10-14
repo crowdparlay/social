@@ -3,11 +3,11 @@
 
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
-using Mapster;
+using CrowdParlay.Social.Domain.Entities;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
+public class CommentsRepositoryTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly IServiceProvider _services = context.Services;
 
@@ -18,16 +18,17 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
         await using var scope = _services.CreateAsyncScope();
 
         var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
-        var comments = scope.ServiceProvider.GetRequiredService<ICommentRepository>();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentsRepository>();
 
         var authorId = Guid.NewGuid();
-        var discussion = await discussions.CreateAsync(
+        var discussionId = await discussions.CreateAsync(
             authorId: authorId,
             title: "Discussion",
             description: "Test discussion.");
 
         // Act
-        var comment = await comments.CreateAsync(authorId, discussion.Id, "Comment content");
+        var commentId = await comments.CreateAsync(authorId, discussionId, "Comment content");
+        var comment = await comments.GetByIdAsync(commentId, authorId);
 
         // Assert
         comment.AuthorId.Should().Be(authorId);
@@ -42,19 +43,19 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
     {
         /*
         ┌───────────────────────┬───────────────────────┐
-        │  COMMENT              │  AUTHOR ID            │
+        │  COMMENT              │  AUTHOR               │
         ├───────────────────────┼───────────────────────┤
-        │  comment1             │  authorId1            │
-        │   • comment11         │  authorId1            │
-        │      • comment111     │  authorId1            │
-        │      • comment112     │  authorId2            │
-        │   • comment12         │  authorId1            │
-        │      • comment121     │  authorId4            │
-        │   • comment13         │  authorId3            │
-        │   • comment14         │  authorId4            │
-        │  comment2             │  authorId1            │
-        │   • comment21         │  authorId3            │
-        │  comment3             │  authorId4            │
+        │  comment 1            │  author 1             │
+        │   • comment 11        │  author 1             │
+        │      • comment 111    │  author 1             │
+        │      • comment 112    │  author 2             │
+        │   • comment 12        │  author 1             │
+        │      • comment 121    │  author 4             │
+        │   • comment 13        │  author 3             │
+        │   • comment 14        │  author 4             │
+        │  comment 2            │  author 1             │
+        │   • comment 21        │  author 3             │
+        │  comment 3            │  author 4             │
         └───────────────────────┴───────────────────────┘
         */
 
@@ -62,40 +63,42 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
         await using var scope = _services.CreateAsyncScope();
 
         var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
-        var comments = scope.ServiceProvider.GetRequiredService<ICommentRepository>();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentsRepository>();
 
         var authorId1 = Guid.NewGuid();
         var authorId2 = Guid.NewGuid();
         var authorId3 = Guid.NewGuid();
         var authorId4 = Guid.NewGuid();
+        var viewerId = Guid.NewGuid();
 
-        var discussion = await discussions.CreateAsync(
+        var discussionId = await discussions.CreateAsync(
             authorId: authorId1,
             title: "Discussion",
             description: "Test discussion.");
 
-        var comment1 = await comments.CreateAsync(authorId1, discussion.Id, "Comment 1");
-        var comment2 = await comments.CreateAsync(authorId1, discussion.Id, "Comment 2");
-        var comment3 = await comments.CreateAsync(authorId4, discussion.Id, "Comment 3");
+        var commentId1 = await comments.CreateAsync(authorId1, discussionId, "Comment 1");
+        var commentId2 = await comments.CreateAsync(authorId1, discussionId, "Comment 2");
+        var commentId3 = await comments.CreateAsync(authorId4, discussionId, "Comment 3");
 
-        var comment11 = await comments.ReplyToCommentAsync(authorId1, comment1.Id, "Comment 11");
-        var comment12 = await comments.ReplyToCommentAsync(authorId1, comment1.Id, "Comment 12");
-        var comment13 = await comments.ReplyToCommentAsync(authorId3, comment1.Id, "Comment 13");
-        var comment14 = await comments.ReplyToCommentAsync(authorId4, comment1.Id, "Comment 14");
-        var comment21 = await comments.ReplyToCommentAsync(authorId3, comment2.Id, "Comment 21");
+        var commentId11 = await comments.ReplyToCommentAsync(authorId1, commentId1, "Comment 11");
+        var commentId12 = await comments.ReplyToCommentAsync(authorId1, commentId1, "Comment 12");
+        var commentId13 = await comments.ReplyToCommentAsync(authorId3, commentId1, "Comment 13");
+        var commentId14 = await comments.ReplyToCommentAsync(authorId4, commentId1, "Comment 14");
+        var commentId21 = await comments.ReplyToCommentAsync(authorId3, commentId2, "Comment 21");
 
-        var comment111 = await comments.ReplyToCommentAsync(authorId1, comment1.Id, "Comment 111");
-        var comment112 = await comments.ReplyToCommentAsync(authorId2, comment1.Id, "Comment 112");
-        var comment121 = await comments.ReplyToCommentAsync(authorId4, comment1.Id, "Comment 121");
+        var commentId111 = await comments.ReplyToCommentAsync(authorId1, commentId1, "Comment 111");
+        var commentId112 = await comments.ReplyToCommentAsync(authorId2, commentId1, "Comment 112");
+        var commentId121 = await comments.ReplyToCommentAsync(authorId4, commentId1, "Comment 121");
 
-        comment1 = await comments.GetByIdAsync(comment1.Id);
-        comment2 = await comments.GetByIdAsync(comment2.Id);
-        comment3 = await comments.GetByIdAsync(comment3.Id);
+        var comment1 = await comments.GetByIdAsync(commentId1, viewerId);
+        var comment2 = await comments.GetByIdAsync(commentId2, viewerId);
+        var comment3 = await comments.GetByIdAsync(commentId3, viewerId);
 
         // Act
         var page = await comments.SearchAsync(
-            discussionId: discussion.Id,
+            discussionId,
             authorId: null,
+            viewerId,
             offset: 0,
             count: 2);
 
@@ -111,10 +114,10 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
-        var comments = scope.ServiceProvider.GetRequiredService<ICommentRepository>();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentsRepository>();
 
         // Act
-        Func<Task> getComment = async () => await comments.GetByIdAsync(Guid.NewGuid());
+        Func<Task> getComment = async () => await comments.GetByIdAsync(Guid.NewGuid(), Guid.NewGuid());
 
         // Assert
         await getComment.Should().ThrowAsync<NotFoundException>();
@@ -126,21 +129,22 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
         // Arrange
         await using var scope = _services.CreateAsyncScope();
         var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
-        var comments = scope.ServiceProvider.GetRequiredService<ICommentsService>();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentsRepository>();
 
         var authorId = Guid.NewGuid();
-        var discussion = await discussions.CreateAsync(authorId, "Discussion", "Test discussion.");
-        var comment = await comments.CreateAsync(authorId, discussion.Id, "Comment content");
-        var reply = await comments.ReplyToCommentAsync(authorId, comment.Id, "Reply content");
+        var discussionId = await discussions.CreateAsync(authorId, "Discussion", "Test discussion.");
+        var commentId = await comments.CreateAsync(authorId, discussionId, "Comment content");
+        var replyId = await comments.ReplyToCommentAsync(authorId, commentId, "Reply content");
+        var reply = await comments.GetByIdAsync(replyId, authorId);
 
         // Act
-        var page = await comments.GetRepliesToCommentAsync(comment.Id, offset: 0, count: 1);
+        var page = await comments.SearchAsync(commentId, authorId: null, authorId, offset: 0, count: 1);
 
         // Assert
-        page.Should().BeEquivalentTo(new Page<CommentDto>
+        page.Should().BeEquivalentTo(new Page<Comment>
         {
             TotalCount = 1,
-            Items = [reply.Adapt<CommentDto>()]
+            Items = [reply]
         });
     }
 
@@ -149,7 +153,7 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IClassFixt
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
-        var comments = scope.ServiceProvider.GetRequiredService<ICommentRepository>();
+        var comments = scope.ServiceProvider.GetRequiredService<ICommentsRepository>();
 
         // Act
         Func<Task> createComment = async () =>

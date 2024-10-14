@@ -19,6 +19,7 @@ public static class ConfigureAuthenticationExtensions
 
         builder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
         {
+            options.MapInboundClaims = false;
             options.RequireHttpsMetadata = false;
             options.TokenValidationParameters.ValidateAudience = false;
             options.TokenValidationParameters.ValidateIssuer = false;

@@ -33,6 +33,7 @@ public class WebApplicationContext
         var neo4j = new Neo4jBuilder()
             .WithExposedPort(7474)
             .WithPortBinding(7474, true)
+            .WithEnvironment("NEO4JLABS_PLUGINS", "[\"apoc\"]")
             .Build();
 
         AsyncContext.Run(async () => await neo4j.StartAsync());
@@ -56,7 +57,7 @@ public class WebApplicationContext
                 })-[:AUTHORED_BY]->(author:Author { Id: "df194a2d-368c-43ea-b48d-66042f74691d" })
                 """);
         });
-        
+
         return configuration;
     }
 

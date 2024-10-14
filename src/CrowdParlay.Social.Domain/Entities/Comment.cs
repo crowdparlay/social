@@ -8,4 +8,6 @@ public class Comment
     public required DateTimeOffset CreatedAt { get; set; }
     public required int ReplyCount { get; set; }
     public required ISet<Guid> FirstRepliesAuthorIds { get; set; }
+    public required IDictionary<string, int> ReactionCounters { get; set; }
+    public required ISet<string> ViewerReactions { get; set; }
 }

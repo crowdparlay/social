@@ -8,4 +8,6 @@ public class CommentDto
     public required DateTimeOffset CreatedAt { get; set; }
     public required int ReplyCount { get; set; }
     public required IEnumerable<AuthorDto> FirstRepliesAuthors { get; set; }
+    public required IDictionary<string, int> ReactionCounters { get; set; }
+    public required ISet<string> ViewerReactions { get; set; }
 }

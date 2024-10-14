@@ -7,4 +7,6 @@ public class Discussion
     public required string Description { get; set; }
     public required Guid AuthorId { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
+    public required IDictionary<string, int> ReactionCounters { get; set; }
+    public required ISet<string> ViewerReactions { get; set; }
 }
