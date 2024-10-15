@@ -37,6 +37,7 @@ public class DiscussionsService(
         {
             var discussionId = await unitOfWork.DiscussionsRepository.CreateAsync(authorId, title, description);
             discussion = await unitOfWork.DiscussionsRepository.GetByIdAsync(discussionId, authorId);
+            await unitOfWork.CommitAsync();
         }
 
         return await EnrichAsync(discussion);
