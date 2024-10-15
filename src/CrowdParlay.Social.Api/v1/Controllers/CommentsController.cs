@@ -100,22 +100,6 @@ public class CommentsController(ICommentsService comments, IHubContext<CommentsH
     }
 
     /// <summary>
-    /// React to the comment.
-    /// </summary>
-    [HttpPost("{commentId:guid}/replies"), Authorize]
-    [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(CommentDto), (int)HttpStatusCode.Created)]
-    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.NotFound)]
-    public async Task<ActionResult<CommentDto>> ReplyToComment([FromRoute] Guid commentId, [FromBody] string reaction)
-    {
-        var response = await comments.AddReactionAsync(User.GetRequiredUserId(), commentId, new Reaction(reaction));
-        return CreatedAtAction(nameof(GetCommentById), new { commentId = response.Id }, response);
-    }
-
-    /// <summary>
     /// Add a reaction to a comment
     /// </summary>
     [HttpPost("{commentId:guid}/reactions"), Authorize]
