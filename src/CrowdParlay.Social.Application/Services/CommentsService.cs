@@ -41,6 +41,7 @@ public class CommentsService(
         {
             var commentId = await unitOfWork.CommentsRepository.CreateAsync(authorId, discussionId, content);
             comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId, authorId);
+            await unitOfWork.CommitAsync();
         }
 
         // TODO: notify clients via SignalR
@@ -65,6 +66,7 @@ public class CommentsService(
         {
             var commentId = await unitOfWork.CommentsRepository.ReplyToCommentAsync(authorId, parentCommentId, content);
             comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId, authorId);
+            await unitOfWork.CommitAsync();
         }
 
         return await EnrichAsync(comment);
