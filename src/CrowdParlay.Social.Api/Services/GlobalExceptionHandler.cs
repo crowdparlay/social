@@ -4,6 +4,7 @@ using CrowdParlay.Social.Application.Exceptions;
 using Grpc.Core;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using static Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace CrowdParlay.Social.Api.Services;
 
@@ -28,7 +29,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         };
 
         context.Response.ContentType = MediaTypeNames.Application.ProblemJson;
-        context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
+        context.Response.StatusCode = problemDetails.Status ?? Status500InternalServerError;
         await context.Response.WriteAsJsonAsync(problemDetails, GlobalSerializerOptions.SnakeCase, cancellationToken);
 
         return true;
@@ -36,13 +37,13 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
 
     private static ProblemDetails GetDefaultProblemDetails() => new()
     {
-        Status = (int)HttpStatusCode.InternalServerError,
+        Status = Status500InternalServerError,
         Detail = "Something went wrong. Try again later.",
     };
 
     private static ValidationProblemDetails ConvertToProblemDetails(ValidationException exception) => new()
     {
-        Status = (int)HttpStatusCode.BadRequest,
+        Status = Status400BadRequest,
         Detail = "The specified data is invalid.",
         Errors = exception.Errors.ToDictionary(
             x => x.Key,
@@ -51,7 +52,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
 
     private static ValidationProblemDetails ConvertToProblemDetails(FluentValidation.ValidationException exception) => new()
     {
-        Status = (int)HttpStatusCode.BadRequest,
+        Status = Status400BadRequest,
         Detail = "The specified data is invalid.",
         Errors = exception.Errors
             .GroupBy(failure => failure.PropertyName)
@@ -64,19 +65,19 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
 
     private static ProblemDetails GetNotFoundProblemDetails() => new()
     {
-        Status = (int)HttpStatusCode.NotFound,
+        Status = Status404NotFound,
         Detail = "The requested resource doesn't exist."
     };
 
     private static ProblemDetails GetForbiddenProblemDetails() => new()
     {
-        Status = (int)HttpStatusCode.Forbidden,
+        Status = Status403Forbidden,
         Detail = "You have no permission for this action."
     };
 
     private static ProblemDetails GetUnavailableDependencyProblemDetails() => new()
     {
-        Status = (int)HttpStatusCode.ServiceUnavailable,
+        Status = Status503ServiceUnavailable,
         Detail = "Failed to handle the request due to an unavailable dependency. Try again later."
     };
 }

@@ -29,7 +29,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                 COUNT(reaction) AS reactionCount
 
             WITH comment, author, replyCount, firstRepliesAuthorIds, viewerReactions,
-                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
 
             RETURN {
                 Id: comment.Id,
@@ -38,7 +38,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                 CreatedAt: comment.CreatedAt,
                 ReplyCount: replyCount,
                 FirstRepliesAuthorIds: firstRepliesAuthorIds,
-                Reactions: reactions,
+                ReactionCounters: reactionCounters,
                 ViewerReactions: viewerReactions
             }
             """,
@@ -83,11 +83,11 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                  COUNT(reaction) AS reactionCount
 
             WITH author, comment, deepReplyAuthor, deepReply, viewerReactions,
-                 apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+                 apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
                  
             ORDER BY comment.CreatedAt, deepReply.CreatedAt DESC
 
-            WITH author, comment, viewerReactions, reactions,
+            WITH author, comment, viewerReactions, reactionCounters,
                  COUNT(deepReply) AS deepReplyCount,
                  COLLECT(DISTINCT deepReplyAuthor.Id)[0..3] AS firstDeepRepliesAuthorIds
 
@@ -100,7 +100,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                     CreatedAt: comment.CreatedAt,
                     ReplyCount: deepReplyCount,
                     FirstRepliesAuthorIds: firstDeepRepliesAuthorIds,
-                    Reactions: reactions,
+                    ReactionCounters: reactionCounters,
                     ViewerReactions: viewerReactions
                 })[$offset..$offset + $count]
             }

@@ -36,6 +36,8 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IAssemblyF
         comment.ReplyCount.Should().Be(0);
         comment.FirstRepliesAuthorIds.Should().BeEmpty();
         comment.CreatedAt.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMinutes(1));
+        comment.ReactionCounters.Should().BeEmpty();
+        comment.ViewerReactions.Should().BeEmpty();
     }
 
     [Fact(DisplayName = "Search comments")]
@@ -107,6 +109,8 @@ public class CommentsRepositoryTests(WebApplicationContext context) : IAssemblyF
         page.Items.Should().HaveCount(2);
         page.Items.Should().BeEquivalentTo([comment1, comment2]);
         page.Items.First().FirstRepliesAuthorIds.Should().BeEquivalentTo([authorId4, authorId2, authorId1]);
+        page.Items.Should().OnlyContain(comment => comment.ReactionCounters.Count == 0);
+        page.Items.Should().OnlyContain(comment => comment.ViewerReactions.Count == 0);
     }
 
     [Fact(DisplayName = "Get comment with unknown ID")]

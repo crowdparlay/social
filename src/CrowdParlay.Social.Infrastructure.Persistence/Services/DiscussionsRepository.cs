@@ -22,7 +22,7 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
                 COUNT(reaction) AS reactionCount
 
             WITH author, discussion, viewerReactions,
-                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
 
             RETURN {
                 Id: discussion.Id,
@@ -30,7 +30,7 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
                 Description: discussion.Description,
                 AuthorId: author.Id,
                 CreatedAt: discussion.CreatedAt,
-                Reactions: reactions,
+                ReactionCounters: reactionCounters,
                 ViewerReactions: viewerReactions
             }
             """,
@@ -64,7 +64,7 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
                 COUNT(reaction) AS reactionCount
 
             WITH author, discussion, viewerReactions,
-                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactions
+                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
 
             ORDER BY discussion.CreatedAt DESC
 
@@ -76,7 +76,7 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
                     Description: discussion.Description,
                     AuthorId: author.Id,
                     CreatedAt: discussion.CreatedAt,
-                    Reactions: reactions,
+                    ReactionCounters: reactionCounters,
                     ViewerReactions: viewerReactions
                 })[$offset..$offset + $count]
             }

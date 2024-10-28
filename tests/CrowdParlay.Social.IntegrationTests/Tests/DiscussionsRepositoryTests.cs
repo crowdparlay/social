@@ -28,6 +28,8 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IAssemb
 
         // Assert
         response.Items.Should().BeEquivalentTo(expectedDiscussions.Reverse());
+        response.Items.Should().OnlyContain(discussion => discussion.ReactionCounters.Count == 0);
+        response.Items.Should().OnlyContain(discussion => discussion.ViewerReactions.Count == 0);
     }
 
     [Fact(DisplayName = "Get discussions by author of no discussions")]
