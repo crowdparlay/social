@@ -17,14 +17,14 @@ public class SignalRTests(WebApplicationContext context) : IAssemblyFixture<WebA
         // Arrange
         await using var scope = _services.CreateAsyncScope();
         var commentsHub = scope.ServiceProvider.GetRequiredService<IHubContext<CommentsHub>>();
-        var newComments = new List<CommentDto>();
+        var newComments = new List<CommentResponse>();
 
         var discussionId = new Guid("6ef436dc-8e38-4a4b-b0e7-ff9fcd55ac0e");
-        var expectedComment = new CommentDto
+        var expectedComment = new CommentResponse
         {
             Id = Guid.NewGuid(),
             Content = "Sample comment.",
-            Author = new AuthorDto
+            Author = new AuthorResponse
             {
                 Id = new Guid("df194a2d-368c-43ea-b48d-66042f74691d"),
                 Username = "sample_author",
@@ -50,7 +50,7 @@ public class SignalRTests(WebApplicationContext context) : IAssemblyFixture<WebA
 
         await connection.StartAsync();
 
-        connection.On<CommentDto>(
+        connection.On<CommentResponse>(
             CommentsHub.Events.NewComment.ToString(),
             comment => newComments.Add(comment));
 

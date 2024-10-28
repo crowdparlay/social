@@ -126,4 +126,27 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
         var record = await data.SingleAsync();
         return record[0].Adapt<Guid>();
     }
+
+    public async Task UpdateAsync(Guid discussionId, string? title, string? description)
+    {
+        var data = await runner.RunAsync(
+            """
+            MATCH (d:Discussion { Id: $discussionId })
+            SET d.Title: COALESCE($title, d.Title)
+            SET d.Description: COALESCE($description, d.Description)
+            RETURN COUNT(*)
+            """,
+            new
+            {
+                discussionId = discussionId.ToString(),
+                title,
+                description
+            });
+
+        var record = await data.SingleAsync();
+        var notFound = record[0].As<int>() == 0;
+
+        if (notFound)
+            throw new NotFoundException();
+    }
 }

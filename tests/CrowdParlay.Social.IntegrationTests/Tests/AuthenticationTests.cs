@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using CrowdParlay.Social.Api.v1.DTOs;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 

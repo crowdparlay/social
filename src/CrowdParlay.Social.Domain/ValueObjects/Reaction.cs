@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using CrowdParlay.Social.Api;
 
 namespace CrowdParlay.Social.Domain.ValueObjects;
 
@@ -21,7 +20,6 @@ public class Reaction : IEquatable<Reaction>
         "\ud83c\udf46", // Eggplant
         "\ud83e\udd74", // Woozy Face
         "\ud83d\udc85", // Nail Polish
-        "\u2764\ufe0f", // Red Heart
         "\u2764\ufe0f", // Red Heart
         "\ud83e\udd2e", // Face Vomiting
         "\ud83c\udf7e", // Bottle with Popping Cork

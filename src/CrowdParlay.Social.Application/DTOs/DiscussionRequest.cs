@@ -1,3 +1,3 @@
-namespace CrowdParlay.Social.Api.v1.DTOs;
+namespace CrowdParlay.Social.Application.DTOs;
 
 public record DiscussionRequest(string Title, string Description);

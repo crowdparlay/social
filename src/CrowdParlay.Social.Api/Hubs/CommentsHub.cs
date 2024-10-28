@@ -22,7 +22,7 @@ public class CommentsHub : Hub
     private Guid GetDiscussionIdFromQuery() =>
         Guid.TryParse(GetSingleQueryParameterValueFromQuery(DiscussionIdQueryParameterName), out var discussionId)
             ? discussionId
-            : throw new ValidationException(DiscussionIdQueryParameterName, ["Must be a valid GUID."]);
+            : throw new ValidationException(DiscussionIdQueryParameterName, ["Must be a valid UUID."]);
 
     private string GetSingleQueryParameterValueFromQuery(string key)
     {

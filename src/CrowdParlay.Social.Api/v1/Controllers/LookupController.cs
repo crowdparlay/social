@@ -7,7 +7,6 @@ namespace CrowdParlay.Social.Api.v1.Controllers;
 [ApiController, ApiRoute("[controller]")]
 public class LookupController : ControllerBase
 {
-    [HttpGet("reactions")]
-    [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
+    [HttpGet("reactions"), Produces(MediaTypeNames.Application.Json)]
     public IReadOnlySet<string> GetAvailableReactions() => Reaction.AllowedValues;
 }

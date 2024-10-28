@@ -8,4 +8,5 @@ public interface IDiscussionsRepository
     public Task<Discussion> GetByIdAsync(Guid discussionId, Guid? viewerId);
     public Task<Page<Discussion>> SearchAsync(Guid? authorId, Guid? viewerId, int offset, int count);
     public Task<Guid> CreateAsync(Guid authorId, string title, string description);
+    public Task UpdateAsync(Guid discussionId, string? title = null, string? description = null);
 }

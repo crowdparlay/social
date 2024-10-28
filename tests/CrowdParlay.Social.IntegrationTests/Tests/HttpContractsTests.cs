@@ -45,7 +45,7 @@ public class HttpContractsTests(WebApplicationContext context) : IAssemblyFixtur
         // Act
         var response = await _client.GetAsync("/api/v1/discussions/6ef436dc-8e38-4a4b-b0e7-ff9fcd55ac0e");
         var rawResponseContent = await response.Content.ReadAsStringAsync();
-        var discussion = await response.Content.ReadFromJsonAsync<DiscussionDto>(GlobalSerializerOptions.SnakeCase);
+        var discussion = await response.Content.ReadFromJsonAsync<DiscussionResponse>(GlobalSerializerOptions.SnakeCase);
         var serializedInSnakeCase = JsonSerializer.Serialize(discussion, GlobalSerializerOptions.SnakeCase);
 
         // Assert

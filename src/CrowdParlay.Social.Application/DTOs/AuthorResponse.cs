@@ -1,6 +1,6 @@
 namespace CrowdParlay.Social.Application.DTOs;
 
-public class AuthorDto
+public class AuthorResponse
 {
     public required Guid Id { get; set; }
     public required string Username { get; set; }

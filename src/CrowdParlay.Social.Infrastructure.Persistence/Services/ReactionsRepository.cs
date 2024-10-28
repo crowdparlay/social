@@ -1,76 +1,74 @@
 using CrowdParlay.Social.Application.Exceptions;
 using CrowdParlay.Social.Domain.Abstractions;
-using CrowdParlay.Social.Domain.ValueObjects;
-using Mapster;
 using Neo4j.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class ReactionsRepository(IAsyncQueryRunner runner) : IReactionsRepository
 {
-    public async Task AddAsync(Guid authorId, Guid subjectId, Reaction reaction)
+    public async Task<ISet<string>> GetAsync(Guid subjectId)
     {
         var data = await runner.RunAsync(
             """
-            MATCH (subject { Id: $subjectId })
+            MATCH (:Author)-[reaction:REACTED_TO]->(subject { Id: $subjectId })
             WHERE (subject:Comment OR subject:Discussion)
-            MERGE (author:Author { Id: $authorId })
-            MERGE (author)-[reaction:REACTED_TO { Value: $reaction }]->(subject)
-            RETURN reaction IS NULL
+            RETURN DISTINCT reaction.Value
             """,
-            new
-            {
-                authorId = authorId.ToString(),
-                subjectId = subjectId.ToString(),
-                reaction = reaction.ToString()
-            });
+            new { subjectId = subjectId.ToString() });
 
-        var record = await data.SingleAsync();
-        var notFound = record[0].As<bool>();
-        
-        if (notFound)
-            throw new NotFoundException();
+        return await data
+            .Select(record => record[0].As<string>())
+            .ToHashSetAsync();
     }
 
-    public async Task RemoveAsync(Guid authorId, Guid subjectId, Reaction reaction)
+    public async Task<ISet<string>> GetAsync(Guid subjectId, Guid viewerId)
     {
         var data = await runner.RunAsync(
             """
-            OPTIONAL MATCH (author:Author { Id: $authorId })-[reaction:REACTED_TO { Value: $reaction }]->(subject { Id: $subjectId })
-            WHERE (subject:Comment OR subject:Discussion)
-            DELETE reaction
-            RETURN COUNT(reaction) = 0
-            """,
-            new
-            {
-                authorId = authorId.ToString(),
-                subjectId = subjectId.ToString(),
-                reaction = reaction.ToString()
-            });
-
-        var record = await data.SingleAsync();
-        var notFound = record[0].As<bool>();
-
-        if (notFound)
-            throw new NotFoundException();
-    }
-
-    public async Task<ISet<Reaction>> GetAllAsync(Guid authorId, Guid subjectId)
-    {
-        var data = await runner.RunAsync(
-            """
-            MATCH (author:Author { Id: $authorId })-[reaction:REACTED_TO]->(subject { Id: $subjectId })
+            MATCH (:Author { Id: $viewerId })-[reaction:REACTED_TO]->(subject { Id: $subjectId })
             WHERE (subject:Comment OR subject:Discussion)
             RETURN reaction.Value
             """,
             new
             {
-                authorId = authorId.ToString(),
-                subjectId = subjectId.ToString()
+                subjectId = subjectId.ToString(),
+                viewerId = viewerId.ToString()
             });
 
         return await data
-            .Select(record => record[0].As<string>().Adapt<Reaction>())
+            .Select(record => record[0].As<string>())
             .ToHashSetAsync();
+    }
+
+    public async Task SetAsync(Guid subjectId, Guid viewerId, ISet<string> reactions)
+    {
+        var data = await runner.RunAsync(
+            """
+            MATCH (subject { Id: $subjectId })
+            WHERE subject:Comment OR subject:Discussion
+            MATCH (viewer:Author { Id: $viewerId })
+            OPTIONAL MATCH (viewer)-[oldReaction:REACTED_TO]->(subject)
+            WHERE NOT oldReaction.Value IN $reactions
+            DELETE oldReaction
+
+            WITH viewer, subject, $reactions AS newReactionValues
+            FOREACH (newReactionValue IN newReactionValues |
+                MERGE (viewer)-[:REACTED_TO { Value: newReactionValue }]->(subject)
+            )
+
+            RETURN COUNT(*)
+            """,
+            new
+            {
+                subjectId = subjectId.ToString(),
+                viewerId = viewerId.ToString(),
+                reactions
+            });
+
+        var record = await data.SingleAsync();
+        var notFound = record[0].As<int>() == 0;
+
+        if (notFound)
+            throw new NotFoundException();
     }
 }

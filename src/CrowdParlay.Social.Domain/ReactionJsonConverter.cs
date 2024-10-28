@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using CrowdParlay.Social.Domain.ValueObjects;
 
-namespace CrowdParlay.Social.Api;
+namespace CrowdParlay.Social.Domain;
 
 public class ReactionJsonConverter : JsonConverter<Reaction>
 {
