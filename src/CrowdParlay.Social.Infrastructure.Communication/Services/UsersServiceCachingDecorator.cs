@@ -6,20 +6,21 @@ namespace CrowdParlay.Social.Infrastructure.Communication.Services;
 
 public class UsersServiceCachingDecorator(IUsersService usersService, IUsersCache usersCache) : IUsersService
 {
-    public async Task<UserDto> GetByIdAsync(Guid userId)
+    public async Task<UserDto?> GetByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await usersCache.GetUserByIdAsync(userId);
 
         if (user is null)
         {
-            user = await usersService.GetByIdAsync(userId);
-            await usersCache.SaveAsync(user);
+            user = await usersService.GetByIdAsync(userId, cancellationToken);
+            if (user is not null)
+                await usersCache.SaveAsync(user);
         }
 
         return user;
     }
 
-    public async Task<IDictionary<Guid, UserDto>> GetUsersAsync(ISet<Guid> userIds)
+    public async Task<IDictionary<Guid, UserDto?>> GetUsersAsync(ISet<Guid> userIds, CancellationToken cancellationToken)
     {
         var usersById = await usersCache.GetUsersByIdsAsync(userIds);
         var missingUserIds = usersById
@@ -29,13 +30,14 @@ public class UsersServiceCachingDecorator(IUsersService usersService, IUsersCach
 
         if (missingUserIds.Count > 0)
         {
-            var missingUsersById = await usersService.GetUsersAsync(missingUserIds);
+            var missingUsersById = await usersService.GetUsersAsync(missingUserIds, cancellationToken);
             foreach (var (missingUserId, missingUser) in missingUsersById)
                 usersById[missingUserId] = missingUser;
 
-            _ = usersCache.SaveAsync(missingUsersById.Values);
+            var missingUsers = missingUsersById.Values.Where(user => user is not null).Cast<UserDto>();
+            _ = usersCache.SaveAsync(missingUsers);
         }
 
-        return usersById!;
+        return usersById;
     }
 }

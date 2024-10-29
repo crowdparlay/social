@@ -1,7 +1,7 @@
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.Hubs;
 using CrowdParlay.Social.Application;
-using CrowdParlay.Social.Infrastructure.Communication.Extensions;
+using CrowdParlay.Social.Infrastructure.Communication;
 using CrowdParlay.Social.Infrastructure.Persistence;
 using Elastic.Apm.NetCoreAll;
 using Microsoft.AspNetCore.Http.Connections;

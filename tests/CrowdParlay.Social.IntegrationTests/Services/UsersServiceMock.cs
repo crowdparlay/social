@@ -2,7 +2,7 @@ namespace CrowdParlay.Social.IntegrationTests.Services;
 
 public class UsersServiceMock : IUsersService
 {
-    public Task<UserDto> GetByIdAsync(Guid id) => Task.FromResult(new UserDto
+    public Task<UserDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<UserDto?>(new UserDto
     {
         Id = id,
         Username = $"user_{id:N}",
@@ -10,7 +10,7 @@ public class UsersServiceMock : IUsersService
         AvatarUrl = null
     });
 
-    public Task<IDictionary<Guid, UserDto>> GetUsersAsync(ISet<Guid> ids)
+    public Task<IDictionary<Guid, UserDto?>> GetUsersAsync(ISet<Guid> ids, CancellationToken cancellationToken)
     {
         var users = ids.Select(id => new UserDto
         {
@@ -20,6 +20,7 @@ public class UsersServiceMock : IUsersService
             AvatarUrl = null
         });
 
-        return Task.FromResult<IDictionary<Guid, UserDto>>(users.ToDictionary(x => x.Id, x => x));
+        var usersById = users.ToDictionary<UserDto, Guid, UserDto?>(user => user.Id, user => user);
+        return Task.FromResult<IDictionary<Guid, UserDto?>>(usersById);
     }
 }

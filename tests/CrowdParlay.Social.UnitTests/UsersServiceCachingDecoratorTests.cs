@@ -22,7 +22,7 @@ public class UsersServiceCachingDecoratorTests
 
         var usersServiceMock = new Mock<IUsersService>();
         usersServiceMock
-            .Setup(service => service.GetByIdAsync(user.Id))
+            .Setup(service => service.GetByIdAsync(user.Id, CancellationToken.None))
             .ReturnsAsync(user);
 
         var usersCacheMock = new Mock<IUsersCache>();
@@ -33,12 +33,12 @@ public class UsersServiceCachingDecoratorTests
         var cachedUsersService = new UsersServiceCachingDecorator(usersServiceMock.Object, usersCacheMock.Object);
 
         // Act
-        var result = await cachedUsersService.GetByIdAsync(user.Id);
+        var result = await cachedUsersService.GetByIdAsync(user.Id, CancellationToken.None);
 
         // Assert
         result.Should().BeEquivalentTo(user);
         usersServiceMock.Verify(
-            service => service.GetByIdAsync(user.Id),
+            service => service.GetByIdAsync(user.Id, CancellationToken.None),
             userPresentInCache ? Times.Never : Times.Once);
     }
 
@@ -66,12 +66,12 @@ public class UsersServiceCachingDecoratorTests
         ];
 
         var userIds = users.Select(user => user.Id).ToHashSet();
-        var usersById = users.ToDictionary(user => user.Id, user => user);
-        var nullsById = userIds.ToDictionary(userId => userId, _ => (UserDto?)null);
-        
+        var usersById = users.ToDictionary<UserDto, Guid, UserDto?>(user => user.Id, user => user);
+        var nullsById = userIds.ToDictionary<Guid, Guid, UserDto?>(userId => userId, _ => null);
+
         var usersServiceMock = new Mock<IUsersService>();
         usersServiceMock
-            .Setup(service => service.GetUsersAsync(userIds))
+            .Setup(service => service.GetUsersAsync(userIds, CancellationToken.None))
             .ReturnsAsync(usersPresentInCache ? nullsById! : usersById);
 
         var cachedUsers = users.ToDictionary(user => user.Id, user => (UserDto?)user);
@@ -83,12 +83,12 @@ public class UsersServiceCachingDecoratorTests
         var cachedUsersService = new UsersServiceCachingDecorator(usersServiceMock.Object, usersCacheMock.Object);
 
         // Act
-        var results = await cachedUsersService.GetUsersAsync(userIds);
+        var results = await cachedUsersService.GetUsersAsync(userIds, CancellationToken.None);
 
         // Assert
         results.Should().BeEquivalentTo(usersById);
         usersServiceMock.Verify(
-            service => service.GetUsersAsync(userIds),
+            service => service.GetUsersAsync(userIds, CancellationToken.None),
             usersPresentInCache ? Times.Never : Times.Once);
     }
 }

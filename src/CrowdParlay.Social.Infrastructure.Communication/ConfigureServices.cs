@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 
-namespace CrowdParlay.Social.Infrastructure.Communication.Extensions;
+namespace CrowdParlay.Social.Infrastructure.Communication;
 
 public static class ConfigureServices
 {
@@ -30,6 +30,7 @@ public static class ConfigureServices
         return services
             .AddScoped<IUsersCache, RedisUsersCache>()
             .AddScoped<IUsersService, UsersService>()
-            .Decorate<IUsersService, UsersServiceCachingDecorator>();
+            .Decorate<IUsersService, UsersServiceCachingDecorator>()
+            .Decorate<IUsersService, UsersServiceResilienceDecorator>();
     }
 }
