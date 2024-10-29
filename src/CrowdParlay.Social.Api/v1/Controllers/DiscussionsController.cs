@@ -73,6 +73,9 @@ public class DiscussionsController(IDiscussionsService discussionsService, IReac
     [ProducesResponseType<ProblemDetails>(Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(Status500InternalServerError)]
-    public async Task React([FromRoute] Guid discussionId, [FromBody] ISet<string> reactions) =>
+    public async Task<IActionResult> React([FromRoute] Guid discussionId, [FromBody] ISet<string> reactions)
+    {
         await reactionsService.SetAsync(discussionId, User.GetRequiredUserId(), reactions);
+        return NoContent();
+    }
 }

@@ -15,9 +15,21 @@ public static class ConfigureAuthenticationExtensions
         var dataProtectionRedisMultiplexer = ConnectionMultiplexer.Connect(dataProtectionRedisConnectionString);
         services.AddDataProtection().PersistKeysToStackExchangeRedis(dataProtectionRedisMultiplexer);
 
-        var builder = services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
+        var builder = services.AddAuthentication(sharedOptions =>
+        {
+            sharedOptions.DefaultScheme = "BearerOrCookies";
+            sharedOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        });
 
-        builder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+        builder.AddPolicyScheme("BearerOrCookies", "Bearer or Cookies", options =>
+        {
+            options.ForwardDefaultSelector = context =>
+                context.Request.Headers.ContainsKey("Authorization")
+                    ? JwtBearerDefaults.AuthenticationScheme
+                    : CookieAuthenticationDefaults.AuthenticationScheme;
+        });
+
+        builder.AddJwtBearer(options =>
         {
             options.MapInboundClaims = false;
             options.RequireHttpsMetadata = false;
