@@ -21,11 +21,14 @@ public class ReactionsRepositoryTests(WebApplicationContext context) : IAssembly
         HashSet<string> heartAndOldInvalid = [heart, oldInvalid];
 
         await using var scope = _services.CreateAsyncScope();
+        var authorsRepository = scope.ServiceProvider.GetRequiredService<IAuthorsRepository>();
         var discussionsRepository = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
         var reactionsRepository = scope.ServiceProvider.GetRequiredService<IReactionsRepository>();
         var reactionsService = scope.ServiceProvider.GetRequiredService<IReactionsService>();
 
         var viewerId = Guid.NewGuid();
+        await authorsRepository.EnsureCreatedAsync(viewerId);
+
         var discussionId = await discussionsRepository.CreateAsync(viewerId, "Title", "Description");
         await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { oldInvalid });
 

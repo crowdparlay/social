@@ -1,4 +1,6 @@
-﻿using CrowdParlay.Social.Infrastructure.Communication.Services;
+﻿using CrowdParlay.Social.Api.Consumers;
+using CrowdParlay.Social.Infrastructure.Communication.Services;
+using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +26,7 @@ internal class TestWebApplicationFactory<TProgram>(
             ["TELEMETRY_SOURCE_NAME"] = "Social",
             ["TELEMETRY_OTLP_EXPORTER_ENDPOINT"] = "http://localhost:8200",
             ["CORS_ORIGINS"] = "http://localhost;http://localhost:1234",
-            ["DATA_PROTECTION_REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString
+            ["DATA_PROTECTION_REDIS_CONNECTION_STRING"] = redisConfiguration.ConnectionString,
         }));
 
         builder.ConfigureServices(services =>
@@ -32,6 +34,19 @@ internal class TestWebApplicationFactory<TProgram>(
             services.RemoveAll(typeof(IUsersService));
             services.AddScoped<IUsersService, UsersServiceMock>();
             services.Decorate<IUsersService, UsersServiceCachingDecorator>();
+
+            var massTransitDescriptors = services
+                .Where(service => service.ServiceType.Namespace?.Split('.') is [nameof(MassTransit), ..])
+                .ToArray();
+
+            foreach (var descriptor in massTransitDescriptors)
+                services.Remove(descriptor);
+
+            services.AddMassTransitTestHarness(bus =>
+            {
+                bus.AddDelayedMessageScheduler();
+                bus.AddConsumersFromNamespaceContaining<UserEventConsumer>();
+            });
         });
     }
 }

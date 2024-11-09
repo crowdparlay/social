@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
@@ -29,12 +30,15 @@ public class AuthenticationTests(WebApplicationContext context) : IAssemblyFixtu
     public async Task SearchReactionsWithAccessToken()
     {
         // Arrange
-        var authorId = Guid.NewGuid();
         HashSet<string> reactions = ["\u2764\ufe0f", "\ud83c\udf08"];
 
         await using var scope = _services.CreateAsyncScope();
+        var authorsRepository = scope.ServiceProvider.GetRequiredService<IAuthorsRepository>();
         var discussionsService = scope.ServiceProvider.GetRequiredService<IDiscussionsService>();
         var reactionsService = scope.ServiceProvider.GetRequiredService<IReactionsService>();
+
+        var authorId = Guid.NewGuid();
+        await authorsRepository.EnsureCreatedAsync(authorId);
 
         var discussion = await discussionsService.CreateAsync(authorId, "Test discussion", "Description.");
         await reactionsService.SetAsync(discussion.Id, authorId, reactions);

@@ -11,6 +11,7 @@ public static class ConfigurePersistenceExtensions
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
         .AddNeo4j(configuration)
+        .AddScoped<IAuthorsRepository, AuthorsRepository>()
         .AddScoped<ICommentsRepository, CommentsRepository>()
         .AddScoped<IDiscussionsRepository, DiscussionsRepository>()
         .AddScoped<IReactionsRepository, ReactionsRepository>()
