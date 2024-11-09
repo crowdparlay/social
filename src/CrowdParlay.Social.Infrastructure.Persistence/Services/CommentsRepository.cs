@@ -15,29 +15,32 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
         var data = await runner.RunAsync(
             """
             MATCH (comment:Comment { Id: $commentId })-[:AUTHORED_BY]->(author:Author)
-            OPTIONAL MATCH (replyAuthor:Author)<-[:AUTHORED_BY]-(reply:Comment)-[:REPLIES_TO]->(comment)
+            OPTIONAL MATCH (deepReplyAuthor:Author)<-[:AUTHORED_BY]-(deepReply:Comment)-[:REPLIES_TO*]->(comment)
             OPTIONAL MATCH (comment)<-[reaction:REACTED_TO]-(:Author)
             OPTIONAL MATCH (comment)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
 
-            WITH comment, author, COUNT(reply) AS replyCount, reaction,
-                COLLECT(viewerReaction.Value) AS viewerReactions,
-                CASE WHEN COUNT(reply) > 0
-                    THEN COLLECT(DISTINCT replyAuthor.Id)[0..3]
-                    ELSE [] END AS firstRepliesAuthorIds
-             
-            WITH comment, author, replyCount, firstRepliesAuthorIds, viewerReactions, reaction,
-                COUNT(reaction) AS reactionCount
+            WITH author, comment, deepReply, deepReplyAuthor, reaction,
+                 collect(viewerReaction.Value) AS viewerReactions
 
-            WITH comment, author, replyCount, firstRepliesAuthorIds, viewerReactions,
-                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
+            WITH author, comment, deepReply, deepReplyAuthor, viewerReactions,
+                 reaction.Value AS reactionValue, count(reaction) AS reactionCount
+
+            WITH author, comment, deepReply, deepReplyAuthor, viewerReactions,
+                 apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
+
+            ORDER BY deepReply.CreatedAt DESC
+
+            WITH author, comment, viewerReactions, reactionCounters,
+                 count(deepReply) AS deepReplyCount,
+                 collect(DISTINCT deepReplyAuthor.Id)[0..3] AS firstDeepRepliesAuthorIds
 
             RETURN {
                 Id: comment.Id,
                 Content: comment.Content,
                 AuthorId: author.Id,
                 CreatedAt: comment.CreatedAt,
-                ReplyCount: replyCount,
-                FirstRepliesAuthorIds: firstRepliesAuthorIds,
+                ReplyCount: deepReplyCount,
+                FirstRepliesAuthorIds: firstDeepRepliesAuthorIds,
                 ReactionCounters: reactionCounters,
                 ViewerReactions: viewerReactions
             }
@@ -77,13 +80,13 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
             OPTIONAL MATCH (comment)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
 
             WITH author, comment, deepReplyAuthor, deepReply, reaction,
-                COLLECT(viewerReaction.Value) AS viewerReactions
-
-            WITH author, comment, deepReplyAuthor, deepReply, viewerReactions, reaction,
-                 COUNT(reaction) AS reactionCount
+                 collect(viewerReaction.Value) AS viewerReactions
 
             WITH author, comment, deepReplyAuthor, deepReply, viewerReactions,
-                 apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
+                 reaction.Value AS reactionValue, count(reaction) AS reactionCount
+
+            WITH author, comment, deepReplyAuthor, deepReply, viewerReactions,
+                 apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
                  
             ORDER BY comment.CreatedAt, deepReply.CreatedAt DESC
 

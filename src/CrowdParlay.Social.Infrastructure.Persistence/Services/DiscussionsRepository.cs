@@ -15,14 +15,12 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
             """
             MATCH (discussion:Discussion { Id: $discussionId })-[:AUTHORED_BY]->(author:Author)
             OPTIONAL MATCH (discussion)<-[reaction:REACTED_TO]-(:Author)
+
+            WITH author, discussion, reaction.Value as reactionValue, count(reaction) AS reactionCount
+            WITH author, discussion, apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
+
             OPTIONAL MATCH (discussion)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
-
-            WITH author, discussion, reaction,
-                COLLECT(viewerReaction.Value) AS viewerReactions,
-                COUNT(reaction) AS reactionCount
-
-            WITH author, discussion, viewerReactions,
-                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
+            WITH author, discussion, reactionCounters, COLLECT(viewerReaction.Value) AS viewerReactions
 
             RETURN {
                 Id: discussion.Id,
