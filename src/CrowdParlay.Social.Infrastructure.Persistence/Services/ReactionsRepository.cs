@@ -44,16 +44,15 @@ public class ReactionsRepository(IAsyncQueryRunner runner) : IReactionsRepositor
     {
         var data = await runner.RunAsync(
             """
-            MATCH (subject { Id: $subjectId })
+            MATCH (viewer:Author { Id: $viewerId }), (subject { Id: $subjectId })
             WHERE subject:Comment OR subject:Discussion
-            MATCH (viewer:Author { Id: $viewerId })
-            OPTIONAL MATCH (viewer)-[oldReaction:REACTED_TO]->(subject)
-            WHERE NOT oldReaction.Value IN $reactions
-            DELETE oldReaction
+            OPTIONAL MATCH (viewer)-[reaction:REACTED_TO]->(subject)
 
-            WITH viewer, subject, $reactions AS newReactionValues
-            FOREACH (newReactionValue IN newReactionValues |
-                MERGE (viewer)-[:REACTED_TO { Value: newReactionValue }]->(subject)
+            DELETE reaction
+
+            WITH viewer, subject
+            FOREACH (newReactionValue IN $reactions |
+                CREATE (viewer)-[:REACTED_TO { Value: newReactionValue }]->(subject)
             )
 
             RETURN COUNT(*)
