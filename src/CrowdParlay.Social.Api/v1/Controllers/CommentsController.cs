@@ -98,16 +98,16 @@ public class CommentsController(
     /// <summary>
     /// Sets reactions to a comment.
     /// </summary>
-    [HttpPost("{discussionId:guid}/reactions"), Authorize]
+    [HttpPost("{commentId:guid}/reactions"), Authorize]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(Status204NoContent)]
     [ProducesResponseType<ValidationProblemDetails>(Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(Status500InternalServerError)]
-    public async Task<IActionResult> React([FromRoute] Guid discussionId, [FromBody] ISet<string> reactions)
+    public async Task<IActionResult> React([FromRoute] Guid commentId, [FromBody] ISet<string> reactions)
     {
-        await reactionsService.SetAsync(discussionId, User.GetRequiredUserId(), reactions);
+        await reactionsService.SetAsync(commentId, User.GetRequiredUserId(), reactions);
         return NoContent();
     }
 }
