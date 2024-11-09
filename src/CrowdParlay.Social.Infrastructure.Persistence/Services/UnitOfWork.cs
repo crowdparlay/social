@@ -5,6 +5,9 @@ namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class UnitOfWork(IAsyncTransaction transaction) : IUnitOfWork
 {
+    private readonly Lazy<AuthorsRepository> _authorsRepository = new(() => new(transaction));
+    public IAuthorsRepository AuthorsRepository => _authorsRepository.Value;
+
     private readonly Lazy<DiscussionsRepository> _discussionsRepository = new(() => new(transaction));
     public IDiscussionsRepository DiscussionsRepository => _discussionsRepository.Value;
 
