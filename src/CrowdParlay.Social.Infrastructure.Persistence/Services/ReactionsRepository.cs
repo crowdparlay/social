@@ -50,7 +50,7 @@ public class ReactionsRepository(IAsyncQueryRunner runner) : IReactionsRepositor
 
             DELETE reaction
 
-            WITH viewer, subject
+            WITH DISTINCT viewer, subject
             FOREACH (newReactionValue IN $reactions |
                 CREATE (viewer)-[:REACTED_TO { Value: newReactionValue }]->(subject)
             )

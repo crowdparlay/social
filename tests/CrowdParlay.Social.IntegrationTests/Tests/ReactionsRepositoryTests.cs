@@ -44,4 +44,33 @@ public class ReactionsRepositoryTests(WebApplicationContext context) : IAssembly
         await reactWithNewInvalid.Should().ThrowAsync<ForbiddenException>();
         reactions.Should().BeEquivalentTo(thumbs);
     }
+
+    [Fact(DisplayName = "Setting reactions overwrites existing reactions")]
+    public async Task SetReactions_OverwritesExistingReactions()
+    {
+        // Arrange
+        await using var scope = _services.CreateAsyncScope();
+        var authorsRepository = scope.ServiceProvider.GetRequiredService<IAuthorsRepository>();
+        var discussionsRepository = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
+        var reactionsRepository = scope.ServiceProvider.GetRequiredService<IReactionsRepository>();
+
+        var viewerId = Guid.NewGuid();
+        await authorsRepository.EnsureCreatedAsync(viewerId);
+        var discussionId = await discussionsRepository.CreateAsync(viewerId, "Title", "Description");
+
+        // Act
+        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "a" });
+        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "a", "b" });
+        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "a", "b", "c" });
+        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "b", "d" });
+
+        // Assert
+        var discussion = await discussionsRepository.GetByIdAsync(discussionId, viewerId);
+        discussion.ViewerReactions.Should().BeEquivalentTo(["b", "d"]);
+        discussion.ReactionCounters.Should().BeEquivalentTo(new Dictionary<string, int>
+        {
+            { "b", 1 },
+            { "d", 1 }
+        });
+    }
 }
