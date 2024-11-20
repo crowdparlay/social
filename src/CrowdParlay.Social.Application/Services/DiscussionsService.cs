@@ -11,7 +11,6 @@ namespace CrowdParlay.Social.Application.Services;
 public class DiscussionsService(
     IUnitOfWorkFactory unitOfWorkFactory,
     IDiscussionsRepository discussionsRepository,
-    IReactionsService reactionsService,
     IUsersService usersService)
     : IDiscussionsService
 {
@@ -62,25 +61,12 @@ public class DiscussionsService(
         return await EnrichAsync(discussion);
     }
 
-    private async Task<DiscussionResponse> EnrichAsync(Discussion discussion)
-    {
-        var author = await usersService.GetByIdAsync(discussion.AuthorId);
-        return new DiscussionResponse
-        {
-            Id = discussion.Id,
-            Title = discussion.Title,
-            Description = discussion.Description,
-            Author = author.Adapt<AuthorResponse>(),
-            CreatedAt = discussion.CreatedAt,
-            ReactionCounters = discussion.ReactionCounters,
-            ViewerReactions = discussion.ViewerReactions
-        };
-    }
+    private async Task<DiscussionResponse> EnrichAsync(Discussion discussion) => (await EnrichAsync([discussion])).First();
 
     private async Task<IEnumerable<DiscussionResponse>> EnrichAsync(IReadOnlyList<Discussion> discussions)
     {
-        var authorIds = discussions.Select(discussion => discussion.AuthorId);
-        var authorsById = await usersService.GetUsersAsync(authorIds.ToHashSet());
+        var authorIds = discussions.SelectMany(discussion => discussion.LastCommentsAuthorIds.Append(discussion.AuthorId)).ToHashSet();
+        var authorsById = await usersService.GetUsersAsync(authorIds);
 
         return discussions.Select(discussion => new DiscussionResponse
         {
@@ -89,6 +75,9 @@ public class DiscussionsService(
             Description = discussion.Description,
             Author = authorsById[discussion.AuthorId].Adapt<AuthorResponse>(),
             CreatedAt = discussion.CreatedAt,
+            CommentCount = discussion.CommentCount,
+            LastCommentsAuthors = discussion.LastCommentsAuthorIds
+                .Select(replyAuthorId => authorsById[replyAuthorId].Adapt<AuthorResponse>()),
             ReactionCounters = discussion.ReactionCounters,
             ViewerReactions = discussion.ViewerReactions
         });

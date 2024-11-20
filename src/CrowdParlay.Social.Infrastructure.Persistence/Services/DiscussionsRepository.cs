@@ -14,20 +14,34 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
         var data = await runner.RunAsync(
             """
             MATCH (discussion:Discussion { Id: $discussionId })-[:AUTHORED_BY]->(author:Author)
+
+            OPTIONAL MATCH (deepReplyAuthor:Author)<-[:AUTHORED_BY]-(deepReply:Comment)-[:REPLIES_TO*]->(discussion)
             OPTIONAL MATCH (discussion)<-[reaction:REACTED_TO]-(:Author)
-
-            WITH author, discussion, reaction.Value as reactionValue, count(reaction) AS reactionCount
-            WITH author, discussion, apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
-
             OPTIONAL MATCH (discussion)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
-            WITH author, discussion, reactionCounters, COLLECT(viewerReaction.Value) AS viewerReactions
 
+            WITH author, discussion, deepReply, deepReplyAuthor, reaction,
+                 collect(viewerReaction.Value) AS viewerReactions
+                 
+            WITH author, discussion, deepReply, deepReplyAuthor, viewerReactions,
+                 reaction.Value AS reactionValue, count(reaction) AS reactionCount
+                 
+            WITH author, discussion, deepReply, deepReplyAuthor, viewerReactions,
+                 apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
+                 
+            ORDER BY deepReply.CreatedAt DESC
+
+            WITH author, discussion, viewerReactions, reactionCounters,
+                 count(deepReply) AS deepReplyCount,
+                 collect(DISTINCT deepReplyAuthor.Id)[0..3] AS lastDeepRepliesAuthorIds
+                 
             RETURN {
                 Id: discussion.Id,
                 Title: discussion.Title,
                 Description: discussion.Description,
                 AuthorId: author.Id,
                 CreatedAt: discussion.CreatedAt,
+                CommentCount: deepReplyCount,
+                LastCommentsAuthorIds: lastDeepRepliesAuthorIds,
                 ReactionCounters: reactionCounters,
                 ViewerReactions: viewerReactions
             }
@@ -54,17 +68,25 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
         var data = await runner.RunAsync(
             matchSelector +
             """
+            OPTIONAL MATCH (deepReplyAuthor:Author)<-[:AUTHORED_BY]-(deepReply:Comment)-[:REPLIES_TO*]->(discussion)
+
             OPTIONAL MATCH (discussion)<-[reaction:REACTED_TO]-(:Author)
-            OPTIONAL MATCH (discussion)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
+            OPTIONAL MATCH (discussion)<-[viewerReaction:REACTED_TO]-(:Author { Id: $authorId })
 
-            WITH author, discussion, reaction,
-                COLLECT(viewerReaction.Value) AS viewerReactions,
-                COUNT(reaction) AS reactionCount
+            WITH author, discussion, deepReplyAuthor, deepReply, reaction,
+                 collect(viewerReaction.Value) AS viewerReactions
 
-            WITH author, discussion, viewerReactions,
-                apoc.map.fromPairs(COLLECT([reaction.Value, reactionCount])) AS reactionCounters
+            WITH author, discussion, deepReplyAuthor, deepReply, viewerReactions,
+                 reaction.Value AS reactionValue, count(reaction) AS reactionCount
 
-            ORDER BY discussion.CreatedAt DESC
+            WITH author, discussion, deepReplyAuthor, deepReply, viewerReactions,
+                 apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
+
+            ORDER BY discussion.CreatedAt, deepReply.CreatedAt DESC
+
+            WITH author, discussion, viewerReactions, reactionCounters,
+                 COUNT(deepReply) AS deepReplyCount,
+                 COLLECT(DISTINCT deepReplyAuthor.Id)[0..3] AS lastDeepRepliesAuthorIds
 
             RETURN {
                 TotalCount: COUNT(discussion),
@@ -74,6 +96,8 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
                     Description: discussion.Description,
                     AuthorId: author.Id,
                     CreatedAt: discussion.CreatedAt,
+                    CommentCount: deepReplyCount,
+                    LastCommentsAuthorIds: lastDeepRepliesAuthorIds,
                     ReactionCounters: reactionCounters,
                     ViewerReactions: viewerReactions
                 })[$offset..$offset + $count]
@@ -92,7 +116,7 @@ public class DiscussionsRepository(IAsyncQueryRunner runner) : IDiscussionsRepos
             return new Page<Discussion>
             {
                 TotalCount = 0,
-                Items = Enumerable.Empty<Discussion>()
+                Items = []
             };
         }
 
