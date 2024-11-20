@@ -33,7 +33,7 @@ public class SignalRTests(WebApplicationContext context) : IAssemblyFixture<WebA
             },
             CreatedAt = DateTimeOffset.Now,
             ReplyCount = 0,
-            FirstRepliesAuthors = [],
+            LastRepliesAuthors = [],
             ReactionCounters = new Dictionary<string, int>(),
             ViewerReactions = new HashSet<string>()
         };

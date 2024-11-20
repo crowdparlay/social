@@ -70,30 +70,14 @@ public class CommentsService(
 
         return await EnrichAsync(comment);
     }
-    
+
     public async Task DeleteAsync(Guid id) => await commentsRepository.DeleteAsync(id);
 
-    private async Task<CommentResponse> EnrichAsync(Comment comment)
-    {
-        var author = await usersService.GetByIdAsync(comment.AuthorId);
-        var firstRepliesAuthors = await usersService.GetUsersAsync(comment.FirstRepliesAuthorIds);
-
-        return new CommentResponse
-        {
-            Id = comment.Id,
-            Content = comment.Content,
-            Author = author.Adapt<AuthorResponse>(),
-            CreatedAt = comment.CreatedAt,
-            ReplyCount = comment.ReplyCount,
-            FirstRepliesAuthors = firstRepliesAuthors.Values.Adapt<IEnumerable<AuthorResponse>>(),
-            ReactionCounters = comment.ReactionCounters,
-            ViewerReactions = comment.ViewerReactions
-        };
-    }
+    private async Task<CommentResponse> EnrichAsync(Comment comment) => (await EnrichAsync([comment])).First();
 
     private async Task<IEnumerable<CommentResponse>> EnrichAsync(IReadOnlyList<Comment> comments)
     {
-        var authorIds = comments.SelectMany(comment => comment.FirstRepliesAuthorIds.Append(comment.AuthorId)).ToHashSet();
+        var authorIds = comments.SelectMany(comment => comment.LastRepliesAuthorIds.Append(comment.AuthorId)).ToHashSet();
         var authorsById = await usersService.GetUsersAsync(authorIds);
 
         return comments.Select(comment => new CommentResponse
@@ -103,7 +87,7 @@ public class CommentsService(
             Author = authorsById[comment.AuthorId].Adapt<AuthorResponse>(),
             CreatedAt = comment.CreatedAt,
             ReplyCount = comment.ReplyCount,
-            FirstRepliesAuthors = comment.FirstRepliesAuthorIds
+            LastRepliesAuthors = comment.LastRepliesAuthorIds
                 .Select(replyAuthorId => authorsById[replyAuthorId].Adapt<AuthorResponse>()),
             ReactionCounters = comment.ReactionCounters,
             ViewerReactions = comment.ViewerReactions

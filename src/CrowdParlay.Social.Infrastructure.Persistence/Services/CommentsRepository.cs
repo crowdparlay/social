@@ -32,7 +32,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
 
             WITH author, comment, viewerReactions, reactionCounters,
                  count(deepReply) AS deepReplyCount,
-                 collect(DISTINCT deepReplyAuthor.Id)[0..3] AS firstDeepRepliesAuthorIds
+                 collect(DISTINCT deepReplyAuthor.Id)[0..3] AS lastDeepRepliesAuthorIds
 
             RETURN {
                 Id: comment.Id,
@@ -40,7 +40,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                 AuthorId: author.Id,
                 CreatedAt: comment.CreatedAt,
                 ReplyCount: deepReplyCount,
-                FirstRepliesAuthorIds: firstDeepRepliesAuthorIds,
+                LastRepliesAuthorIds: lastDeepRepliesAuthorIds,
                 ReactionCounters: reactionCounters,
                 ViewerReactions: viewerReactions
             }
@@ -92,7 +92,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
 
             WITH author, comment, viewerReactions, reactionCounters,
                  COUNT(deepReply) AS deepReplyCount,
-                 COLLECT(DISTINCT deepReplyAuthor.Id)[0..3] AS firstDeepRepliesAuthorIds
+                 COLLECT(DISTINCT deepReplyAuthor.Id)[0..3] AS lastDeepRepliesAuthorIds
 
             RETURN {
                 TotalCount: COUNT(comment),
@@ -102,7 +102,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
                     AuthorId: author.Id,
                     CreatedAt: comment.CreatedAt,
                     ReplyCount: deepReplyCount,
-                    FirstRepliesAuthorIds: firstDeepRepliesAuthorIds,
+                    LastRepliesAuthorIds: lastDeepRepliesAuthorIds,
                     ReactionCounters: reactionCounters,
                     ViewerReactions: viewerReactions
                 })[$offset..$offset + $count]
@@ -122,7 +122,7 @@ public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
             return new Page<Comment>
             {
                 TotalCount = 0,
-                Items = Enumerable.Empty<Comment>()
+                Items = []
             };
         }
 

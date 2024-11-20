@@ -8,6 +8,6 @@ public class Page<T>
     public static Page<T> Empty => new()
     {
         TotalCount = 0,
-        Items = Enumerable.Empty<T>()
+        Items = []
     };
 }
