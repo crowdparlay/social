@@ -23,7 +23,7 @@ public class AuthenticationTests(WebApplicationContext context) : IAssemblyFixtu
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.Should().HaveStatusCode(HttpStatusCode.Created);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
     [Fact(DisplayName = "Search discussions returns discussions with viewer reactions")]
@@ -50,7 +50,7 @@ public class AuthenticationTests(WebApplicationContext context) : IAssemblyFixtu
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.Should().HaveStatusCode(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
         var page = await response.Content.ReadFromJsonAsync<Page<DiscussionResponse>>(GlobalSerializerOptions.SnakeCase);
         page?.Items.Should().ContainSingle().Which.ViewerReactions.Should().BeEquivalentTo(reactions);
     }
