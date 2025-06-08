@@ -11,6 +11,5 @@ public static class ConfigureServicesExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services) => services
         .AddScoped<IDiscussionsService, DiscussionsService>()
         .AddScoped<ICommentsService, CommentsService>()
-        .AddScoped<IReactionsService, ReactionsService>()
         .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
 }

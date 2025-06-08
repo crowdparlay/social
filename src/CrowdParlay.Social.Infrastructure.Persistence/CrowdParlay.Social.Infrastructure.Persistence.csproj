@@ -10,7 +10,7 @@
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.5" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="9.0.5" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.5" />
-      <PackageReference Include="Neo4j.Driver" Version="5.28.1" />
+      <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
     </ItemGroup>
 
     <ItemGroup>

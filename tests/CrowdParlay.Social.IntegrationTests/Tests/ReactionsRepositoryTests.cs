@@ -21,24 +21,19 @@ public class ReactionsRepositoryTests(WebApplicationContext context) : IAssembly
         HashSet<string> heartAndOldInvalid = [heart, oldInvalid];
 
         await using var scope = _services.CreateAsyncScope();
-        var authorsRepository = scope.ServiceProvider.GetRequiredService<IAuthorsRepository>();
+        var discussionsService = scope.ServiceProvider.GetRequiredService<IDiscussionsService>();
         var discussionsRepository = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
-        var reactionsRepository = scope.ServiceProvider.GetRequiredService<IReactionsRepository>();
-        var reactionsService = scope.ServiceProvider.GetRequiredService<IReactionsService>();
 
         var viewerId = Guid.NewGuid();
-        await authorsRepository.EnsureCreatedAsync(viewerId);
-
-        var discussionId = await discussionsRepository.CreateAsync(viewerId, "Title", "Description");
-        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { oldInvalid });
+        var discussion = await discussionsService.CreateAsync(viewerId, "Title", "Description");
 
         // Act
-        await reactionsService.SetAsync(discussionId, viewerId, heartAndOldInvalid);
-        await reactionsService.SetAsync(discussionId, viewerId, new HashSet<string>());
-        await reactionsService.SetAsync(discussionId, viewerId, thumbs);
+        await discussionsRepository.SetReactionsAsync(discussion.Id, viewerId, heartAndOldInvalid);
+        await discussionsRepository.SetReactionsAsync(discussion.Id, viewerId, new HashSet<string>());
+        await discussionsRepository.SetReactionsAsync(discussion.Id, viewerId, thumbs);
 
-        var reactWithNewInvalid = async () => await reactionsService.SetAsync(discussionId, viewerId, thumbsAndNewInvalid);
-        var reactions = await reactionsService.GetAsync(discussionId, viewerId);
+        var reactWithNewInvalid = async () => await discussionsService.SetReactionsAsync(discussion.Id, viewerId, thumbsAndNewInvalid);
+        var reactions = await discussionsService.GetReactionsAsync(discussion.Id, viewerId);
 
         // Assert
         await reactWithNewInvalid.Should().ThrowAsync<ForbiddenException>();
@@ -50,27 +45,31 @@ public class ReactionsRepositoryTests(WebApplicationContext context) : IAssembly
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
-        var authorsRepository = scope.ServiceProvider.GetRequiredService<IAuthorsRepository>();
-        var discussionsRepository = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
-        var reactionsRepository = scope.ServiceProvider.GetRequiredService<IReactionsRepository>();
+        var discussionsService = scope.ServiceProvider.GetRequiredService<IDiscussionsService>();
 
         var viewerId = Guid.NewGuid();
-        await authorsRepository.EnsureCreatedAsync(viewerId);
-        var discussionId = await discussionsRepository.CreateAsync(viewerId, "Title", "Description");
+        var discussion = await discussionsService.CreateAsync(viewerId, "Title", "Description");
+
+        const string eggplant = "\ud83c\udf46";
+        const string woozyFace = "\ud83e\udd74";
+        const string nailPolish = "\ud83d\udc85";
+        const string redHeart = "\u2764\ufe0f";
 
         // Act
-        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "a" });
-        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "a", "b" });
-        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "a", "b", "c" });
-        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "b", "d" });
+        await discussionsService.SetReactionsAsync(discussion.Id, viewerId, new HashSet<string> { eggplant });
+        await discussionsService.SetReactionsAsync(discussion.Id, viewerId, new HashSet<string> { eggplant, woozyFace });
+        await discussionsService.SetReactionsAsync(discussion.Id, viewerId, new HashSet<string> { eggplant, woozyFace, nailPolish });
+        await discussionsService.SetReactionsAsync(discussion.Id, viewerId, new HashSet<string> { woozyFace, redHeart });
 
         // Assert
-        var discussion = await discussionsRepository.GetByIdAsync(discussionId, viewerId);
-        discussion.ViewerReactions.Should().BeEquivalentTo(["b", "d"]);
+        discussion = await discussionsService.GetByIdAsync(discussion.Id, viewerId);
+        discussion.ViewerReactions.Should().BeEquivalentTo(woozyFace, redHeart);
         discussion.ReactionCounters.Should().BeEquivalentTo(new Dictionary<string, int>
         {
-            { "b", 1 },
-            { "d", 1 }
+            { eggplant, 0 },
+            { woozyFace, 1 },
+            { nailPolish, 0 },
+            { redHeart, 1 }
         });
     }
 }

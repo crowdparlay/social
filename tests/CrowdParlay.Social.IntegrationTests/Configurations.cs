@@ -1,5 +1,4 @@
 namespace CrowdParlay.Social.IntegrationTests;
 
-// ReSharper disable once InconsistentNaming
-public record Neo4jConfiguration(string Uri, string Username, string Password);
+public record MongoDbConfiguration(string ConnectionString, string Database);
 public record RedisConfiguration(string ConnectionString);

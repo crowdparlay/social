@@ -2,6 +2,7 @@ using CrowdParlay.Social.Api.Hubs;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using MongoDB.Bson;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
@@ -19,10 +20,10 @@ public class SignalRTests(WebApplicationContext context) : IAssemblyFixture<WebA
         var commentsHub = scope.ServiceProvider.GetRequiredService<IHubContext<CommentsHub>>();
         var newComments = new List<CommentResponse>();
 
-        var discussionId = new Guid("6ef436dc-8e38-4a4b-b0e7-ff9fcd55ac0e");
+        var discussionId = ObjectId.GenerateNewId().ToString();
         var expectedComment = new CommentResponse
         {
-            Id = Guid.NewGuid(),
+            Id = ObjectId.GenerateNewId().ToString(),
             Content = "Sample comment.",
             Author = new AuthorResponse
             {
@@ -32,8 +33,8 @@ public class SignalRTests(WebApplicationContext context) : IAssemblyFixture<WebA
                 AvatarUrl = null
             },
             CreatedAt = DateTimeOffset.Now,
-            ReplyCount = 0,
-            LastRepliesAuthors = [],
+            CommentCount = 0,
+            LastCommentsAuthors = [],
             ReactionCounters = new Dictionary<string, int>(),
             ViewerReactions = new HashSet<string>()
         };
