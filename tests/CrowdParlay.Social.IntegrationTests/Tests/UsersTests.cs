@@ -3,7 +3,7 @@ using StackExchange.Redis;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class UsersServiceTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
+public class UsersTests(WebApplicationContext context) : IClassFixture<WebApplicationContext>
 {
         private readonly IServiceProvider _services = context.Services;
 

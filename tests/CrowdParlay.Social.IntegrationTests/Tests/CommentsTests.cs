@@ -3,7 +3,7 @@ using MongoDB.Bson;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class CommentsServiceTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
+public class CommentsTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly IServiceProvider _services = context.Services;
 

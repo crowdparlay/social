@@ -2,7 +2,7 @@ using CrowdParlay.Social.Domain.Abstractions;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class DiscussionsRepositoryTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
+public class DiscussionsTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly IServiceProvider _services = context.Services;
 
