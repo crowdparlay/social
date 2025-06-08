@@ -32,16 +32,16 @@ public class CommentsService(
             Items = await EnrichAsync(page.Items.ToArray())
         };
     }
-    
+
     public async Task<CommentResponse> ReplyToDiscussionAsync(string discussionId, Guid authorId, string content)
     {
-        _ = await discussionsRepository.GetByIdAsync(discussionId, null);
+        await discussionsRepository.GetByIdAsync(discussionId, null);
         return await CreateAsync(discussionId, authorId, content);
     }
-    
+
     public async Task<CommentResponse> ReplyToCommentAsync(string commentId, Guid authorId, string content)
     {
-        _ = await commentsRepository.GetByIdAsync(commentId, null);
+        await commentsRepository.GetByIdAsync(commentId, null);
         return await CreateAsync(commentId, authorId, content);
     }
 

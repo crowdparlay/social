@@ -64,9 +64,9 @@ public class GenericSubjectsRepository<TDocument>(IClientSessionHandle session, 
             ?? throw new NotFoundException();
 
         var newLastCommentAuthorIds = oldLastCommentsAuthorIds
+            .Except([authorId])
             .Append(authorId)
-            .Distinct()
-            .TakeLast(5)
+            .TakeLast(3)
             .ToList();
 
         var filter = Builders<TDocument>.Filter.Eq(subject => subject.Id, ObjectId.Parse(subjectId));

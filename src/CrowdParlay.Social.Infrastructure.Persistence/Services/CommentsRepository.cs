@@ -27,22 +27,28 @@ public class CommentsRepository(IClientSessionHandle session, IMongoDatabase dat
         return await pipeline.FirstOrDefaultAsync() ?? throw new NotFoundException();
     }
 
-    public async Task<Page<Comment>> GetRepliesAsync(
-        string subjectId, bool flatten, Guid? viewerId, int offset, int count)
+    public async Task<Page<Comment>> GetRepliesAsync(string subjectId, bool flatten, Guid? viewerId, int offset, int count)
     {
-        var matchPipeline = _comments.Aggregate(session)
-            .Match(comment => comment.SubjectId == ObjectId.Parse(subjectId));
+        var matchPipeline = _comments.Aggregate(session);
 
         if (flatten)
         {
             matchPipeline = matchPipeline
-                .GraphLookup<CommentDocument, CommentDocument, ObjectId, ObjectId, ObjectId, IList<CommentDocument>,
-                    CommentDocument>(
+                .Limit(1)
+                .GraphLookup<CommentDocument, CommentDocument, ObjectId, ObjectId, ObjectId, CommentDocument, IList<CommentDocument>, CommentDocument>(
                     from: _comments,
-                    startWith: comment => comment.Id,
+                    startWith: _ => ObjectId.Parse(subjectId),
                     connectFromField: comment => comment.Id,
                     connectToField: comment => comment.SubjectId,
-                    @as: comment => comment.Ascendants!);
+                    @as: comment => comment.Ascendants!,
+                    depthField: comment => comment.Depth!.Value)
+                .Unwind<CommentDocument, CommentDocument>(comment => comment.Ascendants)
+                .ReplaceRoot<CommentDocument>("$ascendants");
+        }
+        else
+        {
+            matchPipeline = matchPipeline
+                .Match(comment => comment.SubjectId == ObjectId.Parse(subjectId));
         }
 
         var pipeline = matchPipeline.Facet(
@@ -91,38 +97,27 @@ public class CommentsRepository(IClientSessionHandle session, IMongoDatabase dat
 
     public async Task<IList<Comment>> GetAncestorsAsync(string commentId, Guid? viewerId) => await _comments.Aggregate(session)
         .Match(comment => comment.Id == ObjectId.Parse(commentId))
-        .GraphLookup<CommentDocument, CommentDocument, ObjectId, ObjectId, ObjectId, IList<CommentDocument>, CommentDocument>(
+        .GraphLookup<CommentDocument, CommentDocument, ObjectId, ObjectId, ObjectId, CommentDocument, IList<CommentDocument>, CommentDocument>(
             from: _comments,
             startWith: comment => comment.SubjectId,
             connectFromField: comment => comment.SubjectId,
             connectToField: comment => comment.Id,
-            @as: comment => comment.Ancestors!)
-        .Project(comment => comment.Ancestors!.Select(ancestor => new Comment
-        {
-            Id = ancestor.Id.ToString(),
-            SubjectId = ancestor.SubjectId.ToString(),
-            CreatedAt = ancestor.CreatedAt,
-            AuthorId = ancestor.AuthorId,
-            Content = ancestor.Content,
-            CommentCount = ancestor.CommentCount,
-            LastCommentsAuthorIds = ancestor.LastCommentsAuthorIds,
-            ReactionCounters = ancestor.ReactionCounters,
-            ViewerReactions =
-                viewerId.HasValue &&
-                ancestor.ReactionsByAuthorId.ContainsKey(viewerId.Value.ToString())
-                    ? ancestor.ReactionsByAuthorId[viewerId.Value.ToString()]
-                    : Array.Empty<string>()
-        }).ToList())
-        .FirstOrDefaultAsync();
+            @as: comment => comment.Ancestors!,
+            depthField: comment => comment.Depth!.Value)
+        .Unwind<CommentDocument, CommentDocument>(comment => comment.Ancestors)
+        .ReplaceRoot<CommentDocument>("$ancestors")
+        .SortBy(comment => comment.Depth)
+        .Project(CreateCommentProjectionExpression(viewerId))
+        .ToListAsync();
 
     public async Task IncludeCommentInAncestorsMetadataAsync(IEnumerable<Comment> ancestors, Guid authorId)
     {
         var updates = ancestors.Select(ancestor =>
             {
                 var newLastCommentsAuthorIds = ancestor.LastCommentsAuthorIds
+                    .Except([authorId])
                     .Append(authorId)
-                    .Distinct()
-                    .TakeLast(5)
+                    .TakeLast(3)
                     .ToList();
 
                 var filter = Filter.Eq(comment => comment.Id, ObjectId.Parse(ancestor.Id));

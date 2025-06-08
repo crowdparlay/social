@@ -16,4 +16,5 @@ public class CommentDocument : ISubjectDocument
     public required IDictionary<string, string[]> ReactionsByAuthorId { get; set; }
     [BsonIgnoreIfNull] public IList<CommentDocument>? Ancestors { get; set; }
     [BsonIgnoreIfNull] public IList<CommentDocument>? Ascendants { get; set; }
+    [BsonIgnoreIfNull] public int? Depth { get; set; }
 }
