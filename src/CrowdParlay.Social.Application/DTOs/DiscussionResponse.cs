@@ -2,9 +2,9 @@ namespace CrowdParlay.Social.Application.DTOs;
 
 public class DiscussionResponse
 {
-    public required Guid Id { get; set; }
+    public required string Id { get; set; }
     public required string Title { get; set; }
-    public required string Description { get; set; }
+    public required string Content { get; set; }
     public required AuthorResponse? Author { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
     public required int CommentCount { get; set; }

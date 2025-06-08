@@ -3,12 +3,11 @@ using CrowdParlay.Social.Domain.DTOs;
 
 namespace CrowdParlay.Social.Application.Abstractions;
 
-public interface ICommentsService
+public interface ICommentsService : ISubjectsService
 {
-    public Task<CommentResponse> GetByIdAsync(Guid commentId, Guid? viewerId);
-    public Task<Page<CommentResponse>> SearchAsync(Guid? discussionId, Guid? authorId, Guid? viewerId, int offset, int count);
-    public Task<CommentResponse> CreateAsync(Guid authorId, Guid discussionId, string content);
-    public Task<Page<CommentResponse>> GetRepliesToCommentAsync(Guid parentCommentId, Guid? viewerId, int offset, int count);
-    public Task<CommentResponse> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content);
-    public Task DeleteAsync(Guid id);
+    public Task<CommentResponse> GetByIdAsync(string commentId, Guid? viewerId);
+    public Task<Page<CommentResponse>> GetRepliesAsync(string subjectId, bool flatten, Guid? viewerId, int offset, int count);
+    public Task<CommentResponse> ReplyToDiscussionAsync(string discussionId, Guid authorId, string content);
+    public Task<CommentResponse> ReplyToCommentAsync(string commentId, Guid authorId, string content);
+    public Task DeleteAsync(string commentId);
 }

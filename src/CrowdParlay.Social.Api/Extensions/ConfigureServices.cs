@@ -1,5 +1,4 @@
 using CrowdParlay.Communication;
-using CrowdParlay.Social.Api.Consumers;
 using CrowdParlay.Social.Api.Services;
 using MassTransit;
 
@@ -21,7 +20,6 @@ public static class ConfigureApiExtensions
 
         return services.AddMassTransit(bus =>
         {
-            bus.AddConsumersFromNamespaceContaining<UserEventConsumer>();
             bus.UsingRabbitMq((context, configurator) =>
             {
                 var amqpServerUrl =

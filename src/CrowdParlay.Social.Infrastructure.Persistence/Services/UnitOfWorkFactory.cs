@@ -1,13 +1,15 @@
 using CrowdParlay.Social.Domain.Abstractions;
-using Neo4j.Driver;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
-public class UnitOfWorkFactory(IAsyncSession session) : IUnitOfWorkFactory
+internal class UnitOfWorkFactory(IMongoClient client, IOptions<MongoDbSettings> settings) : IUnitOfWorkFactory
 {
     public async Task<IUnitOfWork> CreateAsync()
     {
-        var transaction = await session.BeginTransactionAsync();
-        return new UnitOfWork(transaction);
+        var session = await client.StartSessionAsync();
+        session.StartTransaction();
+        return new UnitOfWork(session, client.GetDatabase(settings.Value.Database));
     }
 }

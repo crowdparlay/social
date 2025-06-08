@@ -1,42 +1,46 @@
-using CrowdParlay.Social.Domain;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Infrastructure.Persistence.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Neo4j.Driver;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence;
 
 public static class ConfigurePersistenceExtensions
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
-        .AddNeo4j(configuration)
-        .AddScoped<IAuthorsRepository, AuthorsRepository>()
+        .AddMongoDb(configuration)
         .AddScoped<ICommentsRepository, CommentsRepository>()
         .AddScoped<IDiscussionsRepository, DiscussionsRepository>()
-        .AddScoped<IReactionsRepository, ReactionsRepository>()
-        .AddScoped<IAsyncSession>(provider => provider.GetRequiredService<IDriver>().AsyncSession())
-        .AddScoped<IAsyncQueryRunner>(provider => provider.GetRequiredService<IAsyncSession>())
-        .AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
+        .AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>()
+        .AddHostedService<StartupConfigurator>();
 
-    // ReSharper disable once InconsistentNaming
-    private static IServiceCollection AddNeo4j(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddMongoDb(this IServiceCollection services, IConfiguration configuration)
     {
-        ReactionMapsterAdapterConfigurator.Configure();
-        
-        var uri =
-            configuration["NEO4J_URI"] ??
-            throw new InvalidOperationException("NEO4J_URI is not set!");
+        services
+            .AddOptions<MongoDbSettings>()
+            .ValidateDataAnnotations()
+            .ValidateOnStart()
+            .Bind(configuration.GetSection("MongoDb"));
 
-        var username =
-            configuration["NEO4J_USERNAME"] ??
-            throw new InvalidOperationException("NEO4J_USERNAME is not set!");
+        services.AddSingleton<IMongoClient>(provider =>
+        {
+            var settings = provider.GetRequiredService<IOptions<MongoDbSettings>>();
+            return new MongoClient(settings.Value.ConnectionString);
+        });
 
-        var password =
-            configuration["NEO4J_PASSWORD"] ??
-            throw new InvalidOperationException("NEO4J_PASSWORD is not set!");
+        services.AddScoped<IClientSessionHandle>(provider =>
+        {
+            var client = provider.GetRequiredService<IMongoClient>();
+            return client.StartSession();
+        });
 
-        var driver = GraphDatabase.Driver(uri, AuthTokens.Basic(username, password));
-        return services.AddSingleton(driver);
+        return services.AddScoped<IMongoDatabase>(provider =>
+        {
+            var session = provider.GetRequiredService<IClientSessionHandle>();
+            var settings = provider.GetRequiredService<IOptions<MongoDbSettings>>();
+            return session.Client.GetDatabase(settings.Value.Database);
+        });
     }
 }
