@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Models;
 
+[DebuggerDisplay("{Id} by {AuthorId} in reply to {SubjectId}")]
 public class CommentDocument : ISubjectDocument
 {
     [BsonId] public required ObjectId Id { get; set; }

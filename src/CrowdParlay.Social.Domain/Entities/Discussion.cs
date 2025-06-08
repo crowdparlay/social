@@ -1,5 +1,9 @@
+using System.Diagnostics;
+
 namespace CrowdParlay.Social.Domain.Entities;
 
+
+[DebuggerDisplay("{Id} by {AuthorId}")]
 public class Discussion
 {
     public required string Id { get; set; }

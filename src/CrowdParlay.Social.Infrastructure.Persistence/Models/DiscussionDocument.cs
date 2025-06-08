@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Models;
 
+[DebuggerDisplay("{Id} by {AuthorId}")]
 public class DiscussionDocument : ISubjectDocument
 {
     [BsonId] public required ObjectId Id { get; set; }
