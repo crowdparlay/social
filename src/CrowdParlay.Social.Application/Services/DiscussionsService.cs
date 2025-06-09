@@ -14,7 +14,9 @@ public class DiscussionsService(
     IUsersService usersService)
     : IDiscussionsService
 {
-    public async Task<DiscussionResponse> GetByIdAsync(Guid discussionId, Guid? viewerId)
+    private readonly ISubjectsService _subjectsService = new SubjectsService(discussionsRepository);
+    
+    public async Task<DiscussionResponse> GetByIdAsync(string discussionId, Guid? viewerId)
     {
         var discussion = await discussionsRepository.GetByIdAsync(discussionId, viewerId);
         return await EnrichAsync(discussion);
@@ -30,12 +32,13 @@ public class DiscussionsService(
         };
     }
 
-    public async Task<DiscussionResponse> CreateAsync(Guid authorId, string title, string description)
+    public async Task<DiscussionResponse> CreateAsync(Guid authorId, string title, string content)
     {
         Discussion discussion;
-        await using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+        
+        using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
         {
-            var discussionId = await unitOfWork.DiscussionsRepository.CreateAsync(authorId, title, description);
+            var discussionId = await discussionsRepository.CreateAsync(authorId, title, content);
             discussion = await unitOfWork.DiscussionsRepository.GetByIdAsync(discussionId, authorId);
             await unitOfWork.CommitAsync();
         }
@@ -43,43 +46,45 @@ public class DiscussionsService(
         return await EnrichAsync(discussion);
     }
 
-    public async Task<DiscussionResponse> UpdateAsync(Guid discussionId, Guid viewerId, UpdateDiscussionRequest request)
+    public async Task<DiscussionResponse> UpdateAsync(string discussionId, Guid viewerId,
+        UpdateDiscussionRequest request)
     {
-        Discussion discussion;
-        await using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
-        {
-            discussion = await unitOfWork.DiscussionsRepository.GetByIdAsync(discussionId, viewerId);
-            if (discussion.AuthorId != viewerId)
-                throw new ForbiddenException("Cannot modify a discussion created by another user.");
+        var discussion = await discussionsRepository.GetByIdAsync(discussionId, viewerId);
+        if (discussion.AuthorId != viewerId)
+            throw new ForbiddenException("Cannot modify a discussion created by another user.");
 
-            await unitOfWork.DiscussionsRepository.UpdateAsync(discussionId, request.Title, request.Description);
-            discussion = await unitOfWork.DiscussionsRepository.GetByIdAsync(discussionId, viewerId);
-
-            await unitOfWork.CommitAsync();
-        }
-
+        await discussionsRepository.UpdateAsync(discussionId, request.Title, request.Description);
+        discussion = await discussionsRepository.GetByIdAsync(discussionId, viewerId);
         return await EnrichAsync(discussion);
     }
+
+    public async Task<ISet<string>> GetReactionsAsync(string discussionId, Guid authorId) =>
+        await _subjectsService.GetReactionsAsync(discussionId, authorId);
+
+    public async Task SetReactionsAsync(string discussionId, Guid authorId, ISet<string> reactions) =>
+        await _subjectsService.SetReactionsAsync(discussionId, authorId, reactions);
 
     private async Task<DiscussionResponse> EnrichAsync(Discussion discussion) => (await EnrichAsync([discussion])).First();
 
     private async Task<IEnumerable<DiscussionResponse>> EnrichAsync(IReadOnlyList<Discussion> discussions)
     {
-        var authorIds = discussions.SelectMany(discussion => discussion.LastCommentsAuthorIds.Append(discussion.AuthorId)).ToHashSet();
+        var authorIds = discussions
+            .SelectMany(discussion => discussion.LastCommentsAuthorIds.Append(discussion.AuthorId))
+            .ToHashSet();
+        
         var authorsById = await usersService.GetUsersAsync(authorIds);
-
         return discussions.Select(discussion => new DiscussionResponse
         {
             Id = discussion.Id,
             Title = discussion.Title,
-            Description = discussion.Description,
+            Content = discussion.Content,
             Author = authorsById[discussion.AuthorId].Adapt<AuthorResponse>(),
             CreatedAt = discussion.CreatedAt,
             CommentCount = discussion.CommentCount,
             LastCommentsAuthors = discussion.LastCommentsAuthorIds
                 .Select(replyAuthorId => authorsById[replyAuthorId].Adapt<AuthorResponse>()),
             ReactionCounters = discussion.ReactionCounters,
-            ViewerReactions = discussion.ViewerReactions
+            ViewerReactions = discussion.ViewerReactions.ToHashSet()
         });
     }
 }

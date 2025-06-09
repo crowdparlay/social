@@ -23,15 +23,13 @@ jobs:
       - name: ⚙️ Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: |
-            7.0.x
-            8.0.x
+          dotnet-version: 9.0.x
       - name: ⚒ Build solution
         run: dotnet build
       - name: ⚙️ Restore .NET tools
         run: dotnet tool restore
       - name: 📝 Produce OpenAPI specification
-        run: dotnet swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net8.0/CrowdParlay.Social.Api.dll v1
+        run: dotnet swagger tofile --output openapi.yaml --yaml ./src/CrowdParlay.Social.Api/bin/Debug/net9.0/CrowdParlay.Social.Api.dll v1
       - name: 🔗 Upload OpenAPI specification as release asset
         uses: actions/upload-release-asset@v1
         env:

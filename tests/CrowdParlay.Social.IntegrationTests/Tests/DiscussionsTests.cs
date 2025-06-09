@@ -2,7 +2,7 @@ using CrowdParlay.Social.Domain.Abstractions;
 
 namespace CrowdParlay.Social.IntegrationTests.Tests;
 
-public class DiscussionsRepositoryTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
+public class DiscussionsTests(WebApplicationContext context) : IAssemblyFixture<WebApplicationContext>
 {
     private readonly IServiceProvider _services = context.Services;
 
@@ -14,7 +14,7 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IAssemb
         var discussions = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
 
         var authorId = Guid.NewGuid();
-        Guid[] expectedDiscussionIds =
+        string[] expectedDiscussionIds =
         [
             await discussions.CreateAsync(authorId, "Discussion 1", "bla bla bla"),
             await discussions.CreateAsync(authorId, "Discussion 2", "numa numa e")
@@ -51,32 +51,45 @@ public class DiscussionsRepositoryTests(WebApplicationContext context) : IAssemb
     {
         // Arrange
         await using var scope = _services.CreateAsyncScope();
-        var authorsRepository = scope.ServiceProvider.GetRequiredService<IAuthorsRepository>();
-        var discussionsRepository = scope.ServiceProvider.GetRequiredService<IDiscussionsRepository>();
-        var reactionsRepository = scope.ServiceProvider.GetRequiredService<IReactionsRepository>();
+        var discussionsService = scope.ServiceProvider.GetRequiredService<IDiscussionsService>();
+
+        const string heart = "\u2764\ufe0f";
+        const string thumbUp = "\ud83d\udc4d";
+        const string thumbDown = "\ud83d\udc4e";
 
         var authorId = Guid.NewGuid();
-        await authorsRepository.EnsureCreatedAsync(authorId);
-
         var viewerId = Guid.NewGuid();
-        await authorsRepository.EnsureCreatedAsync(viewerId);
 
-        await discussionsRepository.CreateAsync(viewerId, "Discussion 1", "bla bla bla");
-        var discussionId = await discussionsRepository.CreateAsync(authorId, "Discussion 2", "bla bla bla");
+        await discussionsService.CreateAsync(viewerId, "Discussion 1", "bla bla bla");
+        var discussion = await discussionsService.CreateAsync(authorId, "Discussion 2", "bla bla bla");
 
-        await reactionsRepository.SetAsync(discussionId, authorId, new HashSet<string> { "thumb-up", "heart" });
-        await reactionsRepository.SetAsync(discussionId, viewerId, new HashSet<string> { "thumb-up", "rainbow" });
+        await discussionsService.SetReactionsAsync(discussion.Id, authorId, new HashSet<string> { thumbUp, heart });
+        await discussionsService.SetReactionsAsync(discussion.Id, viewerId, new HashSet<string> { thumbUp, thumbDown });
 
         // Act
-        var discussion = await discussionsRepository.GetByIdAsync(discussionId, viewerId);
+        discussion = await discussionsService.GetByIdAsync(discussion.Id, viewerId);
 
         // Assert
-        discussion.ViewerReactions.Should().BeEquivalentTo("thumb-up", "rainbow");
+        discussion.ViewerReactions.Should().BeEquivalentTo(thumbUp, thumbDown);
         discussion.ReactionCounters.Should().BeEquivalentTo(new Dictionary<string, int>
         {
-            ["thumb-up"] = 2,
-            ["heart"] = 1,
-            ["rainbow"] = 1
+            { thumbUp, 2 },
+            { heart, 1 },
+            { thumbDown, 1 }
         });
+    }
+
+    [Theory(DisplayName = "Create discussions in parallel")]
+    [InlineData(1), InlineData(2), InlineData(100)]
+    public async Task CreateDiscussionsInParallel(int degreeOfParallelism)
+    {
+        var tasks = Enumerable.Range(0, degreeOfParallelism).Select(i => Task.Run(async () =>
+        {
+            await using var scope = _services.CreateAsyncScope();
+            var discussionsService = scope.ServiceProvider.GetRequiredService<IDiscussionsService>();
+            await discussionsService.CreateAsync(Guid.NewGuid(), $"Discussion {i}", $"Content {i}");
+        }));
+        
+        await Task.WhenAll(tasks);
     }
 }

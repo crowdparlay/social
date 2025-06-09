@@ -3,10 +3,10 @@ using CrowdParlay.Social.Domain.Entities;
 
 namespace CrowdParlay.Social.Domain.Abstractions;
 
-public interface IDiscussionsRepository
+public interface IDiscussionsRepository : ISubjectsRepository
 {
-    public Task<Discussion> GetByIdAsync(Guid discussionId, Guid? viewerId);
+    public Task<Discussion> GetByIdAsync(string discussionId, Guid? viewerId);
     public Task<Page<Discussion>> SearchAsync(Guid? authorId, Guid? viewerId, int offset, int count);
-    public Task<Guid> CreateAsync(Guid authorId, string title, string description);
-    public Task UpdateAsync(Guid discussionId, string? title = null, string? description = null);
+    public Task<string> CreateAsync(Guid authorId, string title, string content);
+    public Task UpdateAsync(string discussionId, string? title = null, string? content = null);
 }

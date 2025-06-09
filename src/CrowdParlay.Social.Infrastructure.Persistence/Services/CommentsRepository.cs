@@ -1,206 +1,182 @@
-using System.Text;
+using System.Linq.Expressions;
 using CrowdParlay.Social.Application.Exceptions;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
 using CrowdParlay.Social.Domain.Entities;
-using Mapster;
-using Neo4j.Driver;
+using CrowdParlay.Social.Infrastructure.Persistence.Models;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using static CrowdParlay.Social.Infrastructure.Persistence.MongoDbConstants;
+using static MongoDB.Driver.PipelineStageDefinitionBuilder;
+using static MongoDB.Driver.Builders<CrowdParlay.Social.Infrastructure.Persistence.Models.CommentDocument>;
+using static MongoDB.Driver.PipelineDefinition<CrowdParlay.Social.Infrastructure.Persistence.Models.CommentDocument,
+    MongoDB.Driver.AggregateCountResult>;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
-public class CommentsRepository(IAsyncQueryRunner runner) : ICommentsRepository
+public class CommentsRepository(IClientSessionHandle session, IMongoDatabase database) : ICommentsRepository
 {
-    public async Task<Comment> GetByIdAsync(Guid commentId, Guid? viewerId)
+    private readonly IMongoCollection<CommentDocument> _comments = database.GetCollection<CommentDocument>(Collections.Comments);
+    private readonly ISubjectsRepository _subjectsRepository = new GenericSubjectsRepository<CommentDocument>(session, database, Collections.Comments);
+
+    public async Task<Comment> GetByIdAsync(string commentId, Guid? viewerId)
     {
-        var data = await runner.RunAsync(
-            """
-            MATCH (comment:Comment { Id: $commentId })-[:AUTHORED_BY]->(author:Author)
-            OPTIONAL MATCH (deepReplyAuthor:Author)<-[:AUTHORED_BY]-(deepReply:Comment)-[:REPLIES_TO*]->(comment)
-            OPTIONAL MATCH (comment)<-[reaction:REACTED_TO]-(:Author)
-            OPTIONAL MATCH (comment)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
+        var pipeline = _comments
+            .Find(session, comment => comment.Id == ObjectId.Parse(commentId))
+            .Project(CreateCommentProjectionExpression(viewerId));
 
-            WITH author, comment, deepReply, deepReplyAuthor, reaction,
-                 collect(viewerReaction.Value) AS viewerReactions
-
-            WITH author, comment, deepReply, deepReplyAuthor, viewerReactions,
-                 reaction.Value AS reactionValue, count(reaction) AS reactionCount
-
-            WITH author, comment, deepReply, deepReplyAuthor, viewerReactions,
-                 apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
-
-            ORDER BY deepReply.CreatedAt DESC
-
-            WITH author, comment, viewerReactions, reactionCounters,
-                 count(deepReply) AS deepReplyCount,
-                 collect(DISTINCT deepReplyAuthor.Id)[0..3] AS lastDeepRepliesAuthorIds
-
-            RETURN {
-                Id: comment.Id,
-                Content: comment.Content,
-                AuthorId: author.Id,
-                CreatedAt: comment.CreatedAt,
-                ReplyCount: deepReplyCount,
-                LastRepliesAuthorIds: lastDeepRepliesAuthorIds,
-                ReactionCounters: reactionCounters,
-                ViewerReactions: viewerReactions
-            }
-            """,
-            new
-            {
-                commentId = commentId.ToString(),
-                viewerId = viewerId?.ToString()
-            });
-
-        if (await data.PeekAsync() is null)
-            throw new NotFoundException();
-
-        var record = await data.SingleAsync();
-        return record[0].Adapt<Comment>();
+        return await pipeline.FirstOrDefaultAsync() ?? throw new NotFoundException();
     }
 
-    public async Task<Page<Comment>> SearchAsync(Guid? subjectId, Guid? authorId, Guid? viewerId, int offset, int count)
+    public async Task<Page<Comment>> GetRepliesAsync(string subjectId, bool flatten, Guid? viewerId, int offset, int count)
     {
-        var matchSelector = new StringBuilder("MATCH (comment:Comment)-[:AUTHORED_BY]->(author:Author)");
+        var matchPipeline = _comments.Aggregate(session);
 
-        if (subjectId is not null)
+        if (flatten)
         {
-            matchSelector.AppendLine("MATCH (comment)-[:REPLIES_TO]->(subject { Id: $subjectId })");
-            matchSelector.AppendLine("WHERE (subject:Comment OR subject:Discussion)");
+            matchPipeline = matchPipeline
+                .Limit(1)
+                .GraphLookup<CommentDocument, CommentDocument, ObjectId, ObjectId, ObjectId, CommentDocument, IList<CommentDocument>, CommentDocument>(
+                    from: _comments,
+                    startWith: _ => ObjectId.Parse(subjectId),
+                    connectFromField: comment => comment.Id,
+                    connectToField: comment => comment.SubjectId,
+                    @as: comment => comment.Ascendants!,
+                    depthField: comment => comment.Depth!.Value)
+                .Unwind<CommentDocument, CommentDocument>(comment => comment.Ascendants)
+                .ReplaceRoot<CommentDocument>("$ascendants");
+        }
+        else
+        {
+            matchPipeline = matchPipeline
+                .Match(comment => comment.SubjectId == ObjectId.Parse(subjectId));
         }
 
-        if (authorId is not null)
-            matchSelector.AppendLine("WHERE author.Id = $authorId");
+        var pipeline = matchPipeline.Facet(
+            new AggregateFacet<CommentDocument, Comment>(
+                "items",
+                PipelineDefinition<CommentDocument, Comment>.Create(
+                [
+                    Sort(Builders<CommentDocument>.Sort.Ascending(comment => comment.Id)),
+                    Skip<CommentDocument>(offset),
+                    Limit<CommentDocument>(count),
+                    Project(CreateCommentProjectionExpression(viewerId))
+                ])
+            ),
+            new AggregateFacet<CommentDocument, AggregateCountResult>(
+                "totalCount",
+                Create([Count<CommentDocument>()])
+            )
+        );
 
-        var data = await runner.RunAsync(
-            matchSelector +
-            """
-            OPTIONAL MATCH (deepReplyAuthor:Author)<-[:AUTHORED_BY]-(deepReply:Comment)-[:REPLIES_TO*]->(comment)
-
-            OPTIONAL MATCH (comment)<-[reaction:REACTED_TO]-(:Author)
-            OPTIONAL MATCH (comment)<-[viewerReaction:REACTED_TO]-(:Author { Id: $viewerId })
-
-            WITH author, comment, deepReplyAuthor, deepReply, reaction,
-                 collect(viewerReaction.Value) AS viewerReactions
-
-            WITH author, comment, deepReplyAuthor, deepReply, viewerReactions,
-                 reaction.Value AS reactionValue, count(reaction) AS reactionCount
-
-            WITH author, comment, deepReplyAuthor, deepReply, viewerReactions,
-                 apoc.map.fromPairs(collect([reactionValue, reactionCount])) AS reactionCounters
-                 
-            ORDER BY comment.CreatedAt, deepReply.CreatedAt DESC
-
-            WITH author, comment, viewerReactions, reactionCounters,
-                 COUNT(deepReply) AS deepReplyCount,
-                 COLLECT(DISTINCT deepReplyAuthor.Id)[0..3] AS lastDeepRepliesAuthorIds
-
-            RETURN {
-                TotalCount: COUNT(comment),
-                Items: COLLECT({
-                    Id: comment.Id,
-                    Content: comment.Content,
-                    AuthorId: author.Id,
-                    CreatedAt: comment.CreatedAt,
-                    ReplyCount: deepReplyCount,
-                    LastRepliesAuthorIds: lastDeepRepliesAuthorIds,
-                    ReactionCounters: reactionCounters,
-                    ViewerReactions: viewerReactions
-                })[$offset..$offset + $count]
-            }
-            """,
-            new
-            {
-                subjectId = subjectId?.ToString(),
-                authorId = authorId?.ToString(),
-                viewerId = viewerId?.ToString(),
-                offset,
-                count
-            });
-
-        if (await data.PeekAsync() is null)
+        var result = await pipeline.FirstOrDefaultAsync() ?? throw new NotFoundException();
+        return new Page<Comment>
         {
-            return new Page<Comment>
-            {
-                TotalCount = 0,
-                Items = []
-            };
-        }
-
-        var record = await data.SingleAsync();
-        return record[0].Adapt<Page<Comment>>();
+            Items = result.Facets[0].Output<Comment>() ?? Enumerable.Empty<Comment>(),
+            TotalCount = (int)(result.Facets[1].Output<AggregateCountResult>().FirstOrDefault()?.Count ?? 0)
+        };
     }
 
-    public async Task<Guid> CreateAsync(Guid authorId, Guid discussionId, string content)
+    public async Task<string> CreateAsync(string? subjectId, Guid authorId, string content)
     {
-        var data = await runner.RunAsync(
-            """
-            MATCH (discussion:Discussion { Id: $discussionId })
-            MERGE (author:Author { Id: $authorId })
-            CREATE (comment:Comment {
-                Id: randomUUID(),
-                Content: $content,
-                CreatedAt: datetime()
+        var reply = new CommentDocument
+        {
+            Id = ObjectId.GenerateNewId(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            AuthorId = authorId,
+            SubjectId = ObjectId.Parse(subjectId),
+            Content = content,
+            CommentCount = 0,
+            LastCommentsAuthorIds = [],
+            ReactionCounters = new Dictionary<string, int>(),
+            ReactionsByAuthorId = new Dictionary<string, string[]>()
+        };
+
+        await _comments.InsertOneAsync(session, reply);
+        return reply.Id.ToString();
+    }
+
+    public async Task<IList<Comment>> GetAncestorsAsync(string commentId, Guid? viewerId) => await _comments.Aggregate(session)
+        .Match(comment => comment.Id == ObjectId.Parse(commentId))
+        .GraphLookup<CommentDocument, CommentDocument, ObjectId, ObjectId, ObjectId, CommentDocument, IList<CommentDocument>, CommentDocument>(
+            from: _comments,
+            startWith: comment => comment.SubjectId,
+            connectFromField: comment => comment.SubjectId,
+            connectToField: comment => comment.Id,
+            @as: comment => comment.Ancestors!,
+            depthField: comment => comment.Depth!.Value)
+        .Unwind<CommentDocument, CommentDocument>(comment => comment.Ancestors)
+        .ReplaceRoot<CommentDocument>("$ancestors")
+        .SortBy(comment => comment.Depth)
+        .Project(CreateCommentProjectionExpression(viewerId))
+        .ToListAsync();
+
+    public async Task IncludeCommentInAncestorsMetadataAsync(IEnumerable<Comment> ancestors, Guid authorId)
+    {
+        var updates = ancestors.Select(ancestor =>
+            {
+                var newLastCommentsAuthorIds = ancestor.LastCommentsAuthorIds
+                    .Except([authorId])
+                    .Append(authorId)
+                    .TakeLast(3)
+                    .ToList();
+
+                var filter = Filter.Eq(comment => comment.Id, ObjectId.Parse(ancestor.Id));
+                var update = Update
+                    .Set(comment => comment.LastCommentsAuthorIds, newLastCommentsAuthorIds)
+                    .Inc(comment => comment.CommentCount, 1);
+
+                return new UpdateOneModel<CommentDocument>(filter, update);
             })
-            CREATE (discussion)<-[:REPLIES_TO]-(comment)-[:AUTHORED_BY]->(author)
-            RETURN comment.Id
-            """,
-            new
-            {
-                authorId = authorId.ToString(),
-                discussionId = discussionId.ToString(),
-                content
-            });
+            .ToList();
 
-        if (await data.PeekAsync() is null)
-            throw new NotFoundException();
-
-        var record = await data.SingleAsync();
-        return record[0].Adapt<Guid>();
+        if (updates.Any())
+            await _comments.BulkWriteAsync(session, updates);
     }
 
-    public async Task<Guid> ReplyToCommentAsync(Guid authorId, Guid parentCommentId, string content)
+    public async Task ExcludeCommentFromAncestorsMetadataAsync(IEnumerable<Comment> ancestors)
     {
-        var cursor = await runner.RunAsync(
-            """
-            MATCH (parent:Comment {Id: $parentCommentId})
-            MERGE (replyAuthor:Author { Id: $authorId })
-            CREATE (reply:Comment {
-                Id: randomUUID(),
-                Content: $content,
-                CreatedAt: datetime()
-            })
-            CREATE (parent)<-[:REPLIES_TO]-(reply)-[:AUTHORED_BY]->(replyAuthor)
-            RETURN reply.Id
-            """,
-            new
-            {
-                parentCommentId = parentCommentId.ToString(),
-                authorId = authorId.ToString(),
-                content
-            });
-
-        if (await cursor.PeekAsync() is null)
-            throw new NotFoundException();
-
-        var record = await cursor.SingleAsync();
-        return record[0].Adapt<Guid>();
+        var filter = Filter.In(comment => comment.Id, ancestors.Select(comment => ObjectId.Parse(comment.Id)));
+        var update = Update.Inc(comment => comment.CommentCount, -1);
+        await _comments.UpdateManyAsync(session, filter, update);
     }
 
-    public async Task DeleteAsync(Guid commentId)
+    public async Task IncludeCommentInMetadataAsync(string discussionId, Guid authorId) =>
+        await _subjectsRepository.IncludeCommentInMetadataAsync(discussionId, authorId);
+
+    public async Task ExcludeCommentFromMetadataAsync(string discussionId) =>
+        await _subjectsRepository.ExcludeCommentFromMetadataAsync(discussionId);
+
+    public async Task DeleteAsync(string commentId)
     {
-        var data = await runner.RunAsync(
-            """
-            OPTIONAL MATCH (comment:Comment { Id: $commentId })
-            OPTIONAL MATCH (reply:Comment)-[:REPLIES_TO*]->(comment)
-            DETACH DELETE comment, reply
-            RETURN COUNT(comment) = 0
-            """,
-            new { commentId = commentId.ToString() });
-
-        var record = await data.SingleAsync();
-        var notFount = record[0].As<bool>();
-
-        if (notFount)
+        var deleteResult = await _comments.DeleteOneAsync(session, comment => comment.Id == ObjectId.Parse(commentId));
+        if (deleteResult.DeletedCount == 0)
             throw new NotFoundException();
     }
+
+    public async Task<ISet<string>> GetReactionsAsync(string commentId, Guid authorId) =>
+        await _subjectsRepository.GetReactionsAsync(commentId, authorId);
+
+    public async Task SetReactionsAsync(string commentId, Guid authorId, ISet<string> reactions) =>
+        await _subjectsRepository.SetReactionsAsync(commentId, authorId, reactions);
+
+    public async Task UpdateReactionCountersAsync(string commentId, IEnumerable<string> reactionsToAdd, IEnumerable<string> reactionsToRemove) =>
+        await _subjectsRepository.UpdateReactionCountersAsync(commentId, reactionsToAdd, reactionsToRemove);
+
+    private static Expression<Func<CommentDocument, Comment>> CreateCommentProjectionExpression(Guid? viewerId) => comment => new Comment
+    {
+        Id = comment.Id.ToString(),
+        SubjectId = comment.SubjectId.ToString(),
+        CreatedAt = comment.CreatedAt,
+        AuthorId = comment.AuthorId,
+        Content = comment.Content,
+        CommentCount = comment.CommentCount,
+        LastCommentsAuthorIds = comment.LastCommentsAuthorIds,
+        ReactionCounters = comment.ReactionCounters,
+        ViewerReactions =
+            viewerId.HasValue &&
+            comment.ReactionsByAuthorId.ContainsKey(viewerId.Value.ToString())
+                ? comment.ReactionsByAuthorId[viewerId.Value.ToString()]
+                : Array.Empty<string>()
+    };
 }

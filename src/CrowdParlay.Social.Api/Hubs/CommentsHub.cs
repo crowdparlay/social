@@ -19,25 +19,23 @@ public class CommentsHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.NewCommentInDiscussion(discussionId));
     }
 
-    private Guid GetDiscussionIdFromQuery() =>
-        Guid.TryParse(GetSingleQueryParameterValueFromQuery(DiscussionIdQueryParameterName), out var discussionId)
-            ? discussionId
-            : throw new ValidationException(DiscussionIdQueryParameterName, ["Must be a valid UUID."]);
-
-    private string GetSingleQueryParameterValueFromQuery(string key)
+    private string GetDiscussionIdFromQuery()
     {
         var query =
             Context.GetHttpContext()?.Request.Query
-            ?? throw new InvalidOperationException("Cannot access request's query parameters, since HttpContext is null.");
+            ?? throw new InvalidOperationException(
+                "Cannot access request's query parameters, since HttpContext is null.");
 
-        return query.TryGetValue(key, out var values)
-            ? values.SingleOrDefault() ?? throw new ValidationException(key, ["Must have single value."])
-            : throw new ValidationException(key, ["Query parameter is required."]);
+        return query.TryGetValue(DiscussionIdQueryParameterName, out var values)
+            ? values.SingleOrDefault() ??
+              throw new ValidationException(DiscussionIdQueryParameterName, ["Must have single value."])
+            : throw new ValidationException(DiscussionIdQueryParameterName, ["Query parameter is required."]);
     }
 
     public static class GroupNames
     {
-        public static string NewCommentInDiscussion(Guid discussionId) => $"{Events.NewComment.ToString()}/{discussionId}";
+        public static string NewCommentInDiscussion(string discussionId) =>
+            $"{Events.NewComment.ToString()}/{discussionId}";
     }
 
     public enum Events
