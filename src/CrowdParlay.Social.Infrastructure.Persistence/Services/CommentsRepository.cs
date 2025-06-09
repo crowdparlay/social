@@ -6,6 +6,7 @@ using CrowdParlay.Social.Domain.Entities;
 using CrowdParlay.Social.Infrastructure.Persistence.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using static CrowdParlay.Social.Infrastructure.Persistence.MongoDbConstants;
 using static MongoDB.Driver.PipelineStageDefinitionBuilder;
 using static MongoDB.Driver.Builders<CrowdParlay.Social.Infrastructure.Persistence.Models.CommentDocument>;
 using static MongoDB.Driver.PipelineDefinition<CrowdParlay.Social.Infrastructure.Persistence.Models.CommentDocument,
@@ -15,8 +16,8 @@ namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class CommentsRepository(IClientSessionHandle session, IMongoDatabase database) : ICommentsRepository
 {
-    private readonly IMongoCollection<CommentDocument> _comments = database.GetCollection<CommentDocument>("comments");
-    private readonly ISubjectsRepository _subjectsRepository = new GenericSubjectsRepository<CommentDocument>(session, database, "comments");
+    private readonly IMongoCollection<CommentDocument> _comments = database.GetCollection<CommentDocument>(Collections.Comments);
+    private readonly ISubjectsRepository _subjectsRepository = new GenericSubjectsRepository<CommentDocument>(session, database, Collections.Comments);
 
     public async Task<Comment> GetByIdAsync(string commentId, Guid? viewerId)
     {
@@ -56,7 +57,7 @@ public class CommentsRepository(IClientSessionHandle session, IMongoDatabase dat
                 "items",
                 PipelineDefinition<CommentDocument, Comment>.Create(
                 [
-                    Sort(Builders<CommentDocument>.Sort.Ascending(comment => comment.CreatedAt)),
+                    Sort(Builders<CommentDocument>.Sort.Ascending(comment => comment.Id)),
                     Skip<CommentDocument>(offset),
                     Limit<CommentDocument>(count),
                     Project(CreateCommentProjectionExpression(viewerId))

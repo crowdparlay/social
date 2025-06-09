@@ -6,6 +6,7 @@ using CrowdParlay.Social.Domain.Entities;
 using CrowdParlay.Social.Infrastructure.Persistence.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using static CrowdParlay.Social.Infrastructure.Persistence.MongoDbConstants;
 using static MongoDB.Driver.PipelineStageDefinitionBuilder;
 using static MongoDB.Driver.Builders<CrowdParlay.Social.Infrastructure.Persistence.Models.DiscussionDocument>;
 using static MongoDB.Driver.PipelineDefinition<CrowdParlay.Social.Infrastructure.Persistence.Models.DiscussionDocument,
@@ -15,8 +16,8 @@ namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
 public class DiscussionsRepository(IClientSessionHandle session, IMongoDatabase database) : IDiscussionsRepository
 {
-    private readonly IMongoCollection<DiscussionDocument> _discussions = database.GetCollection<DiscussionDocument>("discussions");
-    private readonly ISubjectsRepository _subjectsRepository = new GenericSubjectsRepository<DiscussionDocument>(session, database, "discussions");
+    private readonly IMongoCollection<DiscussionDocument> _discussions = database.GetCollection<DiscussionDocument>(Collections.Discussions);
+    private readonly ISubjectsRepository _subjectsRepository = new GenericSubjectsRepository<DiscussionDocument>(session, database, Collections.Discussions);
 
     public async Task<Discussion> GetByIdAsync(string discussionId, Guid? viewerId)
     {
@@ -38,7 +39,7 @@ public class DiscussionsRepository(IClientSessionHandle session, IMongoDatabase 
                     "items",
                     PipelineDefinition<DiscussionDocument, Discussion>.Create(
                     [
-                        Sort(Builders<DiscussionDocument>.Sort.Ascending(discussion => discussion.CreatedAt)),
+                        Sort(Builders<DiscussionDocument>.Sort.Ascending(discussion => discussion.Id)),
                         Skip<DiscussionDocument>(offset),
                         Limit<DiscussionDocument>(count),
                         Project(CreateDiscussionProjectionExpression(viewerId))

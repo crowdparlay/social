@@ -14,7 +14,8 @@ public static class ConfigurePersistenceExtensions
         .AddScoped<ICommentsRepository, CommentsRepository>()
         .AddScoped<IDiscussionsRepository, DiscussionsRepository>()
         .AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>()
-        .AddHostedService<StartupConfigurator>();
+        .AddHostedService<StartupConfigurator>()
+        .AddHostedService<DatabaseInitializer>();
 
     private static IServiceCollection AddMongoDb(this IServiceCollection services, IConfiguration configuration)
     {
