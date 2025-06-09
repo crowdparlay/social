@@ -14,8 +14,10 @@ namespace CrowdParlay.Social.Api.v1.Controllers;
 public class CommentsController(ICommentsService commentsService) : ControllerBase
 {
     /// <summary>
-    /// Returns comment with the specified ID.
+    /// Retrieves a comment by its unique identifier.
     /// </summary>
+    /// <param name="commentId">The unique identifier of the comment to retrieve.</param>
+    /// <returns>The requested comment details.</returns>
     [HttpGet("{commentId}")]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType<CommentResponse>(Status200OK)]
@@ -25,8 +27,13 @@ public class CommentsController(ICommentsService commentsService) : ControllerBa
         await commentsService.GetByIdAsync(commentId, User.GetUserId());
     
     /// <summary>
-    /// Get replies to the comment with the specified ID.
+    /// Retrieves replies to a specified comment with configurable tree traversal and pagination.
     /// </summary>
+    /// <param name="commentId">The unique identifier of the parent comment.</param>
+    /// <param name="flatten">When true, returns all nested replies in a flat structure; otherwise returns direct children only.</param>
+    /// <param name="offset">The number of items to skip before starting to return results (pagination offset).</param>
+    /// <param name="count">The maximum number of items to return (pagination limit).</param>
+    /// <returns>A paginated list of comment replies.</returns>
     [HttpGet("{commentId}/replies")]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType<Page<CommentResponse>>(Status200OK)]
@@ -41,8 +48,11 @@ public class CommentsController(ICommentsService commentsService) : ControllerBa
         await commentsService.GetRepliesAsync(commentId, flatten, User.GetUserId(), offset, count);
     
     /// <summary>
-    /// Creates a reply to the comment with the specified ID.
+    /// Creates a new reply to a specified comment. Requires authenticated user.
     /// </summary>
+    /// <param name="commentId">The unique identifier of the comment being replied to.</param>
+    /// <param name="request">The content of the reply.</param>
+    /// <returns>The newly created reply comment details.</returns>
     [HttpPost("{commentId}/replies"), Authorize]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType<CommentResponse>(Status201Created)]
@@ -57,8 +67,11 @@ public class CommentsController(ICommentsService commentsService) : ControllerBa
     }
 
     /// <summary>
-    /// Sets reactions to a comment.
+    /// Updates reactions on a specified comment. Requires authenticated user.
     /// </summary>
+    /// <param name="commentId">The unique identifier of the comment to react to.</param>
+    /// <param name="reactions">The set of reaction identifiers to apply.</param>
+    /// <returns>No content response upon successful update.</returns>
     [HttpPost("{commentId}/reactions"), Authorize]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(Status204NoContent)]
