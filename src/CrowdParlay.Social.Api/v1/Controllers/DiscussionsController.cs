@@ -52,18 +52,20 @@ public class DiscussionsController(
     /// Retrieves top-level comments for a specified discussion with pagination.
     /// </summary>
     /// <param name="discussionId">The unique identifier of the discussion.</param>
+    /// <param name="flatten">When true, returns all nested replies in a flat structure; otherwise returns direct children only.</param>
     /// <param name="offset">The number of items to skip before starting to return results (pagination offset).</param>
     /// <param name="count">The maximum number of items to return (pagination limit).</param>
     /// <returns>A paginated list of top-level comments in the discussion.</returns>
     [HttpGet("{discussionId}/comments")]
     [Consumes(MediaTypeNames.Application.Json), Produces(MediaTypeNames.Application.Json)]
-    [ProducesResponseType<Page<DiscussionResponse>>(Status200OK)]
+    [ProducesResponseType<Page<CommentResponse>>(Status200OK)]
     [ProducesResponseType<ProblemDetails>(Status500InternalServerError)]
     public async Task<Page<CommentResponse>> GetComments(
         [FromRoute] string discussionId,
+        [FromQuery, BindRequired] bool flatten,
         [FromQuery, BindRequired] int offset,
         [FromQuery, BindRequired] int count) =>
-        await commentsService.GetRepliesAsync(discussionId, false, User.GetUserId(), offset, count);
+        await commentsService.GetRepliesAsync(discussionId, flatten, User.GetUserId(), offset, count);
 
     /// <summary>
     /// Creates a new top-level comment in a discussion. Requires authenticated user and triggers real-time notifications.
