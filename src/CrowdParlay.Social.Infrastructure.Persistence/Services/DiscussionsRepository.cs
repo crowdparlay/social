@@ -105,8 +105,8 @@ public class DiscussionsRepository(IClientSessionHandle session, IMongoDatabase 
     public async Task SetReactionsAsync(string discussionId, Guid authorId, ISet<string> reactions) =>
         await _subjectsRepository.SetReactionsAsync(discussionId, authorId, reactions);
 
-    public async Task UpdateReactionCountersAsync(string subjectId, IEnumerable<string> reactionsToAdd, IEnumerable<string> reactionsToRemove) =>
-        await _subjectsRepository.UpdateReactionCountersAsync(subjectId, reactionsToAdd, reactionsToRemove);
+    public async Task UpdateReactionCountersAsync(string subjectId, IDictionary<string, int> reactionsDiff) =>
+        await _subjectsRepository.UpdateReactionCountersAsync(subjectId, reactionsDiff);
 
     public async Task IncludeCommentInMetadataAsync(string discussionId, Guid authorId) =>
         await _subjectsRepository.IncludeCommentInMetadataAsync(discussionId, authorId);

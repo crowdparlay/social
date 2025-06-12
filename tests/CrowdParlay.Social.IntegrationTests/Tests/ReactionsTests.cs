@@ -66,9 +66,7 @@ public class ReactionsTests(WebApplicationContext context) : IAssemblyFixture<We
         discussion.ViewerReactions.Should().BeEquivalentTo(woozyFace, redHeart);
         discussion.ReactionCounters.Should().BeEquivalentTo(new Dictionary<string, int>
         {
-            { eggplant, 0 },
             { woozyFace, 1 },
-            { nailPolish, 0 },
             { redHeart, 1 }
         });
     }

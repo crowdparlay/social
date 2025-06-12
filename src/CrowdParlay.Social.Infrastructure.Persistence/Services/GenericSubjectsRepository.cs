@@ -16,8 +16,8 @@ public class GenericSubjectsRepository<TDocument>(IClientSessionHandle session, 
         var pipeline = _subjects
             .Find(session, subject => subject.Id == ObjectId.Parse(subjectId))
             .Project(subject => subject.ReactionsByAuthorId.ContainsKey(authorId.ToString())
-                    ? subject.ReactionsByAuthorId[authorId.ToString()]
-                    : new string[] { });
+                ? subject.ReactionsByAuthorId[authorId.ToString()]
+                : new string[] { });
 
         var reactions = await pipeline.FirstOrDefaultAsync() ?? throw new NotFoundException();
         return reactions.ToHashSet();
@@ -38,16 +38,13 @@ public class GenericSubjectsRepository<TDocument>(IClientSessionHandle session, 
             throw new NotFoundException();
     }
 
-    public async Task UpdateReactionCountersAsync(string subjectId, IEnumerable<string> reactionsToAdd, IEnumerable<string> reactionsToRemove)
+    public async Task UpdateReactionCountersAsync(string subjectId, IDictionary<string, int> reactionsDiff)
     {
-        var increments = reactionsToAdd.Select(reaction =>
-            Builders<TDocument>.Update.Inc(subject => subject.ReactionCounters[reaction], 1));
-
-        var decrements = reactionsToRemove.Select(reaction =>
-            Builders<TDocument>.Update.Inc(subject => subject.ReactionCounters[reaction], -1));
+        var updates = reactionsDiff.Select(kv =>
+            Builders<TDocument>.Update.Inc(subject => subject.ReactionCounters[kv.Key], kv.Value));
 
         var filter = Builders<TDocument>.Filter.Eq(subject => subject.Id, ObjectId.Parse(subjectId));
-        var update = Builders<TDocument>.Update.Combine(increments.Union(decrements));
+        var update = Builders<TDocument>.Update.Combine(updates);
         var result = await _subjects.UpdateOneAsync(session, filter, update);
 
         if (result.MatchedCount == 0)
@@ -76,7 +73,7 @@ public class GenericSubjectsRepository<TDocument>(IClientSessionHandle session, 
 
         await _subjects.UpdateOneAsync(session, filter, update);
     }
-    
+
     public async Task ExcludeCommentFromMetadataAsync(string subjectId)
     {
         var filter = Builders<TDocument>.Filter.Eq(subject => subject.Id, ObjectId.Parse(subjectId));
