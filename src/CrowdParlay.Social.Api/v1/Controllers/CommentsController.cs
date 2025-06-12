@@ -60,7 +60,7 @@ public class CommentsController(ICommentsService commentsService) : ControllerBa
     [ProducesResponseType<ProblemDetails>(Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(Status500InternalServerError)]
-    public async Task<ActionResult<CommentResponse>> Reply([FromRoute] string commentId, [FromBody] ReplyRequest request)
+    public async Task<ActionResult<CommentResponse>> Reply([FromRoute] string commentId, [FromBody] CommentRequest request)
     {
         var response = await commentsService.ReplyToCommentAsync(commentId, User.GetRequiredUserId(), request.Content);
         return CreatedAtAction(nameof(GetById), new { commentId = response.Id }, response);

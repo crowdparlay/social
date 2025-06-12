@@ -106,6 +106,7 @@ public class CommentsService(
         return comments.Select(comment => new CommentResponse
         {
             Id = comment.Id,
+            SubjectId = comment.SubjectId,
             Content = comment.Content,
             Author = authorsById[comment.AuthorId].Adapt<AuthorResponse>(),
             CreatedAt = comment.CreatedAt,
