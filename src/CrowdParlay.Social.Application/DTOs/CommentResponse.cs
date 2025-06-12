@@ -3,6 +3,7 @@ namespace CrowdParlay.Social.Application.DTOs;
 public class CommentResponse
 {
     public required string Id { get; set; }
+    public required string SubjectId { get; set; }
     public required string Content { get; set; }
     public required AuthorResponse? Author { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }

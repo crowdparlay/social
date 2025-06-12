@@ -160,8 +160,8 @@ public class CommentsRepository(IClientSessionHandle session, IMongoDatabase dat
     public async Task SetReactionsAsync(string commentId, Guid authorId, ISet<string> reactions) =>
         await _subjectsRepository.SetReactionsAsync(commentId, authorId, reactions);
 
-    public async Task UpdateReactionCountersAsync(string commentId, IEnumerable<string> reactionsToAdd, IEnumerable<string> reactionsToRemove) =>
-        await _subjectsRepository.UpdateReactionCountersAsync(commentId, reactionsToAdd, reactionsToRemove);
+    public async Task UpdateReactionCountersAsync(string commentId, IDictionary<string, int> reactionsDiff) =>
+        await _subjectsRepository.UpdateReactionCountersAsync(commentId, reactionsDiff);
 
     private static Expression<Func<CommentDocument, Comment>> CreateCommentProjectionExpression(Guid? viewerId) => comment => new Comment
     {

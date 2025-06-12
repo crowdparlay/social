@@ -49,7 +49,7 @@ public class DiscussionsController(
         await discussionsService.SearchAsync(authorId, User.GetUserId(), offset, count);
 
     /// <summary>
-    /// Retrieves top-level comments for a specified discussion with pagination.
+    /// Retrieves comments for a specified discussion with configurable tree traversal and pagination.
     /// </summary>
     /// <param name="discussionId">The unique identifier of the discussion.</param>
     /// <param name="flatten">When true, returns all nested replies in a flat structure; otherwise returns direct children only.</param>
@@ -70,6 +70,7 @@ public class DiscussionsController(
     /// <summary>
     /// Creates a new top-level comment in a discussion. Requires authenticated user and triggers real-time notifications.
     /// </summary>
+    /// <param name="discussionId">The unique identifier of the discussion being commented.</param>
     /// <param name="request">The comment content and target discussion identifier.</param>
     /// <returns>The newly created top-level comment details.</returns>
     [HttpPost("{discussionId}/comments"), Authorize]
@@ -78,12 +79,13 @@ public class DiscussionsController(
     [ProducesResponseType<ValidationProblemDetails>(Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(Status403Forbidden)]
     [ProducesResponseType<ProblemDetails>(Status500InternalServerError)]
-    public async Task<ActionResult<CommentResponse>> Reply([FromBody] CommentRequest request)
+    public async Task<ActionResult<CommentResponse>> Comment([FromRoute] string discussionId, [FromBody] CommentRequest request)
     {
-        var response = await commentsService.ReplyToDiscussionAsync(request.DiscussionId, User.GetRequiredUserId(), request.Content);
+        var response = await commentsService.ReplyToDiscussionAsync(discussionId, User.GetRequiredUserId(), request.Content);
 
+        // TODO: handle exceptions and move to a better place
         _ = commentHub.Clients
-            .Group(CommentsHub.GroupNames.NewCommentInDiscussion(request.DiscussionId))
+            .Group(CommentsHub.GroupNames.NewCommentInDiscussion(discussionId))
             .SendCoreAsync(CommentsHub.Events.NewComment.ToString(), [response]);
 
         return CreatedAtAction(nameof(CommentsController.GetById), "Comments", new { commentId = response.Id }, response);

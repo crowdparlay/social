@@ -24,6 +24,7 @@ public class SignalRTests(WebApplicationContext context) : IAssemblyFixture<WebA
         var expectedComment = new CommentResponse
         {
             Id = ObjectId.GenerateNewId().ToString(),
+            SubjectId = discussionId,
             Content = "Sample comment.",
             Author = new AuthorResponse
             {

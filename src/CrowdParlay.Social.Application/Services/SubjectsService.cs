@@ -19,9 +19,10 @@ public class SubjectsService(ISubjectsRepository subjectsRepository) : ISubjects
             throw new ForbiddenException("Such reaction set is not allowed.");
 
         await subjectsRepository.SetReactionsAsync(subjectId, authorId, newReactions);
-        
-        var reactionsToAdd = newReactions.Except(oldReactions).ToArray();
-        var reactionsToRemove = oldReactions.Except(newReactions).ToArray();
-        await subjectsRepository.UpdateReactionCountersAsync(subjectId, reactionsToAdd, reactionsToRemove);
+
+        var addedReactionsDiff = newReactions.Except(oldReactions).Select(reaction => new KeyValuePair<string, int>(reaction, 1));
+        var removedReactionsDiff = oldReactions.Except(newReactions).Select(reaction => new KeyValuePair<string, int>(reaction, -1));
+        var reactionsDiff = addedReactionsDiff.Concat(removedReactionsDiff).ToDictionary();
+        await subjectsRepository.UpdateReactionCountersAsync(subjectId, reactionsDiff);
     }
 }
