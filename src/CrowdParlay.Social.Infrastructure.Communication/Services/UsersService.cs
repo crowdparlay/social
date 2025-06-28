@@ -1,11 +1,13 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Users.gRPC;
 using Grpc.Core;
 using Mapster;
 
 namespace CrowdParlay.Social.Infrastructure.Communication.Services;
 
+[TraceMethods]
 public class UsersService(Users.gRPC.UsersService.UsersServiceClient usersClient) : IUsersService
 {
     public async Task<UserDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

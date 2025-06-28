@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
 using CrowdParlay.Social.Domain.Entities;
@@ -14,6 +15,7 @@ using static MongoDB.Driver.PipelineDefinition<CrowdParlay.Social.Infrastructure
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
+[TraceMethods]
 public class CommentsRepository(IClientSessionHandle session, IMongoDatabase database) : ICommentsRepository
 {
     private readonly IMongoCollection<CommentDocument> _comments = database.GetCollection<CommentDocument>(Collections.Comments);
@@ -111,7 +113,7 @@ public class CommentsRepository(IClientSessionHandle session, IMongoDatabase dat
         .Project(CreateCommentProjectionExpression(viewerId))
         .ToListAsync();
 
-    public async Task IncludeCommentInAncestorsMetadataAsync(IEnumerable<Comment> ancestors, Guid authorId)
+    public async Task IncludeCommentInAncestorsMetadataAsync([TraceIgnore] IEnumerable<Comment> ancestors, Guid authorId)
     {
         var updates = ancestors.Select(ancestor =>
             {
@@ -134,7 +136,7 @@ public class CommentsRepository(IClientSessionHandle session, IMongoDatabase dat
             await _comments.BulkWriteAsync(session, updates);
     }
 
-    public async Task ExcludeCommentFromAncestorsMetadataAsync(IEnumerable<Comment> ancestors)
+    public async Task ExcludeCommentFromAncestorsMetadataAsync([TraceIgnore] IEnumerable<Comment> ancestors)
     {
         var filter = Filter.In(comment => comment.Id, ancestors.Select(comment => ObjectId.Parse(comment.Id)));
         var update = Update.Inc(comment => comment.CommentCount, -1);

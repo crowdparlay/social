@@ -1,10 +1,13 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.ValueObjects;
+using Metalama.Framework.Code;
 
 namespace CrowdParlay.Social.Application.Services;
 
+[TraceMethods(Accessibility.Public, Accessibility.Private)]
 public class SubjectsService(ISubjectsRepository subjectsRepository) : ISubjectsService
 {
     public async Task<ISet<string>> GetReactionsAsync(string subjectId, Guid authorId) =>

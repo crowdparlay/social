@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
 using CrowdParlay.Social.Domain.Entities;
@@ -14,6 +15,7 @@ using static MongoDB.Driver.PipelineDefinition<CrowdParlay.Social.Infrastructure
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
+[TraceMethods]
 public class DiscussionsRepository(IClientSessionHandle session, IMongoDatabase database) : IDiscussionsRepository
 {
     private readonly IMongoCollection<DiscussionDocument> _discussions = database.GetCollection<DiscussionDocument>(Collections.Discussions);

@@ -1,8 +1,8 @@
 namespace CrowdParlay.Social.Api.Extensions;
 
-public static class ConfigureSignalRExtensions
+partial class ServiceCollectionExtensions
 {
-    public static IServiceCollection ConfigureSignalR(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection ConfigureSignalR(this IServiceCollection services, IConfiguration configuration)
     {
         var redisConnectionString =
             configuration["REDIS_CONNECTION_STRING"]

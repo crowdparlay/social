@@ -1,10 +1,12 @@
 using System.Text.Json;
 using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Social.Infrastructure.Communication.Abstractions;
 using StackExchange.Redis;
 
 namespace CrowdParlay.Social.Infrastructure.Communication.Services;
 
+[TraceMethods]
 public class RedisUsersCache(IDatabase redis) : IUsersCache
 {
     public async Task<UserDto?> GetUserByIdAsync(Guid userId)
@@ -29,10 +31,10 @@ public class RedisUsersCache(IDatabase redis) : IUsersCache
         return userIds.Zip(users).ToDictionary(x => x.First, x => x.Second);
     }
 
-    public async Task SaveAsync(UserDto user) =>
+    public async Task SaveAsync([TraceIgnore] UserDto user) =>
         await redis.StringSetAsync(user.Id.ToString(), JsonSerializer.Serialize(user), TimeSpan.FromMinutes(1));
 
-    public async Task SaveAsync(IEnumerable<UserDto> users)
+    public async Task SaveAsync([TraceIgnore] IEnumerable<UserDto> users)
     {
         var transaction = redis.CreateTransaction();
 

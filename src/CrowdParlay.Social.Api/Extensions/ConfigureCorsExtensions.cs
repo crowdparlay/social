@@ -1,8 +1,8 @@
 namespace CrowdParlay.Social.Api.Extensions;
 
-public static class ConfigureCorsExtensions
+partial class ServiceCollectionExtensions
 {
-    public static IServiceCollection ConfigureCors(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection ConfigureCors(this IServiceCollection services, IConfiguration configuration)
     {
         var corsOrigins =
             configuration["CORS_ORIGINS"]?.Split(';')

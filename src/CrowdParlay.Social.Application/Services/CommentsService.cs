@@ -1,13 +1,18 @@
 using System.Diagnostics;
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
 using CrowdParlay.Social.Domain.Entities;
 using Mapster;
+using Metalama.Framework.Code;
+
+// ReSharper disable ExplicitCallerInfoArgument
 
 namespace CrowdParlay.Social.Application.Services;
 
+[TraceMethods(Accessibility.Public, Accessibility.Private)]
 public class CommentsService(
     IUnitOfWorkFactory unitOfWorkFactory,
     ICommentsRepository commentsRepository,
@@ -16,6 +21,7 @@ public class CommentsService(
     : ICommentsService
 {
     private readonly ISubjectsService _subjectsService = new SubjectsService(commentsRepository);
+    private readonly ActivitySource _activitySource = new(typeof(CommentsService).FullName!);
 
     public async Task<CommentResponse> GetByIdAsync(string commentId, Guid? viewerId)
     {
@@ -47,18 +53,18 @@ public class CommentsService(
 
     private async Task<CommentResponse> CreateAsync(string subjectId, Guid authorId, string content)
     {
-        var source = new ActivitySource(nameof(CommentsService));
-        using var activity = source.CreateActivity("Create comment", ActivityKind.Server);
-
         Comment comment;
-        using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+        using (_activitySource.StartActivity("Save and retrieve entity"))
         {
-            var commentId = await unitOfWork.CommentsRepository.CreateAsync(subjectId, authorId, content);
-            comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId, authorId);
-            await unitOfWork.CommitAsync();
+            using (var unitOfWork = await unitOfWorkFactory.CreateAsync())
+            {
+                var commentId = await unitOfWork.CommentsRepository.CreateAsync(subjectId, authorId, content);
+                comment = await unitOfWork.CommentsRepository.GetByIdAsync(commentId, authorId);
+                await unitOfWork.CommitAsync();
+            }
         }
 
-        using (source.CreateActivity("Update dependant metadata", ActivityKind.Server))
+        using (_activitySource.StartActivity("Update ancestors"))
         {
             var ancestors = await commentsRepository.GetAncestorsAsync(comment.Id, null);
             await commentsRepository.IncludeCommentInAncestorsMetadataAsync(ancestors, authorId);
@@ -78,11 +84,8 @@ public class CommentsService(
 
     public async Task DeleteAsync(string commentId)
     {
-        var source = new ActivitySource(nameof(CommentsService));
-        using var activity = source.CreateActivity("Delete comment", ActivityKind.Server);
-
         var comment = await commentsRepository.GetByIdAsync(commentId, null);
-        using (source.CreateActivity("Update dependant metadata", ActivityKind.Server))
+        using (_activitySource.StartActivity("Update ancestors", ActivityKind.Server))
         {
             var ancestors = await commentsRepository.GetAncestorsAsync(commentId, null);
             await commentsRepository.ExcludeCommentFromAncestorsMetadataAsync(ancestors);
@@ -91,12 +94,13 @@ public class CommentsService(
             await discussionsRepository.ExcludeCommentFromMetadataAsync(discussionId);
         }
 
-        await commentsRepository.DeleteAsync(commentId);
+        using (_activitySource.StartActivity("Delete entity", ActivityKind.Server))
+            await commentsRepository.DeleteAsync(commentId);
     }
 
-    private async Task<CommentResponse> EnrichAsync(Comment comment) => (await EnrichAsync([comment])).First();
+    private async Task<CommentResponse> EnrichAsync([TraceIgnore] Comment comment) => (await EnrichAsync([comment])).First();
 
-    private async Task<IEnumerable<CommentResponse>> EnrichAsync(IReadOnlyList<Comment> comments)
+    private async Task<IEnumerable<CommentResponse>> EnrichAsync([TraceIgnore] IReadOnlyList<Comment> comments)
     {
         var authorIds = comments
             .SelectMany(comment => comment.LastCommentsAuthorIds.Append(comment.AuthorId))

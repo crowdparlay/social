@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace CrowdParlay.Social.Api.Extensions;
 
-public static class ConfigureEndpointsExtensions
+partial class ServiceCollectionExtensions
 {
-    public static IServiceCollection ConfigureEndpoints(this IServiceCollection services)
+    internal static IServiceCollection ConfigureEndpoints(this IServiceCollection services)
     {
         var mvcBuilder = services.AddControllers(options =>
         {

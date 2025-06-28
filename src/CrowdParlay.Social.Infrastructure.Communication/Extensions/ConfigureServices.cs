@@ -5,9 +5,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 
-namespace CrowdParlay.Social.Infrastructure.Communication;
+namespace CrowdParlay.Social.Infrastructure.Communication.Extensions;
 
-public static class ConfigureServices
+public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCommunication(this IServiceCollection services, IConfiguration configuration)
     {
@@ -28,6 +28,7 @@ public static class ConfigureServices
         });
 
         return services
+            .ConfigureOpenTelemetry(configuration)
             .AddScoped<IUsersCache, RedisUsersCache>()
             .AddScoped<IUsersService, UsersService>()
             .Decorate<IUsersService, UsersServiceCachingDecorator>()
