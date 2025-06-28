@@ -4,9 +4,9 @@ using CrowdParlay.Social.Application.Services;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CrowdParlay.Social.Application;
+namespace CrowdParlay.Social.Application.Extensions;
 
-public static class ConfigureServicesExtensions
+public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services) => services
         .AddScoped<IDiscussionsService, DiscussionsService>()

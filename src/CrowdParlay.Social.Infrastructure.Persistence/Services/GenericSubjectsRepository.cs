@@ -1,4 +1,5 @@
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Infrastructure.Persistence.Models;
 using MongoDB.Bson;
@@ -6,6 +7,7 @@ using MongoDB.Driver;
 
 namespace CrowdParlay.Social.Infrastructure.Persistence.Services;
 
+[TraceMethods]
 public class GenericSubjectsRepository<TDocument>(IClientSessionHandle session, IMongoDatabase database, string collection)
     : ISubjectsRepository where TDocument : ISubjectDocument
 {

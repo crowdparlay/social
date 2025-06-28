@@ -1,13 +1,16 @@
 using CrowdParlay.Social.Application.Abstractions;
 using CrowdParlay.Social.Application.DTOs;
 using CrowdParlay.Social.Application.Exceptions;
+using CrowdParlay.Social.Aspects;
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Domain.DTOs;
 using CrowdParlay.Social.Domain.Entities;
 using Mapster;
+using Metalama.Framework.Code;
 
 namespace CrowdParlay.Social.Application.Services;
 
+[TraceMethods(Accessibility.Public, Accessibility.Private)]
 public class DiscussionsService(
     IUnitOfWorkFactory unitOfWorkFactory,
     IDiscussionsRepository discussionsRepository,

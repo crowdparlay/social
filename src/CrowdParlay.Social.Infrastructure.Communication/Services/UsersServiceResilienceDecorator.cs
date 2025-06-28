@@ -23,7 +23,13 @@ public class UsersServiceResilienceDecorator(
         catch (RpcException exception)
         {
             logger.LogError(exception, message: null);
-            return null;
+            return new UserDto
+            {
+                Id = id,
+                Username = null,
+                DisplayName = null,
+                AvatarUrl = null
+            };
         }
     }
 
@@ -39,7 +45,13 @@ public class UsersServiceResilienceDecorator(
         catch (RpcException exception)
         {
             logger.LogError(exception, message: null);
-            return ids.ToDictionary<Guid, Guid, UserDto?>(id => id, _ => null);
+            return ids.ToDictionary<Guid, Guid, UserDto?>(id => id, id => new UserDto
+            {
+                Id = id,
+                Username = null,
+                DisplayName = null,
+                AvatarUrl = null
+            });
         }
     }
 }

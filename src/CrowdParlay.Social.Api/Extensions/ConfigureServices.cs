@@ -4,7 +4,7 @@ using MassTransit;
 
 namespace CrowdParlay.Social.Api.Extensions;
 
-public static class ConfigureApiExtensions
+public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
@@ -13,7 +13,6 @@ public static class ConfigureApiExtensions
             .ConfigureAuthentication(configuration)
             .ConfigureCors(configuration)
             .ConfigureSignalR(configuration)
-            .ConfigureTelemetry(configuration)
             .AddExceptionHandler<GlobalExceptionHandler>()
             .AddProblemDetails()
             .AddAuthorization();

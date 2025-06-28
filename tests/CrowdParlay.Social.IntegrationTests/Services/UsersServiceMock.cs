@@ -1,5 +1,8 @@
+using CrowdParlay.Social.Aspects;
+
 namespace CrowdParlay.Social.IntegrationTests.Services;
 
+[TraceMethods]
 public class UsersServiceMock : IUsersService
 {
     public Task<UserDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<UserDto?>(new UserDto

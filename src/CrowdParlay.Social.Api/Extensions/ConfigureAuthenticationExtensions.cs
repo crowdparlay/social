@@ -7,9 +7,9 @@ using StackExchange.Redis;
 
 namespace CrowdParlay.Social.Api.Extensions;
 
-public static class ConfigureAuthenticationExtensions
+partial class ServiceCollectionExtensions
 {
-    public static IServiceCollection ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var dataProtectionRedisConnectionString = configuration["DATA_PROTECTION_REDIS_CONNECTION_STRING"]!;
         var dataProtectionRedisMultiplexer = ConnectionMultiplexer.Connect(dataProtectionRedisConnectionString);

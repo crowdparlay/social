@@ -1,29 +1,28 @@
 using CrowdParlay.Social.Domain.Abstractions;
 using CrowdParlay.Social.Infrastructure.Persistence.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
-namespace CrowdParlay.Social.Infrastructure.Persistence;
+namespace CrowdParlay.Social.Infrastructure.Persistence.Extensions;
 
-public static class ConfigurePersistenceExtensions
+public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration) => services
-        .AddMongoDb(configuration)
+    public static IServiceCollection AddPersistence(this IServiceCollection services) => services
+        .AddMongoDb()
         .AddScoped<ICommentsRepository, CommentsRepository>()
         .AddScoped<IDiscussionsRepository, DiscussionsRepository>()
         .AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>()
         .AddHostedService<StartupConfigurator>()
         .AddHostedService<DatabaseInitializer>();
 
-    private static IServiceCollection AddMongoDb(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddMongoDb(this IServiceCollection services)
     {
         services
             .AddOptions<MongoDbSettings>()
             .ValidateDataAnnotations()
             .ValidateOnStart()
-            .Bind(configuration.GetSection("MongoDb"));
+            .BindConfiguration("MongoDb");
 
         services.AddSingleton<IMongoClient>(provider =>
         {

@@ -1,12 +1,10 @@
 using CrowdParlay.Social.Api.Extensions;
 using CrowdParlay.Social.Api.Hubs;
-using CrowdParlay.Social.Application;
-using CrowdParlay.Social.Infrastructure.Communication;
-using CrowdParlay.Social.Infrastructure.Persistence;
-using Elastic.Apm.NetCoreAll;
+using CrowdParlay.Social.Application.Extensions;
+using CrowdParlay.Social.Infrastructure.Communication.Extensions;
+using CrowdParlay.Social.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.Http.Connections;
 using Serilog;
-using Serilog.Enrichers.OpenTelemetry;
 
 namespace CrowdParlay.Social.Api;
 
@@ -14,13 +12,6 @@ public class Startup(IConfiguration configuration)
 {
     public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
     {
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
-            .Enrich.WithOpenTelemetrySpanId()
-            .Enrich.WithOpenTelemetryTraceId()
-            .CreateLogger();
-
-        app.UseAllElasticApm(configuration);
         app.UseExceptionHandler();
         app.UseSerilogRequestLogging();
         app.UseHealthChecks("/healthz");
@@ -39,6 +30,6 @@ public class Startup(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services) => services
         .AddApi(configuration)
         .AddApplication()
-        .AddPersistence(configuration)
+        .AddPersistence()
         .AddCommunication(configuration);
 }
