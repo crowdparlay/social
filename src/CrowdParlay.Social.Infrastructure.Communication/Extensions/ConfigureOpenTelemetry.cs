@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -20,7 +20,7 @@ partial class ServiceCollectionExtensions
             .ValidateOnStart()
             .Bind(openTelemetryConfiguration);
 
-        var openTelemetryBuilder = services.AddOpenTelemetry().UseOtlpExporter();
+        var openTelemetryBuilder = services.AddOpenTelemetry();
 
         openTelemetryBuilder.ConfigureResource(resource => resource
             .AddService(openTelemetrySettings.ServiceName));
@@ -32,12 +32,22 @@ partial class ServiceCollectionExtensions
             .AddHttpClientInstrumentation()
             .AddEntityFrameworkCoreInstrumentation()
             .AddMassTransitInstrumentation()
-            .AddRedisInstrumentation());
+            .AddRedisInstrumentation()
+            .AddOtlpExporter(exporter =>
+            {
+                exporter.Endpoint = new Uri(openTelemetrySettings.OtlpEndpoint);
+                exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
+            }));
 
         openTelemetryBuilder.WithMetrics(metrics => metrics
             .AddMeter(openTelemetrySettings.MeterName)
             .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation());
+            .AddHttpClientInstrumentation()
+            .AddOtlpExporter(exporter =>
+            {
+                exporter.Endpoint = new Uri(openTelemetrySettings.OtlpEndpoint);
+                exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
+            }));
 
         return services;
     }
